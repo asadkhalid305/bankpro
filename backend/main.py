@@ -27,15 +27,53 @@ OUTPUT_FILE = os.path.join(UPLOAD_DIR, "Final_Statement.xlsx")
 os.makedirs(UPLOAD_DIR, exist_ok=True)
 os.makedirs(BACKUP_DIR, exist_ok=True)
 
+CATEGORIES = ['Benefit', 'Bill', 'Conversion', 'Dependant', 'Extra', 'Food & Outing', 'Gifts', 'Grocery', 'Investment', 'Medical', 'Office', 'Salary', 'Shopping', 'Transport', 'Vacation', 'Car', 'Unknown']
+
 class Transaction(BaseModel):
     DATE: str
-    WHERE: str
+    MERCHANT: str
     CATEGORY: str
     PAYMENT: str
     PRICE: float
 
 class MergeRequest(BaseModel):
     transactions: List[Transaction]
+
+class MappingUpdate(BaseModel):
+    merchant: str
+    category: str
+    old_merchant: str = None
+
+@app.get("/mappings")
+async def get_mappings():
+    return processor.load_mappings()
+
+@app.post("/mappings")
+async def update_mapping(update: MappingUpdate):
+    try:
+        mappings = processor.load_mappings()
+        # If renaming a merchant, remove the old key
+        if update.old_merchant and update.old_merchant in mappings:
+            del mappings[update.old_merchant]
+        
+        mappings[update.merchant] = update.category
+        with open(processor.MAPPING_FILE, 'w') as f:
+            json.dump(mappings, f, indent=2)
+        return {"status": "success"}
+    except Exception as e:
+        raise HTTPException(status_code=500, detail=str(e))
+
+@app.delete("/mappings/{merchant}")
+async def delete_mapping(merchant: str):
+    try:
+        mappings = processor.load_mappings()
+        if merchant in mappings:
+            del mappings[merchant]
+            with open(processor.MAPPING_FILE, 'w') as f:
+                json.dump(mappings, f, indent=2)
+        return {"status": "success"}
+    except Exception as e:
+        raise HTTPException(status_code=500, detail=str(e))
 
 @app.post("/upload/")
 async def upload_file(file: UploadFile = File(...)):
@@ -55,20 +93,25 @@ async def upload_file(file: UploadFile = File(...)):
         duplicates = []
         if os.path.exists(OUTPUT_FILE):
             master_df = pd.read_excel(OUTPUT_FILE)
-            # Simple check: Date + Where + Price
+            
+            # Simple check: Date + Merchant + Price
             for _, row in df.iterrows():
                 is_dup = not master_df[
                     (master_df['DATE'] == row['DATE']) & 
-                    (master_df['WHERE'] == row['WHERE']) & 
+                    (master_df['MERCHANT'] == row['MERCHANT']) & 
                     (master_df['PRICE'] == row['PRICE'])
                 ].empty
                 duplicates.append(is_dup)
+        else:
+            # If no master file, everything is new
+            duplicates = [False] * len(df)
         
         df['is_duplicate'] = duplicates
         
         return {
             "metadata": metadata,
-            "transactions": df.to_dict(orient="records")
+            "transactions": df.to_dict(orient="records"),
+            "categories": CATEGORIES
         }
     except Exception as e:
         raise HTTPException(status_code=500, detail=str(e))
@@ -77,6 +120,11 @@ async def upload_file(file: UploadFile = File(...)):
 async def merge_transactions(request: MergeRequest):
     try:
         new_df = pd.DataFrame([t.dict() for t in request.transactions])
+        
+        # Learn from user: Save category mappings
+        for _, row in new_df.iterrows():
+            if row['CATEGORY'] != 'Unknown':
+                processor.save_mapping(row['MERCHANT'], row['CATEGORY'])
         
         # Backup existing file
         if os.path.exists(OUTPUT_FILE):

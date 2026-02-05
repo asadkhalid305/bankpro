@@ -21,6 +21,7 @@ interface Metadata {
 interface UploadResponse {
   metadata: Metadata;
   transactions: Transaction[];
+  categories: string[];
 }
 
 interface Backup {
@@ -31,7 +32,7 @@ interface Backup {
 
 function App() {
   const [file, setFile] = useState<File | null>(null);
-  const [status, setStatus] = useState<'idle' | 'uploading' | 'review' | 'merging' | 'success' | 'error' | 'backups'>('idle');
+  const [status, setStatus] = useState<'idle' | 'uploading' | 'review' | 'merging' | 'success' | 'error' | 'backups' | 'mappings'>('idle');
   const [message, setMessage] = useState('');
   const [stagedData, setStagedData] = useState<UploadResponse | null>(null);
   const [selectedTransactions, setSelectedTransactions] = useState<number[]>([]);
@@ -39,6 +40,49 @@ function App() {
   const [previewData, setPreviewData] = useState<Transaction[] | null>(null);
   const [selectedBackup, setSelectedBackup] = useState<string | null>(null);
   const [confirmText, setConfirmText] = useState('');
+  
+  // Mapping management state
+  const [allMappings, setAllMappings] = useState<Record<string, string>>({});
+  const [searchTerm, setSearchTerm] = useState('');
+  const [editingKey, setEditingKey] = useState<string | null>(null);
+  const [editMerchant, setEditMerchant] = useState('');
+  const [editCategory, setEditCategory] = useState('');
+
+  const fetchMappings = async () => {
+    const response = await fetch('/api/mappings');
+    const data = await response.json();
+    setAllMappings(data);
+    setStatus('mappings');
+  };
+
+  const handleUpdateMapping = async (oldMerchant: string | null) => {
+    const response = await fetch('/api/mappings', {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify({
+        merchant: editMerchant,
+        category: editCategory,
+        old_merchant: oldMerchant
+      })
+    });
+    if (response.ok) {
+      setEditingKey(null);
+      fetchMappings();
+    }
+  };
+
+  const handleDeleteMapping = async (merchant: string) => {
+    if (!window.confirm(`Delete mapping for ${merchant}?`)) return;
+    const response = await fetch(`/api/mappings/${encodeURIComponent(merchant)}`, { method: 'DELETE' });
+    if (response.ok) fetchMappings();
+  };
+
+  const handleCategoryChange = (index: number, newCategory: string) => {
+    if (!stagedData) return;
+    const updatedTransactions = [...stagedData.transactions];
+    updatedTransactions[index].CATEGORY = newCategory;
+    setStagedData({ ...stagedData, transactions: updatedTransactions });
+  };
 
   const handleFileChange = (e: React.ChangeEvent<HTMLInputElement>) => {
     if (e.target.files && e.target.files.length > 0) {
@@ -160,9 +204,76 @@ function App() {
         <header>
           <h1>🏦 Bank Statement Processor</h1>
           <div className="header-actions">
+            <button className="rollback-btn" onClick={fetchMappings} style={{marginRight: '10px'}}>🧠 Knowledge Base</button>
             <button className="rollback-btn" onClick={fetchBackups}>📂 Manage Backups</button>
           </div>
         </header>
+
+        {status === 'mappings' && (
+          <div className="mappings-section">
+            <div className="section-header">
+              <h2>Intelligence Knowledge Base</h2>
+              <input 
+                type="text" 
+                placeholder="Search merchants..." 
+                className="search-input"
+                value={searchTerm}
+                onChange={(e) => setSearchTerm(e.target.value)}
+              />
+            </div>
+            <div className="table-container">
+              <table>
+                <thead>
+                  <tr>
+                    <th>Merchant (Pattern)</th>
+                    <th>Assigned Category</th>
+                    <th>Actions</th>
+                  </tr>
+                </thead>
+                <tbody>
+                  {Object.entries(allMappings)
+                    .filter(([m]) => m.toLowerCase().includes(searchTerm.toLowerCase()))
+                    .map(([merchant, category]) => (
+                      <tr key={merchant}>
+                        <td>
+                          {editingKey === merchant ? (
+                            <input value={editMerchant} onChange={(e) => setEditMerchant(e.target.value)} className="inline-edit" />
+                          ) : merchant}
+                        </td>
+                        <td>
+                          {editingKey === merchant ? (
+                            <select value={editCategory} onChange={(e) => setEditCategory(e.target.value)} className="category-select">
+                              {['Benefit', 'Bill', 'Conversion', 'Dependant', 'Extra', 'Food & Outing', 'Gifts', 'Grocery', 'Investment', 'Medical', 'Office', 'Salary', 'Shopping', 'Transport', 'Vacation', 'Car'].map(c => (
+                                <option key={c} value={c}>{c}</option>
+                              ))}
+                            </select>
+                          ) : category}
+                        </td>
+                        <td>
+                          {editingKey === merchant ? (
+                            <div className="actions">
+                              <button onClick={() => handleUpdateMapping(merchant)} className="primary-btn success sm">Save</button>
+                              <button onClick={() => setEditingKey(null)} className="secondary-btn sm">Cancel</button>
+                            </div>
+                          ) : (
+                            <div className="actions">
+                              <button onClick={() => {
+                                setEditingKey(merchant);
+                                setEditMerchant(merchant);
+                                setEditCategory(category);
+                              }} className="secondary-btn sm">Edit</button>
+                              <button onClick={() => handleDeleteMapping(merchant)} className="rollback-btn sm error-text">Delete</button>
+                            </div>
+                          )}
+                        </td>
+                      </tr>
+                    ))}
+                </tbody>
+              </table>
+            </div>
+            <button onClick={() => setStatus('idle')} className="secondary-btn">Back to Dashboard</button>
+          </div>
+        )}
 
         {(status === 'idle' || status === 'uploading') && (
           <div className="upload-section">
@@ -206,6 +317,7 @@ function App() {
                     </th>
                     <th>Date</th>
                     <th>Merchant</th>
+                    <th>Category</th>
                     <th>Price</th>
                     <th>Status</th>
                   </tr>
@@ -222,6 +334,17 @@ function App() {
                       </td>
                       <td>{t.DATE}</td>
                       <td className="desc-cell">{t.MERCHANT}</td>
+                      <td>
+                        <select 
+                          value={t.CATEGORY} 
+                          onChange={(e) => handleCategoryChange(i, e.target.value)}
+                          className="category-select"
+                        >
+                          {stagedData.categories.map(cat => (
+                            <option key={cat} value={cat}>{cat}</option>
+                          ))}
+                        </select>
+                      </td>
                       <td>{t.PRICE.toFixed(2)}</td>
                       <td>{t.is_duplicate ? '⚠️ DUPLICATE' : '✅ NEW'}</td>
                     </tr>
@@ -261,11 +384,16 @@ function App() {
                   <div className="table-container mini">
                     <table>
                       <thead>
-                        <tr><th>Date</th><th>Merchant</th><th>Price</th></tr>
+                        <tr><th>Date</th><th>Merchant</th><th>Category</th><th>Price</th></tr>
                       </thead>
                       <tbody>
                         {previewData.map((r, i) => (
-                          <tr key={i}><td>{r.DATE}</td><td>{r.MERCHANT}</td><td>{r.PRICE}</td></tr>
+                          <tr key={i}>
+                            <td>{r.DATE}</td>
+                            <td>{r.MERCHANT}</td>
+                            <td>{r.CATEGORY}</td>
+                            <td>{r.PRICE}</td>
+                          </tr>
                         ))}
                       </tbody>
                     </table>

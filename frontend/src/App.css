@@ -187,6 +187,21 @@ td {
   text-overflow: ellipsis;
 }
 
+.category-select {
+  background: var(--bg-hover);
+  color: var(--text-primary);
+  border: 1px solid var(--border);
+  border-radius: 4px;
+  padding: 4px 8px;
+  font-size: 0.8rem;
+  width: 100%;
+}
+
+.category-select:focus {
+  border-color: var(--accent);
+  outline: none;
+}
+
 tr:hover {
   background: rgba(255, 255, 255, 0.02);
 }
@@ -408,6 +423,52 @@ button:disabled {
   background: rgba(239, 68, 68, 0.1);
   border: 1px solid rgba(239, 68, 68, 0.2);
   color: var(--error);
+}
+
+.section-header {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  margin-bottom: 1.5rem;
+}
+
+.search-input {
+  background: var(--bg-hover);
+  border: 1px solid var(--border);
+  color: white;
+  padding: 0.6rem 1rem;
+  border-radius: 6px;
+  width: 250px;
+}
+
+.inline-edit {
+  background: #000;
+  border: 1px solid var(--accent);
+  color: white;
+  padding: 4px 8px;
+  border-radius: 4px;
+  width: 100%;
+  box-sizing: border-box;
+}
+
+button.sm {
+  padding: 0.3rem 0.6rem;
+  font-size: 0.75rem;
+  width: auto;
+}
+
+.error-text {
+  color: var(--error) !important;
+  border-color: rgba(239, 68, 68, 0.3) !important;
+}
+
+.error-text:hover {
+  background: rgba(239, 68, 68, 0.1) !important;
+  border-color: var(--error) !important;
+}
+
+.mappings-section h2 {
+  margin: 0;
 }
 
 .button-group {
