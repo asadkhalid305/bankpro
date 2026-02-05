@@ -47,6 +47,9 @@ function App() {
   const [editingKey, setEditingKey] = useState<string | null>(null);
   const [editMerchant, setEditMerchant] = useState('');
   const [editCategory, setEditCategory] = useState('');
+  
+  // Sorting state
+  const [sortConfig, setSortConfig] = useState<{ key: 'merchant' | 'category'; direction: 'asc' | 'desc' } | null>(null);
 
   const fetchMappings = async () => {
     const response = await fetch('/api/mappings');
@@ -75,6 +78,36 @@ function App() {
     if (!window.confirm(`Delete mapping for ${merchant}?`)) return;
     const response = await fetch(`/api/mappings/${encodeURIComponent(merchant)}`, { method: 'DELETE' });
     if (response.ok) fetchMappings();
+  };
+
+  const requestSort = (key: 'merchant' | 'category') => {
+    let direction: 'asc' | 'desc' = 'asc';
+    if (sortConfig && sortConfig.key === key && sortConfig.direction === 'asc') {
+      direction = 'desc';
+    }
+    setSortConfig({ key, direction });
+  };
+
+  const getSortedMappings = () => {
+    const items = Object.entries(allMappings).filter(([m]) => 
+      m.toLowerCase().includes(searchTerm.toLowerCase())
+    );
+    
+    if (sortConfig !== null) {
+      items.sort((a, b) => {
+        const valA = sortConfig.key === 'merchant' ? a[0] : a[1];
+        const valB = sortConfig.key === 'merchant' ? b[0] : b[1];
+        
+        if (valA.toLowerCase() < valB.toLowerCase()) {
+          return sortConfig.direction === 'asc' ? -1 : 1;
+        }
+        if (valA.toLowerCase() > valB.toLowerCase()) {
+          return sortConfig.direction === 'asc' ? 1 : -1;
+        }
+        return 0;
+      });
+    }
+    return items;
   };
 
   const handleCategoryChange = (index: number, newCategory: string) => {
@@ -225,16 +258,18 @@ function App() {
               <table>
                 <thead>
                   <tr>
-                    <th>Merchant (Pattern)</th>
-                    <th>Assigned Category</th>
+                    <th onClick={() => requestSort('merchant')} className="sortable">
+                      Merchant (Pattern) {sortConfig?.key === 'merchant' && (sortConfig.direction === 'asc' ? '↑' : '↓')}
+                    </th>
+                    <th onClick={() => requestSort('category')} className="sortable">
+                      Assigned Category {sortConfig?.key === 'category' && (sortConfig.direction === 'asc' ? '↑' : '↓')}
+                    </th>
                     <th>Actions</th>
                   </tr>
                 </thead>
                 <tbody>
-                  {Object.entries(allMappings)
-                    .filter(([m]) => m.toLowerCase().includes(searchTerm.toLowerCase()))
-                    .map(([merchant, category]) => (
-                      <tr key={merchant}>
+                  {getSortedMappings().map(([merchant, category]) => (
+                    <tr key={merchant}>
                         <td>
                           {editingKey === merchant ? (
                             <input value={editMerchant} onChange={(e) => setEditMerchant(e.target.value)} className="inline-edit" />

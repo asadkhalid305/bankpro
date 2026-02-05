@@ -425,6 +425,16 @@ button:disabled {
   color: var(--error);
 }
 
+th.sortable {
+  cursor: pointer;
+  user-select: none;
+}
+
+th.sortable:hover {
+  background: var(--bg-hover);
+  color: var(--accent);
+}
+
 .section-header {
   display: flex;
   justify-content: space-between;
