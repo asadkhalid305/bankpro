@@ -48,6 +48,7 @@ function App() {
   const [masterSortConfig, setMasterSortConfig] = useState<{ key: keyof Transaction; direction: 'asc' | 'desc' } | null>({ key: 'DATE', direction: 'desc' });
   const [editingMasterIndex, setEditingMasterIndex] = useState<number | null>(null);
   const [editMasterRow, setEditMasterRow] = useState<Transaction | null>(null);
+  const [selectedMasterRows, setSelectedMasterRows] = useState<Set<number>>(new Set());
 
   // Mapping management state
   const [allMappings, setAllMappings] = useState<Record<string, string>>({});
@@ -346,6 +347,25 @@ function App() {
     }
   };
 
+  const handleToggleMasterRow = (originalIndex: number) => {
+    const newSelection = new Set(selectedMasterRows);
+    if (newSelection.has(originalIndex)) {
+      newSelection.delete(originalIndex);
+    } else {
+      newSelection.add(originalIndex);
+    }
+    setSelectedMasterRows(newSelection);
+  };
+
+  const handleToggleAllMasterRows = () => {
+    if (selectedMasterRows.size === getFilteredMasterData().length && getFilteredMasterData().length > 0) {
+      setSelectedMasterRows(new Set()); // Deselect all
+    } else {
+      const allIndices = new Set(getFilteredMasterData().map(row => row.originalIndex));
+      setSelectedMasterRows(allIndices);
+    }
+  };
+
   const toggleSelect = (index: number) => {
     setSelectedTransactions(prev => 
       prev.includes(index) ? prev.filter(i => i !== index) : [...prev, index]
@@ -450,25 +470,36 @@ function App() {
                 <h2>Master Statement</h2>
                 <p className="disclaimer">📊 Showing all historical records from Final_Statement.xlsx</p>
               </div>
-              <div className="filter-group" style={{display: 'flex'}}>
-                <select 
-                  className="category-select" 
-                  value={masterCategoryFilter}
-                  onChange={(e) => setMasterCategoryFilter(e.target.value)}
-                  style={{width: 'auto', marginRight: '10px'}}
-                >
-                  <option value="All">All Categories</option>
-                  {['Benefit', 'Bill', 'Conversion', 'Dependant', 'Extra', 'Food & Outing', 'Gifts', 'Grocery', 'Investment', 'Medical', 'Office', 'Salary', 'Shopping', 'Transport', 'Vacation', 'Car', 'Unknown'].map(c => (
-                    <option key={c} value={c}>{c}</option>
-                  ))}
-                </select>
-                <input 
-                  type="text" 
-                  placeholder="Search merchant..." 
-                  className="search-input"
-                  value={masterSearch}
-                  onChange={(e) => setMasterSearch(e.target.value)}
-                />
+              <div style={{display: 'flex', alignItems: 'center', gap: '10px'}}>
+                <div className="filter-group">
+                  <select 
+                    className="category-select" 
+                    value={masterCategoryFilter}
+                    onChange={(e) => setMasterCategoryFilter(e.target.value)}
+                    style={{width: 'auto', marginRight: '10px'}}
+                  >
+                    <option value="All">All Categories</option>
+                    {['Benefit', 'Bill', 'Conversion', 'Dependant', 'Extra', 'Food & Outing', 'Gifts', 'Grocery', 'Investment', 'Medical', 'Office', 'Salary', 'Shopping', 'Transport', 'Vacation', 'Car', 'Unknown'].map(c => (
+                      <option key={c} value={c}>{c}</option>
+                    ))}
+                  </select>
+                  <input 
+                    type="text" 
+                    placeholder="Search merchant..." 
+                    className="search-input"
+                    value={masterSearch}
+                    onChange={(e) => setMasterSearch(e.target.value)}
+                  />
+                </div>
+                {selectedMasterRows.size > 0 && (
+                  <button 
+                    onClick={() => handleMasterDelete(Array.from(selectedMasterRows))} 
+                    className="primary-btn error sm"
+                    style={{width: 'auto'}}
+                  >
+                    🗑️ Delete Selected ({selectedMasterRows.size})
+                  </button>
+                )}
               </div>
             </div>
 
@@ -482,6 +513,13 @@ function App() {
                   <table>
                     <thead>
                       <tr>
+                        <th>
+                          <input 
+                            type="checkbox" 
+                            checked={selectedMasterRows.size === getFilteredMasterData().length && getFilteredMasterData().length > 0}
+                            onChange={handleToggleAllMasterRows}
+                          />
+                        </th>
                         <th onClick={() => handleMasterSort('DATE')} className="sortable">Date {masterSortConfig?.key === 'DATE' && (masterSortConfig.direction === 'asc' ? '↑' : '↓')}</th>
                         <th onClick={() => handleMasterSort('MERCHANT')} className="sortable">Merchant {masterSortConfig?.key === 'MERCHANT' && (masterSortConfig.direction === 'asc' ? '↑' : '↓')}</th>
                         <th onClick={() => handleMasterSort('CATEGORY')} className="sortable">Category {masterSortConfig?.key === 'CATEGORY' && (masterSortConfig.direction === 'asc' ? '↑' : '↓')}</th>
@@ -493,6 +531,13 @@ function App() {
                     <tbody>
                       {getFilteredMasterData().map((r) => (
                         <tr key={r.originalIndex}>
+                          <td>
+                            <input 
+                              type="checkbox" 
+                              checked={selectedMasterRows.has(r.originalIndex)}
+                              onChange={() => handleToggleMasterRow(r.originalIndex)}
+                            />
+                          </td>
                           <td>
                             {editingMasterIndex === r.originalIndex ? (
                               <input type="date" value={editMasterRow?.DATE} onChange={(e) => setEditMasterRow({...editMasterRow!, DATE: e.target.value})} className="inline-edit" />
