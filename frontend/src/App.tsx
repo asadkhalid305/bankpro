@@ -1,4 +1,4 @@
-import { useState } from 'react';
+import { useState, useEffect } from 'react';
 import './App.css';
 
 interface Transaction {
@@ -13,7 +13,7 @@ interface Transaction {
 interface Metadata {
   source: string;
   start_date: string;
-  end_date: string;
+  end_date: string; // Corrected type
   initial_balance: number | null;
   final_balance: number | null;
 }
@@ -32,7 +32,7 @@ interface Backup {
 
 function App() {
   const [file, setFile] = useState<File | null>(null);
-  const [status, setStatus] = useState<'idle' | 'uploading' | 'review' | 'merging' | 'success' | 'error' | 'backups' | 'mappings' | 'master'>('idle');
+  const [status, setStatus] = useState<'idle' | 'uploading' | 'review' | 'merging' | 'success' | 'error' | 'backups' | 'mappings' | 'master'>('master');
   const [message, setMessage] = useState('');
   const [stagedData, setStagedData] = useState<UploadResponse | null>(null);
   const [selectedTransactions, setSelectedTransactions] = useState<number[]>([]);
@@ -59,14 +59,22 @@ function App() {
   // Sorting state
   const [sortConfig, setSortConfig] = useState<{ key: 'merchant' | 'category'; direction: 'asc' | 'desc' } | null>(null);
 
+  // Load master data on mount or when status changes to master
+  useEffect(() => {
+    if (status === 'master') {
+      fetchMasterData();
+    }
+  }, [status]); // Only re-fetch if status becomes master.
+
   const fetchMasterData = async () => {
     try {
       const response = await fetch('/api/master');
       const data = await response.json();
       setMasterData(data);
-      setStatus('master');
+      if (status !== 'master') setStatus('master'); // Only set status if not already master
     } catch (error) {
       alert("Failed to fetch master data");
+      setStatus('error'); // If master fails, go to error state
     }
   };
 
@@ -82,8 +90,8 @@ function App() {
 
     if (masterSortConfig) {
       items.sort((a, b) => {
-        const valA = a[masterSortConfig.key] || '';
-        const valB = b[masterSortConfig.key] || '';
+        const valA = String(a[masterSortConfig.key]) || ''; // Convert to string for comparison
+        const valB = String(b[masterSortConfig.key]) || ''; // Convert to string for comparison
         if (valA < valB) return masterSortConfig.direction === 'asc' ? -1 : 1;
         if (valA > valB) return masterSortConfig.direction === 'asc' ? 1 : -1;
         return 0;
@@ -106,10 +114,13 @@ function App() {
       if (response.ok) {
         setEditingMasterIndex(null);
         setEditMasterRow(null);
-        fetchMasterData();
+        fetchMasterData(); // Refresh master data after update
+      } else {
+        const errorData = await response.json();
+        alert(`Failed to update master row: ${errorData.detail || 'Unknown error'}`);
       }
     } catch (error) {
-      alert("Failed to update master row");
+      alert("Failed to update master row: Network error");
     }
   };
 
@@ -122,32 +133,52 @@ function App() {
   };
 
   const fetchMappings = async () => {
-    const response = await fetch('/api/mappings');
-    const data = await response.json();
-    setAllMappings(data);
-    setStatus('mappings');
+    try {
+      const response = await fetch('/api/mappings');
+      const data = await response.json();
+      setAllMappings(data);
+      setStatus('mappings');
+    } catch (error) {
+      alert("Failed to fetch mappings");
+      setStatus('error');
+    }
   };
 
   const handleUpdateMapping = async (oldMerchant: string | null) => {
-    const response = await fetch('/api/mappings', {
-      method: 'POST',
-      headers: { 'Content-Type': 'application/json' },
-      body: JSON.stringify({
-        merchant: editMerchant,
-        category: editCategory,
-        old_merchant: oldMerchant
-      })
-    });
-    if (response.ok) {
-      setEditingKey(null);
-      fetchMappings();
+    try {
+      const response = await fetch('/api/mappings', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({
+          merchant: editMerchant,
+          category: editCategory,
+          old_merchant: oldMerchant
+        })
+      });
+      if (response.ok) {
+        setEditingKey(null);
+        fetchMappings();
+      } else {
+        const errorData = await response.json();
+        alert(`Failed to update mapping: ${errorData.detail || 'Unknown error'}`);
+      }
+    } catch (error) {
+      alert("Failed to update mapping: Network error");
     }
   };
 
   const handleDeleteMapping = async (merchant: string) => {
     if (!window.confirm(`Delete mapping for ${merchant}?`)) return;
-    const response = await fetch(`/api/mappings/${encodeURIComponent(merchant)}`, { method: 'DELETE' });
-    if (response.ok) fetchMappings();
+    try {
+      const response = await fetch(`/api/mappings/${encodeURIComponent(merchant)}`, { method: 'DELETE' });
+      if (response.ok) fetchMappings();
+      else {
+        const errorData = await response.json();
+        alert(`Failed to delete mapping: ${errorData.detail || 'Unknown error'}`);
+      }
+    } catch (error) {
+      alert("Failed to delete mapping: Network error");
+    }
   };
 
   const requestSort = (key: 'merchant' | 'category') => {
@@ -261,6 +292,7 @@ function App() {
       setStatus('backups');
     } catch (error) {
       alert("Failed to fetch backups");
+      setStatus('error');
     }
   };
 
@@ -289,10 +321,13 @@ function App() {
         alert("System restored successfully!");
         setPreviewData(null);
         setSelectedBackup(null);
-        setStatus('idle');
+        fetchMasterData(); // Refresh master data after restore
+      } else {
+        const errorData = await response.json();
+        alert(`Restore failed: ${errorData.detail || 'Unknown error'}`);
       }
     } catch (error) {
-      alert("Restore failed");
+      alert("Restore failed: Network error");
     }
   };
 
@@ -308,9 +343,18 @@ function App() {
         <header>
           <h1>🏦 Bank Statement Processor</h1>
           <div className="header-actions">
-            <button className="rollback-btn" onClick={fetchMasterData} style={{marginRight: '10px'}}>📊 Master Statement</button>
-            <button className="rollback-btn" onClick={fetchMappings} style={{marginRight: '10px'}}>🧠 Knowledge Base</button>
-            <button className="rollback-btn" onClick={fetchBackups}>📂 Manage Backups</button>
+            {status !== 'idle' && (
+              <button className="primary-btn sm" onClick={() => setStatus('idle')} style={{marginRight: '15px', width: 'auto'}}>➕ Import Statement</button>
+            )}
+            {status !== 'master' && (
+              <button className="rollback-btn" onClick={fetchMasterData} style={{marginRight: '10px'}}>📊 Master Statement</button>
+            )}
+            {status !== 'mappings' && (
+              <button className="rollback-btn" onClick={fetchMappings} style={{marginRight: '10px'}}>🧠 Knowledge Base</button>
+            )}
+            {status !== 'backups' && (
+              <button className="rollback-btn" onClick={fetchBackups}>📂 Manage Backups</button>
+            )}
           </div>
         </header>
 
@@ -352,8 +396,8 @@ function App() {
                         </td>
                         <td>
                           {editingKey === merchant ? (
-                            <select value={editCategory} onChange={(e) => setEditCategory(e.target.value)} className="category-select">
-                              {['Benefit', 'Bill', 'Conversion', 'Dependant', 'Extra', 'Food & Outing', 'Gifts', 'Grocery', 'Investment', 'Medical', 'Office', 'Salary', 'Shopping', 'Transport', 'Vacation', 'Car'].map(c => (
+                            <select value={editCategory} onChange={(e) => setEditEditCategory(e.target.value)} className="category-select">
+                              {['Benefit', 'Bill', 'Conversion', 'Dependant', 'Extra', 'Food & Outing', 'Gifts', 'Grocery', 'Investment', 'Medical', 'Office', 'Salary', 'Shopping', 'Transport', 'Vacation', 'Car', 'Unknown'].map(c => (
                                 <option key={c} value={c}>{c}</option>
                               ))}
                             </select>
@@ -381,7 +425,6 @@ function App() {
                 </tbody>
               </table>
             </div>
-            <button onClick={() => setStatus('idle')} className="secondary-btn">Back to Dashboard</button>
           </div>
         )}
 
@@ -487,7 +530,6 @@ function App() {
                 </div>
               </>
             )}
-            <button onClick={() => setStatus('idle')} className="secondary-btn">Back to Dashboard</button>
           </div>
         )}
 
@@ -639,7 +681,6 @@ function App() {
                 </div>
               </div>
             )}
-            <button onClick={() => setStatus('idle')} className="secondary-btn" style={{marginTop: '1rem'}}>Back</button>
           </div>
         )}
 
@@ -650,7 +691,7 @@ function App() {
               <button onClick={() => window.open('/api/download', '_blank')} className="download-btn">
                 📥 Download Master File
               </button>
-              <button onClick={() => setStatus('idle')} className="secondary-btn">Process Another</button>
+              <button onClick={fetchMasterData} className="secondary-btn">View Master Statement</button>
             </div>
           </div>
         )}
@@ -658,7 +699,7 @@ function App() {
         {(status === 'error' || status === 'merging') && (
           <div className="message info">
             {status === 'merging' ? 'Merging data...' : message}
-            {status === 'error' && <button onClick={() => setStatus('idle')}>Try Again</button>}
+            {status === 'error' && <button onClick={fetchMasterData}>Go to Master Statement</button>}
           </div>
         )}
       </div>
