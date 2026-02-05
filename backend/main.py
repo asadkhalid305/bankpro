@@ -56,6 +56,9 @@ class MasterUpdate(BaseModel):
 class DeleteRequest(BaseModel):
     indices: List[int]
 
+class MappingBulkDeleteRequest(BaseModel):
+    merchants: List[str]
+
 @app.get("/mappings")
 async def get_mappings():
     return processor.load_mappings()
@@ -84,6 +87,21 @@ async def delete_mapping(merchant: str):
             with open(processor.MAPPING_FILE, 'w') as f:
                 json.dump(mappings, f, indent=2)
         return {"status": "success"}
+    except Exception as e:
+        raise HTTPException(status_code=500, detail=str(e))
+
+@app.delete("/mappings/bulk_delete")
+async def bulk_delete_mappings(request: MappingBulkDeleteRequest):
+    try:
+        mappings = processor.load_mappings()
+        deleted_count = 0
+        for merchant in request.merchants:
+            if merchant in mappings:
+                del mappings[merchant]
+                deleted_count += 1
+        with open(processor.MAPPING_FILE, 'w') as f:
+            json.dump(mappings, f, indent=2)
+        return {"status": "success", "deleted_count": deleted_count}
     except Exception as e:
         raise HTTPException(status_code=500, detail=str(e))
 

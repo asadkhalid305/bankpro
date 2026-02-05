@@ -56,6 +56,7 @@ function App() {
   const [editingKey, setEditingKey] = useState<string | null>(null);
   const [editMerchant, setEditMerchant] = useState('');
   const [editCategory, setEditCategory] = useState('');
+  const [selectedMappingRows, setSelectedMappingRows] = useState<Set<string>>(new Set());
   
   // Sorting state
   const [sortConfig, setSortConfig] = useState<{ key: 'merchant' | 'category'; direction: 'asc' | 'desc' } | null>(null);
@@ -208,17 +209,45 @@ function App() {
     }
   };
 
-  const handleDeleteMapping = async (merchant: string) => {
-    if (!window.confirm(`Delete mapping for ${merchant}?`)) return;
+  const handleDeleteMapping = async (merchantsToDelete: string | string[]) => {
+    const merchants = Array.isArray(merchantsToDelete) ? merchantsToDelete : [merchantsToDelete];
+    if (!window.confirm(`Are you sure you want to delete ${merchants.length} mapping(s)?`)) return;
     try {
-      const response = await fetch(`/api/mappings/${encodeURIComponent(merchant)}`, { method: 'DELETE' });
-      if (response.ok) fetchMappings();
-      else {
+      // Assuming a bulk delete endpoint (we'll implement this next in backend)
+      const response = await fetch(`/api/mappings/bulk_delete`, { 
+        method: 'DELETE',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ merchants: merchants })
+      });
+      if (response.ok) {
+        setSelectedMappingRows(new Set()); // Clear selection
+        fetchMappings();
+      } else {
         const errorData = await response.json();
-        alert(`Failed to delete mapping: ${errorData.detail || 'Unknown error'}`);
+        alert(`Failed to delete mapping(s): ${errorData.detail || 'Unknown error'}`);
       }
     } catch (error) {
-      alert("Failed to delete mapping: Network error");
+      alert("Failed to delete mapping(s): Network error");
+    }
+  };
+
+  const handleToggleMappingRow = (merchant: string) => {
+    const newSelection = new Set(selectedMappingRows);
+    if (newSelection.has(merchant)) {
+      newSelection.delete(merchant);
+    } else {
+      newSelection.add(merchant);
+    }
+    setSelectedMappingRows(newSelection);
+  };
+
+  const handleToggleAllMappingRows = () => {
+    const filteredMappings = getSortedMappings();
+    if (selectedMappingRows.size === filteredMappings.length && filteredMappings.length > 0) {
+      setSelectedMappingRows(new Set()); // Deselect all
+    } else {
+      const allMerchantNames = new Set(filteredMappings.map(([merchant]) => merchant));
+      setSelectedMappingRows(allMerchantNames);
     }
   };
 
@@ -406,18 +435,36 @@ function App() {
                 <h2>Intelligence Knowledge Base</h2>
                 <p className="disclaimer">💡 Changes here apply only to future uploads and will not modify your master file history.</p>
               </div>
-              <input 
-                type="text" 
-                placeholder="Search merchant or category..." 
-                className="search-input"
-                value={searchTerm}
-                onChange={(e) => setSearchTerm(e.target.value)}
-              />
+              <div style={{display: 'flex', alignItems: 'center', gap: '10px'}}>
+                <input 
+                  type="text" 
+                  placeholder="Search merchant or category..." 
+                  className="search-input"
+                  value={searchTerm}
+                  onChange={(e) => setSearchTerm(e.target.value)}
+                />
+                {selectedMappingRows.size > 0 && (
+                  <button 
+                    onClick={() => handleDeleteMapping(Array.from(selectedMappingRows))} 
+                    className="primary-btn error sm"
+                    style={{width: 'auto'}}
+                  >
+                    🗑️ Delete Selected ({selectedMappingRows.size})
+                  </button>
+                )}
+              </div>
             </div>
             <div className="table-container">
               <table>
                 <thead>
                   <tr>
+                    <th>
+                      <input 
+                        type="checkbox" 
+                        checked={selectedMappingRows.size === getSortedMappings().length && getSortedMappings().length > 0}
+                        onChange={handleToggleAllMappingRows}
+                      />
+                    </th>
                     <th onClick={() => requestSort('merchant')} className="sortable">
                       Merchant (Pattern) {sortConfig?.key === 'merchant' && (sortConfig.direction === 'asc' ? '↑' : '↓')}
                     </th>
@@ -430,6 +477,13 @@ function App() {
                 <tbody>
                   {getSortedMappings().map(([merchant, category]) => (
                     <tr key={merchant}>
+                        <td>
+                          <input 
+                            type="checkbox" 
+                            checked={selectedMappingRows.has(merchant)}
+                            onChange={() => handleToggleMappingRow(merchant)}
+                          />
+                        </td>
                         <td>
                           {editingKey === merchant ? (
                             <input value={editMerchant} onChange={(e) => setEditMerchant(e.target.value)} className="inline-edit" />
