@@ -143,6 +143,17 @@ async def merge_transactions(request: MergeRequest):
     except Exception as e:
         raise HTTPException(status_code=500, detail=str(e))
 
+@app.get("/master")
+async def get_master_data():
+    if not os.path.exists(OUTPUT_FILE):
+        return []
+    try:
+        df = pd.read_excel(OUTPUT_FILE)
+        df = df.fillna("")
+        return df.to_dict(orient="records")
+    except Exception as e:
+        raise HTTPException(status_code=500, detail=str(e))
+
 @app.get("/backups")
 async def list_backups():
     if not os.path.exists(BACKUP_DIR):

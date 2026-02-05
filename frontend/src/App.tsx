@@ -32,7 +32,7 @@ interface Backup {
 
 function App() {
   const [file, setFile] = useState<File | null>(null);
-  const [status, setStatus] = useState<'idle' | 'uploading' | 'review' | 'merging' | 'success' | 'error' | 'backups' | 'mappings'>('idle');
+  const [status, setStatus] = useState<'idle' | 'uploading' | 'review' | 'merging' | 'success' | 'error' | 'backups' | 'mappings' | 'master'>('idle');
   const [message, setMessage] = useState('');
   const [stagedData, setStagedData] = useState<UploadResponse | null>(null);
   const [selectedTransactions, setSelectedTransactions] = useState<number[]>([]);
@@ -41,6 +41,12 @@ function App() {
   const [selectedBackup, setSelectedBackup] = useState<string | null>(null);
   const [confirmText, setConfirmText] = useState('');
   
+  // Master data state
+  const [masterData, setMasterData] = useState<Transaction[]>([]);
+  const [masterSearch, setMasterSearch] = useState('');
+  const [masterCategoryFilter, setMasterCategoryFilter] = useState('All');
+  const [masterSortConfig, setMasterSortConfig] = useState<{ key: keyof Transaction; direction: 'asc' | 'desc' } | null>({ key: 'DATE', direction: 'desc' });
+
   // Mapping management state
   const [allMappings, setAllMappings] = useState<Record<string, string>>({});
   const [searchTerm, setSearchTerm] = useState('');
@@ -50,6 +56,44 @@ function App() {
   
   // Sorting state
   const [sortConfig, setSortConfig] = useState<{ key: 'merchant' | 'category'; direction: 'asc' | 'desc' } | null>(null);
+
+  const fetchMasterData = async () => {
+    try {
+      const response = await fetch('/api/master');
+      const data = await response.json();
+      setMasterData(data);
+      setStatus('master');
+    } catch (error) {
+      alert("Failed to fetch master data");
+    }
+  };
+
+  const getFilteredMasterData = () => {
+    let items = [...masterData].filter(item => 
+      (item.MERCHANT.toLowerCase().includes(masterSearch.toLowerCase()) ||
+       item.CATEGORY.toLowerCase().includes(masterSearch.toLowerCase())) &&
+      (masterCategoryFilter === 'All' || item.CATEGORY === masterCategoryFilter)
+    );
+
+    if (masterSortConfig) {
+      items.sort((a, b) => {
+        const valA = a[masterSortConfig.key] || '';
+        const valB = b[masterSortConfig.key] || '';
+        if (valA < valB) return masterSortConfig.direction === 'asc' ? -1 : 1;
+        if (valA > valB) return masterSortConfig.direction === 'asc' ? 1 : -1;
+        return 0;
+      });
+    }
+    return items;
+  };
+
+  const handleMasterSort = (key: keyof Transaction) => {
+    let direction: 'asc' | 'desc' = 'asc';
+    if (masterSortConfig && masterSortConfig.key === key && masterSortConfig.direction === 'asc') {
+      direction = 'desc';
+    }
+    setMasterSortConfig({ key, direction });
+  };
 
   const fetchMappings = async () => {
     const response = await fetch('/api/mappings');
@@ -238,6 +282,7 @@ function App() {
         <header>
           <h1>🏦 Bank Statement Processor</h1>
           <div className="header-actions">
+            <button className="rollback-btn" onClick={fetchMasterData} style={{marginRight: '10px'}}>📊 Master Statement</button>
             <button className="rollback-btn" onClick={fetchMappings} style={{marginRight: '10px'}}>🧠 Knowledge Base</button>
             <button className="rollback-btn" onClick={fetchBackups}>📂 Manage Backups</button>
           </div>
@@ -309,6 +354,65 @@ function App() {
                     ))}
                 </tbody>
               </table>
+            </div>
+            <button onClick={() => setStatus('idle')} className="secondary-btn">Back to Dashboard</button>
+          </div>
+        )}
+
+        {status === 'master' && (
+          <div className="master-section">
+            <div className="section-header">
+              <div>
+                <h2>Master Statement</h2>
+                <p className="disclaimer">📊 Showing all historical records from Final_Statement.xlsx</p>
+              </div>
+              <div className="filter-group" style={{display: 'flex'}}>
+                <select 
+                  className="category-select" 
+                  value={masterCategoryFilter}
+                  onChange={(e) => setMasterCategoryFilter(e.target.value)}
+                  style={{width: 'auto', marginRight: '10px'}}
+                >
+                  <option value="All">All Categories</option>
+                  {['Benefit', 'Bill', 'Conversion', 'Dependant', 'Extra', 'Food & Outing', 'Gifts', 'Grocery', 'Investment', 'Medical', 'Office', 'Salary', 'Shopping', 'Transport', 'Vacation', 'Car'].map(c => (
+                    <option key={c} value={c}>{c}</option>
+                  ))}
+                </select>
+                <input 
+                  type="text" 
+                  placeholder="Search merchant..." 
+                  className="search-input"
+                  value={masterSearch}
+                  onChange={(e) => setMasterSearch(e.target.value)}
+                />
+              </div>
+            </div>
+            <div className="table-container">
+              <table>
+                <thead>
+                  <tr>
+                    <th onClick={() => handleMasterSort('DATE')} className="sortable">Date {masterSortConfig?.key === 'DATE' && (masterSortConfig.direction === 'asc' ? '↑' : '↓')}</th>
+                    <th onClick={() => handleMasterSort('MERCHANT')} className="sortable">Merchant {masterSortConfig?.key === 'MERCHANT' && (masterSortConfig.direction === 'asc' ? '↑' : '↓')}</th>
+                    <th onClick={() => handleMasterSort('CATEGORY')} className="sortable">Category {masterSortConfig?.key === 'CATEGORY' && (masterSortConfig.direction === 'asc' ? '↑' : '↓')}</th>
+                    <th onClick={() => handleMasterSort('PRICE')} className="sortable">Price {masterSortConfig?.key === 'PRICE' && (masterSortConfig.direction === 'asc' ? '↑' : '↓')}</th>
+                    <th>Payment</th>
+                  </tr>
+                </thead>
+                <tbody>
+                  {getFilteredMasterData().map((r, i) => (
+                    <tr key={i}>
+                      <td>{r.DATE}</td>
+                      <td>{r.MERCHANT}</td>
+                      <td>{r.CATEGORY}</td>
+                      <td>{typeof r.PRICE === 'number' ? r.PRICE.toFixed(2) : r.PRICE}</td>
+                      <td>{r.PAYMENT}</td>
+                    </tr>
+                  ))}
+                </tbody>
+              </table>
+            </div>
+            <div className="stats" style={{marginBottom: '1rem', marginTop: '1rem', textAlign: 'left'}}>
+              Showing {getFilteredMasterData().length} of {masterData.length} entries
             </div>
             <button onClick={() => setStatus('idle')} className="secondary-btn">Back to Dashboard</button>
           </div>
