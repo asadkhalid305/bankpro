@@ -57,6 +57,7 @@ function App() {
   const [editMerchant, setEditMerchant] = useState('');
   const [editCategory, setEditCategory] = useState('');
   const [selectedMappingRows, setSelectedMappingRows] = useState<Set<string>>(new Set());
+  const [mappingCategoryFilter, setMappingCategoryFilter] = useState('All');
   
   // Sorting state
   const [sortConfig, setSortConfig] = useState<{ key: 'merchant' | 'category'; direction: 'asc' | 'desc' } | null>(null);
@@ -260,10 +261,12 @@ function App() {
   };
 
   const getSortedMappings = () => {
-    const items = Object.entries(allMappings).filter(([merchant, category]) => 
-      merchant.toLowerCase().includes(searchTerm.toLowerCase()) ||
-      category.toLowerCase().includes(searchTerm.toLowerCase())
-    );
+    let items = Object.entries(allMappings).filter(([merchant, category]) => {
+      const matchesSearch = merchant.toLowerCase().includes(searchTerm.toLowerCase()) ||
+                            category.toLowerCase().includes(searchTerm.toLowerCase());
+      const matchesFilter = mappingCategoryFilter === 'All' || category === mappingCategoryFilter;
+      return matchesSearch && matchesFilter;
+    });
     
     if (sortConfig !== null) {
       items.sort((a, b) => {
