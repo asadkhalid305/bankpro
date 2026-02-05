@@ -46,6 +46,8 @@ function App() {
   const [masterSearch, setMasterSearch] = useState('');
   const [masterCategoryFilter, setMasterCategoryFilter] = useState('All');
   const [masterSortConfig, setMasterSortConfig] = useState<{ key: keyof Transaction; direction: 'asc' | 'desc' } | null>({ key: 'DATE', direction: 'desc' });
+  const [editingMasterIndex, setEditingMasterIndex] = useState<number | null>(null);
+  const [editMasterRow, setEditMasterRow] = useState<Transaction | null>(null);
 
   // Mapping management state
   const [allMappings, setAllMappings] = useState<Record<string, string>>({});
@@ -69,7 +71,10 @@ function App() {
   };
 
   const getFilteredMasterData = () => {
-    let items = [...masterData].filter(item => 
+    // Include original index for editing
+    let items = masterData.map((item, index) => ({ ...item, originalIndex: index }));
+    
+    items = items.filter(item => 
       (item.MERCHANT.toLowerCase().includes(masterSearch.toLowerCase()) ||
        item.CATEGORY.toLowerCase().includes(masterSearch.toLowerCase())) &&
       (masterCategoryFilter === 'All' || item.CATEGORY === masterCategoryFilter)
@@ -85,6 +90,27 @@ function App() {
       });
     }
     return items;
+  };
+
+  const handleMasterUpdate = async (originalIndex: number) => {
+    if (!editMasterRow) return;
+    try {
+      const response = await fetch('/api/master/update', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({
+          index: originalIndex,
+          ...editMasterRow
+        })
+      });
+      if (response.ok) {
+        setEditingMasterIndex(null);
+        setEditMasterRow(null);
+        fetchMasterData();
+      }
+    } catch (error) {
+      alert("Failed to update master row");
+    }
   };
 
   const handleMasterSort = (key: keyof Transaction) => {
@@ -374,7 +400,7 @@ function App() {
                   style={{width: 'auto', marginRight: '10px'}}
                 >
                   <option value="All">All Categories</option>
-                  {['Benefit', 'Bill', 'Conversion', 'Dependant', 'Extra', 'Food & Outing', 'Gifts', 'Grocery', 'Investment', 'Medical', 'Office', 'Salary', 'Shopping', 'Transport', 'Vacation', 'Car'].map(c => (
+                  {['Benefit', 'Bill', 'Conversion', 'Dependant', 'Extra', 'Food & Outing', 'Gifts', 'Grocery', 'Investment', 'Medical', 'Office', 'Salary', 'Shopping', 'Transport', 'Vacation', 'Car', 'Unknown'].map(c => (
                     <option key={c} value={c}>{c}</option>
                   ))}
                 </select>
@@ -387,33 +413,80 @@ function App() {
                 />
               </div>
             </div>
-            <div className="table-container">
-              <table>
-                <thead>
-                  <tr>
-                    <th onClick={() => handleMasterSort('DATE')} className="sortable">Date {masterSortConfig?.key === 'DATE' && (masterSortConfig.direction === 'asc' ? '↑' : '↓')}</th>
-                    <th onClick={() => handleMasterSort('MERCHANT')} className="sortable">Merchant {masterSortConfig?.key === 'MERCHANT' && (masterSortConfig.direction === 'asc' ? '↑' : '↓')}</th>
-                    <th onClick={() => handleMasterSort('CATEGORY')} className="sortable">Category {masterSortConfig?.key === 'CATEGORY' && (masterSortConfig.direction === 'asc' ? '↑' : '↓')}</th>
-                    <th onClick={() => handleMasterSort('PRICE')} className="sortable">Price {masterSortConfig?.key === 'PRICE' && (masterSortConfig.direction === 'asc' ? '↑' : '↓')}</th>
-                    <th>Payment</th>
-                  </tr>
-                </thead>
-                <tbody>
-                  {getFilteredMasterData().map((r, i) => (
-                    <tr key={i}>
-                      <td>{r.DATE}</td>
-                      <td>{r.MERCHANT}</td>
-                      <td>{r.CATEGORY}</td>
-                      <td>{typeof r.PRICE === 'number' ? r.PRICE.toFixed(2) : r.PRICE}</td>
-                      <td>{r.PAYMENT}</td>
-                    </tr>
-                  ))}
-                </tbody>
-              </table>
-            </div>
-            <div className="stats" style={{marginBottom: '1rem', marginTop: '1rem', textAlign: 'left'}}>
-              Showing {getFilteredMasterData().length} of {masterData.length} entries
-            </div>
+
+            {masterData.length === 0 ? (
+              <div className="message info">
+                No data in master statement yet. Upload and merge some files to get started!
+              </div>
+            ) : (
+              <>
+                <div className="table-container">
+                  <table>
+                    <thead>
+                      <tr>
+                        <th onClick={() => handleMasterSort('DATE')} className="sortable">Date {masterSortConfig?.key === 'DATE' && (masterSortConfig.direction === 'asc' ? '↑' : '↓')}</th>
+                        <th onClick={() => handleMasterSort('MERCHANT')} className="sortable">Merchant {masterSortConfig?.key === 'MERCHANT' && (masterSortConfig.direction === 'asc' ? '↑' : '↓')}</th>
+                        <th onClick={() => handleMasterSort('CATEGORY')} className="sortable">Category {masterSortConfig?.key === 'CATEGORY' && (masterSortConfig.direction === 'asc' ? '↑' : '↓')}</th>
+                        <th onClick={() => handleMasterSort('PRICE')} className="sortable">Price {masterSortConfig?.key === 'PRICE' && (masterSortConfig.direction === 'asc' ? '↑' : '↓')}</th>
+                        <th>Payment</th>
+                        <th>Actions</th>
+                      </tr>
+                    </thead>
+                    <tbody>
+                      {getFilteredMasterData().map((r) => (
+                        <tr key={r.originalIndex}>
+                          <td>
+                            {editingMasterIndex === r.originalIndex ? (
+                              <input type="date" value={editMasterRow?.DATE} onChange={(e) => setEditMasterRow({...editMasterRow!, DATE: e.target.value})} className="inline-edit" />
+                            ) : r.DATE}
+                          </td>
+                          <td>
+                            {editingMasterIndex === r.originalIndex ? (
+                              <input value={editMasterRow?.MERCHANT} onChange={(e) => setEditMasterRow({...editMasterRow!, MERCHANT: e.target.value})} className="inline-edit" />
+                            ) : r.MERCHANT}
+                          </td>
+                          <td>
+                            {editingMasterIndex === r.originalIndex ? (
+                              <select value={editMasterRow?.CATEGORY} onChange={(e) => setEditMasterRow({...editMasterRow!, CATEGORY: e.target.value})} className="category-select">
+                                {['Benefit', 'Bill', 'Conversion', 'Dependant', 'Extra', 'Food & Outing', 'Gifts', 'Grocery', 'Investment', 'Medical', 'Office', 'Salary', 'Shopping', 'Transport', 'Vacation', 'Car', 'Unknown'].map(c => (
+                                  <option key={c} value={c}>{c}</option>
+                                ))}
+                              </select>
+                            ) : r.CATEGORY}
+                          </td>
+                          <td>
+                            {editingMasterIndex === r.originalIndex ? (
+                              <input type="number" step="0.01" value={editMasterRow?.PRICE} onChange={(e) => setEditMasterRow({...editMasterRow!, PRICE: parseFloat(e.target.value)})} className="inline-edit" />
+                            ) : (typeof r.PRICE === 'number' ? r.PRICE.toFixed(2) : r.PRICE)}
+                          </td>
+                          <td>
+                            {editingMasterIndex === r.originalIndex ? (
+                              <input value={editMasterRow?.PAYMENT} onChange={(e) => setEditMasterRow({...editMasterRow!, PAYMENT: e.target.value})} className="inline-edit" />
+                            ) : r.PAYMENT}
+                          </td>
+                          <td>
+                            {editingMasterIndex === r.originalIndex ? (
+                              <div className="actions">
+                                <button onClick={() => handleMasterUpdate(r.originalIndex)} className="primary-btn success sm">Save</button>
+                                <button onClick={() => setEditingMasterIndex(null)} className="secondary-btn sm">Cancel</button>
+                              </div>
+                            ) : (
+                              <button onClick={() => {
+                                setEditingMasterIndex(r.originalIndex);
+                                setEditMasterRow(r);
+                              }} className="secondary-btn sm">Edit</button>
+                            )}
+                          </td>
+                        </tr>
+                      ))}
+                    </tbody>
+                  </table>
+                </div>
+                <div className="stats" style={{marginBottom: '1rem', marginTop: '1rem', textAlign: 'left'}}>
+                  Showing {getFilteredMasterData().length} of {masterData.length} entries
+                </div>
+              </>
+            )}
             <button onClick={() => setStatus('idle')} className="secondary-btn">Back to Dashboard</button>
           </div>
         )}

@@ -143,6 +143,35 @@ async def merge_transactions(request: MergeRequest):
     except Exception as e:
         raise HTTPException(status_code=500, detail=str(e))
 
+class MasterUpdate(BaseModel):
+    index: int
+    DATE: str
+    MERCHANT: str
+    CATEGORY: str
+    PRICE: float
+    PAYMENT: str
+
+@app.post("/master/update")
+async def update_master_row(update: MasterUpdate):
+    if not os.path.exists(OUTPUT_FILE):
+        raise HTTPException(status_code=404, detail="Master file not found")
+    try:
+        df = pd.read_excel(OUTPUT_FILE)
+        if update.index >= len(df):
+            raise HTTPException(status_code=400, detail="Invalid row index")
+        
+        # Update values
+        df.at[update.index, 'DATE'] = update.DATE
+        df.at[update.index, 'MERCHANT'] = update.MERCHANT
+        df.at[update.index, 'CATEGORY'] = update.CATEGORY
+        df.at[update.index, 'PRICE'] = update.PRICE
+        df.at[update.index, 'PAYMENT'] = update.PAYMENT
+        
+        df.to_excel(OUTPUT_FILE, index=False)
+        return {"status": "success"}
+    except Exception as e:
+        raise HTTPException(status_code=500, detail=str(e))
+
 @app.get("/master")
 async def get_master_data():
     if not os.path.exists(OUTPUT_FILE):
