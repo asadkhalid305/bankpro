@@ -380,6 +380,26 @@ function App() {
     }
   };
 
+  const handleToggleMappingRow = (merchant: string) => {
+    const newSelection = new Set(selectedMappingRows);
+    if (newSelection.has(merchant)) {
+      newSelection.delete(merchant);
+    } else {
+      newSelection.add(merchant);
+    }
+    setSelectedMappingRows(newSelection);
+  };
+
+  const handleToggleAllMappingRows = () => {
+    const sortedMappings = getSortedMappings();
+    if (selectedMappingRows.size === sortedMappings.length && sortedMappings.length > 0) {
+      setSelectedMappingRows(new Set()); // Deselect all
+    } else {
+      const allMerchants = new Set(sortedMappings.map(([merchant]) => merchant));
+      setSelectedMappingRows(allMerchants);
+    }
+  };
+
   const requestSort = (key: 'merchant' | 'category') => {
     let direction: 'asc' | 'desc' = 'asc';
     if (sortConfig && sortConfig.key === key && sortConfig.direction === 'asc') {
