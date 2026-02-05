@@ -49,6 +49,14 @@ function App() {
   const [editingMasterIndex, setEditingMasterIndex] = useState<number | null>(null);
   const [editMasterRow, setEditMasterRow] = useState<Transaction | null>(null);
   const [selectedMasterRows, setSelectedMasterRows] = useState<Set<number>>(new Set());
+  const [showAddMasterForm, setShowAddMasterForm] = useState(false);
+  const [newMasterRow, setNewMasterRow] = useState<Transaction>({
+    DATE: new Date().toISOString().split('T')[0],
+    MERCHANT: '',
+    CATEGORY: 'Unknown',
+    PRICE: 0,
+    PAYMENT: ''
+  });
 
   // Mapping management state
   const [allMappings, setAllMappings] = useState<Record<string, string>>({});
@@ -58,6 +66,9 @@ function App() {
   const [editCategory, setEditCategory] = useState('');
   const [selectedMappingRows, setSelectedMappingRows] = useState<Set<string>>(new Set());
   const [mappingCategoryFilter, setMappingCategoryFilter] = useState('All');
+  const [showAddMappingForm, setShowAddMappingForm] = useState(false);
+  const [newMappingMerchant, setNewMappingMerchant] = useState('');
+  const [newMappingCategory, setNewMappingCategory] = useState('Unknown');
   
   // Sorting state
   const [sortConfig, setSortConfig] = useState<{ key: 'merchant' | 'category'; direction: 'asc' | 'desc' } | null>(null);
@@ -124,6 +135,30 @@ function App() {
       }
     } catch (error) {
       alert("Failed to update master row: Network error");
+    }
+  };
+
+  const handleAddMasterRow = async () => {
+    if (!newMasterRow.MERCHANT || !newMasterRow.DATE || !newMasterRow.CATEGORY || newMasterRow.PRICE === undefined || newMasterRow.PAYMENT === undefined) {
+      alert("Please fill all fields for the new record.");
+      return;
+    }
+    try {
+      const response = await fetch('/api/master/add', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify(newMasterRow)
+      });
+      if (response.ok) {
+        setShowAddMasterForm(false);
+        setNewMasterRow({ DATE: new Date().toISOString().split('T')[0], MERCHANT: '', CATEGORY: 'Unknown', PRICE: 0, PAYMENT: '' });
+        fetchMasterData(); // Refresh master data
+      } else {
+        const errorData = await response.json();
+        alert(`Failed to add new master row: ${errorData.detail || 'Unknown error'}`);
+      }
+    } catch (error) {
+      alert("Failed to add new master row: Network error");
     }
   };
 
@@ -210,11 +245,39 @@ function App() {
     }
   };
 
+  const handleAddMapping = async () => {
+    if (!newMappingMerchant) {
+      alert("Merchant name cannot be empty.");
+      return;
+    }
+    try {
+      const response = await fetch('/api/mappings', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({
+          merchant: newMappingMerchant,
+          category: newMappingCategory,
+          old_merchant: null // Indicate this is a new addition
+        })
+      });
+      if (response.ok) {
+        setShowAddMappingForm(false);
+        setNewMappingMerchant('');
+        setNewMappingCategory('Unknown');
+        fetchMappings();
+      } else {
+        const errorData = await response.json();
+        alert(`Failed to add new mapping: ${errorData.detail || 'Unknown error'}`);
+      }
+    } catch (error) {
+      alert("Failed to add new mapping: Network error");
+    }
+  };
+
   const handleDeleteMapping = async (merchantsToDelete: string | string[]) => {
     const merchants = Array.isArray(merchantsToDelete) ? merchantsToDelete : [merchantsToDelete];
     if (!window.confirm(`Are you sure you want to delete ${merchants.length} mapping(s)?`)) return;
     try {
-      // Assuming a bulk delete endpoint (we'll implement this next in backend)
       const response = await fetch(`/api/mappings/bulk_delete`, { 
         method: 'DELETE',
         headers: { 'Content-Type': 'application/json' },
@@ -229,26 +292,6 @@ function App() {
       }
     } catch (error) {
       alert("Failed to delete mapping(s): Network error");
-    }
-  };
-
-  const handleToggleMappingRow = (merchant: string) => {
-    const newSelection = new Set(selectedMappingRows);
-    if (newSelection.has(merchant)) {
-      newSelection.delete(merchant);
-    } else {
-      newSelection.add(merchant);
-    }
-    setSelectedMappingRows(newSelection);
-  };
-
-  const handleToggleAllMappingRows = () => {
-    const filteredMappings = getSortedMappings();
-    if (selectedMappingRows.size === filteredMappings.length && filteredMappings.length > 0) {
-      setSelectedMappingRows(new Set()); // Deselect all
-    } else {
-      const allMerchantNames = new Set(filteredMappings.map(([merchant]) => merchant));
-      setSelectedMappingRows(allMerchantNames);
     }
   };
 
@@ -439,6 +482,17 @@ function App() {
                 <p className="disclaimer">💡 Changes here apply only to future uploads and will not modify your master file history.</p>
               </div>
               <div style={{display: 'flex', alignItems: 'center', gap: '10px'}}>
+                <select 
+                  className="category-select" 
+                  value={mappingCategoryFilter}
+                  onChange={(e) => setMappingCategoryFilter(e.target.value)}
+                  style={{width: 'auto'}}
+                >
+                  <option value="All">All Categories</option>
+                  {['Benefit', 'Bill', 'Conversion', 'Dependant', 'Extra', 'Food & Outing', 'Gifts', 'Grocery', 'Investment', 'Medical', 'Office', 'Salary', 'Shopping', 'Transport', 'Vacation', 'Car', 'Unknown'].map(c => (
+                    <option key={c} value={c}>{c}</option>
+                  ))}
+                </select>
                 <input 
                   type="text" 
                   placeholder="Search merchant or category..." 
@@ -455,8 +509,31 @@ function App() {
                     🗑️ Delete Selected ({selectedMappingRows.size})
                   </button>
                 )}
+                <button 
+                  onClick={() => setShowAddMappingForm(!showAddMappingForm)} 
+                  className="secondary-btn sm"
+                  style={{width: 'auto'}}
+                >
+                  {showAddMappingForm ? '✖️ Cancel Add' : '➕ Add New Mapping'}
+                </button>
               </div>
             </div>
+
+            {showAddMappingForm && (
+              <div className="add-form card">
+                <h3>Add New Mapping</h3>
+                <div className="form-fields" style={{display: 'flex', gap: '10px', flexWrap: 'wrap'}}>
+                  <input type="text" value={newMappingMerchant} onChange={(e) => setNewMappingMerchant(e.target.value)} placeholder="Merchant Name" className="inline-edit" style={{flex: 1}} />
+                  <select value={newMappingCategory} onChange={(e) => setNewMappingCategory(e.target.value)} className="category-select" style={{flex: 1}}>
+                    {['Benefit', 'Bill', 'Conversion', 'Dependant', 'Extra', 'Food & Outing', 'Gifts', 'Grocery', 'Investment', 'Medical', 'Office', 'Salary', 'Shopping', 'Transport', 'Vacation', 'Car', 'Unknown'].map(c => (
+                      <option key={c} value={c}>{c}</option>
+                    ))}
+                  </select>
+                </div>
+                <button onClick={handleAddMapping} className="primary-btn success" style={{width: 'auto', marginTop: '15px'}}>Create Mapping</button>
+              </div>
+            )}
+
             <div className="table-container">
               <table>
                 <thead>
@@ -563,8 +640,33 @@ function App() {
                     🗑️ Delete Selected ({selectedMasterRows.size})
                   </button>
                 )}
+                <button 
+                  onClick={() => setShowAddMasterForm(!showAddMasterForm)} 
+                  className="secondary-btn sm"
+                  style={{width: 'auto'}}
+                >
+                  {showAddMasterForm ? '✖️ Cancel Add' : '➕ Add New Record'}
+                </button>
               </div>
             </div>
+
+            {showAddMasterForm && (
+              <div className="add-form card">
+                <h3>Add New Master Record</h3>
+                <div className="form-fields">
+                  <input type="date" value={newMasterRow.DATE} onChange={(e) => setNewMasterRow({...newMasterRow, DATE: e.target.value})} placeholder="Date" />
+                  <input type="text" value={newMasterRow.MERCHANT} onChange={(e) => setNewMasterRow({...newMasterRow, MERCHANT: e.target.value})} placeholder="Merchant" />
+                  <select value={newMasterRow.CATEGORY} onChange={(e) => setNewMasterRow({...newMasterRow, CATEGORY: e.target.value})} className="category-select">
+                    {['Benefit', 'Bill', 'Conversion', 'Dependant', 'Extra', 'Food & Outing', 'Gifts', 'Grocery', 'Investment', 'Medical', 'Office', 'Salary', 'Shopping', 'Transport', 'Vacation', 'Car', 'Unknown'].map(c => (
+                      <option key={c} value={c}>{c}</option>
+                    ))}
+                  </select>
+                  <input type="number" step="0.01" value={newMasterRow.PRICE} onChange={(e) => setNewMasterRow({...newMasterRow, PRICE: parseFloat(e.target.value)})} placeholder="Price" />
+                  <input type="text" value={newMasterRow.PAYMENT} onChange={(e) => setNewMasterRow({...newMasterRow, PAYMENT: e.target.value})} placeholder="Payment" />
+                </div>
+                <button onClick={handleAddMasterRow} className="primary-btn success" style={{width: 'auto', marginTop: '15px'}}>Create Record</button>
+              </div>
+            )}
 
             {masterData.length === 0 ? (
               <div className="message info">
@@ -721,7 +823,7 @@ function App() {
                       <td>
                         <select 
                           value={t.CATEGORY} 
-                          onChange={(e) => setCategory(e.target.value)} // Corrected: Use setCategory directly
+                          onChange={(e) => handleCategoryChange(i, e.target.value)}
                           className="category-select"
                         >
                           {stagedData.categories.map(cat => (

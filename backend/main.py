@@ -53,6 +53,13 @@ class MasterUpdate(BaseModel):
     PRICE: float
     PAYMENT: str
 
+class MasterAdd(BaseModel):
+    DATE: str
+    MERCHANT: str
+    CATEGORY: str
+    PRICE: float
+    PAYMENT: str
+
 class DeleteRequest(BaseModel):
     indices: List[int]
 
@@ -67,11 +74,15 @@ async def get_mappings():
 async def update_mapping(update: MappingUpdate):
     try:
         mappings = processor.load_mappings()
-        # If renaming a merchant, remove the old key
+        
+        # If old_merchant is provided and exists, it's an edit/rename
         if update.old_merchant and update.old_merchant in mappings:
             del mappings[update.old_merchant]
+        elif update.old_merchant and update.old_merchant not in mappings:
+            # If old_merchant specified but not found, it's likely an error or trying to edit a non-existent mapping
+            raise HTTPException(status_code=404, detail=f"Original merchant '{update.old_merchant}' not found for update.")
         
-        mappings[update.merchant] = update.category
+        mappings[processor.clean_merchant_name(update.merchant)] = update.category # Ensure merchant name is cleaned
         with open(processor.MAPPING_FILE, 'w') as f:
             json.dump(mappings, f, indent=2)
         return {"status": "success"}
@@ -82,8 +93,9 @@ async def update_mapping(update: MappingUpdate):
 async def delete_mapping(merchant: str):
     try:
         mappings = processor.load_mappings()
-        if merchant in mappings:
-            del mappings[merchant]
+        cleaned_merchant = processor.clean_merchant_name(merchant)
+        if cleaned_merchant in mappings:
+            del mappings[cleaned_merchant]
             with open(processor.MAPPING_FILE, 'w') as f:
                 json.dump(mappings, f, indent=2)
         return {"status": "success"}
@@ -96,8 +108,9 @@ async def bulk_delete_mappings(request: MappingBulkDeleteRequest):
         mappings = processor.load_mappings()
         deleted_count = 0
         for merchant in request.merchants:
-            if merchant in mappings:
-                del mappings[merchant]
+            cleaned_merchant = processor.clean_merchant_name(merchant)
+            if cleaned_merchant in mappings:
+                del mappings[cleaned_merchant]
                 deleted_count += 1
         with open(processor.MAPPING_FILE, 'w') as f:
             json.dump(mappings, f, indent=2)
@@ -125,15 +138,34 @@ async def update_master_row(update: MasterUpdate):
         if update.index >= len(df) or update.index < 0:
             raise HTTPException(status_code=400, detail="Invalid row index")
         
-        # Update values
+        # Update values, ensuring merchant name is cleaned
         df.at[update.index, 'DATE'] = update.DATE
-        df.at[update.index, 'MERCHANT'] = update.MERCHANT
+        df.at[update.index, 'MERCHANT'] = processor.clean_merchant_name(update.MERCHANT)
         df.at[update.index, 'CATEGORY'] = update.CATEGORY
         df.at[update.index, 'PRICE'] = update.PRICE
         df.at[update.index, 'PAYMENT'] = update.PAYMENT
         
         df.to_excel(OUTPUT_FILE, index=False)
         return {"status": "success"}
+    except Exception as e:
+        raise HTTPException(status_code=500, detail=str(e))
+
+@app.post("/master/add")
+async def add_master_row(new_row: MasterAdd):
+    try:
+        # Ensure new row merchant name is cleaned
+        cleaned_row_dict = new_row.dict()
+        cleaned_row_dict['MERCHANT'] = processor.clean_merchant_name(cleaned_row_dict['MERCHANT'])
+        df_new_row = pd.DataFrame([cleaned_row_dict])
+        
+        if os.path.exists(OUTPUT_FILE):
+            master_df = pd.read_excel(OUTPUT_FILE)
+            final_df = pd.concat([master_df, df_new_row], ignore_index=True)
+        else:
+            final_df = df_new_row
+            
+        final_df.to_excel(OUTPUT_FILE, index=False)
+        return {"status": "success", "total_rows": len(final_df)}
     except Exception as e:
         raise HTTPException(status_code=500, detail=str(e))
 
