@@ -3,9 +3,28 @@ import pandas as pd
 import pdfplumber
 import re
 import os
+import json
 
 TARGET_COLUMNS = ['DATE', 'MERCHANT', 'CATEGORY', 'PAYMENT', 'PRICE']
 OUTPUT_FILE = 'files/Final_Statement.xlsx'
+MAPPING_FILE = os.path.join(os.path.dirname(__file__), 'mappings.json')
+
+def load_mappings():
+    if os.path.exists(MAPPING_FILE):
+        if os.path.getsize(MAPPING_FILE) == 0:
+            return {}
+        try:
+            with open(MAPPING_FILE, 'r') as f:
+                return json.load(f)
+        except json.JSONDecodeError:
+            return {}
+    return {}
+
+def save_mapping(merchant, category):
+    mappings = load_mappings()
+    mappings[merchant] = category
+    with open(MAPPING_FILE, 'w') as f:
+        json.dump(mappings, f, indent=2)
 
 def clean_merchant_name(text):
     if not text: return ""
@@ -13,20 +32,32 @@ def clean_merchant_name(text):
     # 1. Conservative Regex Cleaning (Always runs)
     # Remove IBANs
     text = re.sub(r'[A-Z]{2}\d{2}[A-Z0-9]{11,30}', '', text)
-    # Remove common transaction noise like "ID:...", "Ref:...", "Terminal..."
+    # ... (rest of regex remains same)
     text = re.sub(r'(ID|REF|TRACE|SEQ|AUTH|TERMINAL|CARD|BATCH|VISA|MC)[:\s]*\d+', '', text, flags=re.IGNORECASE)
-    # Remove strings of 6+ numbers (likely reference codes)
     text = re.sub(r'\d{6,}', '', text)
-    # Remove common bank prefixes
     text = re.sub(r'^(DIRECT DEBIT|CREDIT TRANSFER|PAYMENT TO|PURCHASE AT)\s+', '', text, flags=re.IGNORECASE)
-    # Remove excess special characters and multiple spaces
     text = re.sub(r'[^\w\s\.\-]', ' ', text)
     text = re.sub(r'\s+', ' ', text).strip()
-    
-    # Optional: You can extend this with a local LLM call here if Ollama is running
-    # Example: return call_ollama_cleaner(text)
-    
     return text.title()
+
+def get_category_from_mappings(merchant, mappings):
+    if not merchant: return 'Unknown'
+    
+    m_lower = merchant.lower()
+    
+    # Sort keys by length descending to match most specific keywords first
+    sorted_keys = sorted(mappings.keys(), key=len, reverse=True)
+    
+    for key in sorted_keys:
+        if not key or len(key) < 2: continue
+        
+        # Use regex to find the key as a whole word/phrase within the merchant string
+        # \b ensures we match "Rewe" in "Rewe 123" but not in "Prewen"
+        pattern = rf'\b{re.escape(key.lower())}\b'
+        if re.search(pattern, m_lower):
+            return mappings[key]
+            
+    return 'Unknown'
 
 def process_excel(file_path):
     print(f"Processing Excel: {file_path}")
@@ -51,14 +82,16 @@ def process_excel(file_path):
     if 'Date' in df.columns:
         new_df['DATE'] = pd.to_datetime(df['Date']).dt.strftime('%Y-%m-%d')
     
-    def get_where(row):
+    def get_merchant(row):
         if 'Merchant' in row and pd.notna(row['Merchant']): return row['Merchant']
         if 'Payee Name' in row and pd.notna(row['Payee Name']): return row['Payee Name']
         return row.get('Description', '')
         
-    new_df['MERCHANT'] = df.apply(get_where, axis=1).apply(clean_merchant_name)
+    mappings = load_mappings()
+    
+    new_df['MERCHANT'] = df.apply(get_merchant, axis=1).apply(clean_merchant_name)
+    new_df['CATEGORY'] = new_df['MERCHANT'].map(lambda x: get_category_from_mappings(x, mappings))
     new_df['PAYMENT'] = 'Wise'
-    new_df['CATEGORY'] = ''
     new_df['PRICE'] = df.get('Amount', 0)
         
     return new_df, metadata
@@ -119,15 +152,17 @@ def process_pdf(file_path):
             metadata["initial_balance"] = clean_currency(balance_matches[0][1])
             metadata["final_balance"] = clean_currency(balance_matches[-1][1])
 
+    mappings = load_mappings()
     data = []
     for t in transactions:
         year = t['year'] or "2025" # Fallback
         day, month = t['date_part'].split('-')[:2]
         full_date = f"{year}-{month}-{day}"
+        merchant = clean_merchant_name(" ".join(t['item_lines']))
         data.append({
             'DATE': full_date,
-            'MERCHANT': clean_merchant_name(" ".join(t['item_lines'])),
-            'CATEGORY': '',
+            'MERCHANT': merchant,
+            'CATEGORY': get_category_from_mappings(merchant, mappings),
             'PAYMENT': 'Deutsche Bank',
             'PRICE': t['amount']
         })
