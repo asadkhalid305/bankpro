@@ -3,7 +3,7 @@ import './App.css';
 
 interface Transaction {
   DATE: string;
-  WHERE: string;
+  MERCHANT: string;
   CATEGORY: string;
   PAYMENT: string;
   PRICE: number;
@@ -61,6 +61,11 @@ function App() {
       if (response.ok) {
         setStagedData(data);
         setStatus('review');
+        // Clear input for next time
+        setFile(null);
+        const fileInput = document.getElementById('fileInput') as HTMLInputElement;
+        if (fileInput) fileInput.value = '';
+        
         const nonDups = data.transactions
           .map((t: Transaction, i: number) => t.is_duplicate ? -1 : i)
           .filter((i: number) => i !== -1);
@@ -200,7 +205,7 @@ function App() {
                       />
                     </th>
                     <th>Date</th>
-                    <th>Description</th>
+                    <th>Merchant</th>
                     <th>Price</th>
                     <th>Status</th>
                   </tr>
@@ -216,7 +221,7 @@ function App() {
                         />
                       </td>
                       <td>{t.DATE}</td>
-                      <td className="desc-cell">{t.WHERE}</td>
+                      <td className="desc-cell">{t.MERCHANT}</td>
                       <td>{t.PRICE.toFixed(2)}</td>
                       <td>{t.is_duplicate ? '⚠️ DUPLICATE' : '✅ NEW'}</td>
                     </tr>
@@ -256,11 +261,11 @@ function App() {
                   <div className="table-container mini">
                     <table>
                       <thead>
-                        <tr><th>Date</th><th>Where</th><th>Price</th></tr>
+                        <tr><th>Date</th><th>Merchant</th><th>Price</th></tr>
                       </thead>
                       <tbody>
                         {previewData.map((r, i) => (
-                          <tr key={i}><td>{r.DATE}</td><td>{r.WHERE}</td><td>{r.PRICE}</td></tr>
+                          <tr key={i}><td>{r.DATE}</td><td>{r.MERCHANT}</td><td>{r.PRICE}</td></tr>
                         ))}
                       </tbody>
                     </table>
