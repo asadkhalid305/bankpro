@@ -89,8 +89,9 @@ function App() {
   };
 
   const getSortedMappings = () => {
-    const items = Object.entries(allMappings).filter(([m]) => 
-      m.toLowerCase().includes(searchTerm.toLowerCase())
+    const items = Object.entries(allMappings).filter(([merchant, category]) => 
+      merchant.toLowerCase().includes(searchTerm.toLowerCase()) ||
+      category.toLowerCase().includes(searchTerm.toLowerCase())
     );
     
     if (sortConfig !== null) {
@@ -251,7 +252,7 @@ function App() {
               </div>
               <input 
                 type="text" 
-                placeholder="Search merchants..." 
+                placeholder="Search merchant or category..." 
                 className="search-input"
                 value={searchTerm}
                 onChange={(e) => setSearchTerm(e.target.value)}
