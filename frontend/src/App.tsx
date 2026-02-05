@@ -245,7 +245,10 @@ function App() {
         {status === 'mappings' && (
           <div className="mappings-section">
             <div className="section-header">
-              <h2>Intelligence Knowledge Base</h2>
+              <div>
+                <h2>Intelligence Knowledge Base</h2>
+                <p className="disclaimer">💡 Changes here apply only to future uploads and will not modify your master file history.</p>
+              </div>
               <input 
                 type="text" 
                 placeholder="Search merchants..." 
