@@ -22,6 +22,7 @@ interface UploadResponse {
   metadata: Metadata;
   transactions: Transaction[];
   categories: string[];
+  payment_types: string[]; // Added
 }
 
 interface Backup {
@@ -32,7 +33,7 @@ interface Backup {
 
 function App() {
   const [file, setFile] = useState<File | null>(null);
-  const [status, setStatus] = useState<'idle' | 'uploading' | 'review' | 'merging' | 'success' | 'error' | 'backups' | 'mappings' | 'master'>('master');
+  const [status, setStatus] = useState<'idle' | 'uploading' | 'review' | 'merging' | 'success' | 'error' | 'backups' | 'mappings' | 'master' | 'payment_types'>('master');
   const [message, setMessage] = useState('');
   const [stagedData, setStagedData] = useState<UploadResponse | null>(null);
   const [selectedTransactions, setSelectedTransactions] = useState<number[]>([]);
@@ -45,6 +46,7 @@ function App() {
   const [masterData, setMasterData] = useState<Transaction[]>([]);
   const [masterSearch, setMasterSearch] = useState('');
   const [masterCategoryFilter, setMasterCategoryFilter] = useState('All');
+  const [masterPaymentFilter, setMasterPaymentFilter] = useState('All'); // Added
   const [masterSortConfig, setMasterSortConfig] = useState<{ key: keyof Transaction; direction: 'asc' | 'desc' } | null>({ key: 'DATE', direction: 'desc' });
   const [editingMasterIndex, setEditingMasterIndex] = useState<number | null>(null);
   const [editMasterRow, setEditMasterRow] = useState<Transaction | null>(null);
@@ -55,8 +57,15 @@ function App() {
     MERCHANT: '',
     CATEGORY: 'Unknown',
     PRICE: 0,
-    PAYMENT: ''
+    PAYMENT: 'Other'
   });
+
+  // Payment Types state
+  const [paymentTypes, setPaymentTypes] = useState<string[]>([]);
+  const [showAddPaymentTypeForm, setShowAddPaymentTypeForm] = useState(false);
+  const [newPaymentTypeName, setNewPaymentTypeName] = useState('');
+  const [editingPaymentType, setEditingPaymentType] = useState<string | null>(null);
+  const [editPaymentTypeName, setEditPaymentTypeName] = useState('');
 
   // Mapping management state
   const [allMappings, setAllMappings] = useState<Record<string, string>>({});
@@ -73,12 +82,86 @@ function App() {
   // Sorting state
   const [sortConfig, setSortConfig] = useState<{ key: 'merchant' | 'category'; direction: 'asc' | 'desc' } | null>(null);
 
-  // Load master data on mount or when status changes to master
+  // Load initial data on mount
   useEffect(() => {
+    fetchPaymentTypes();
     if (status === 'master') {
       fetchMasterData();
     }
   }, [status]); // Only re-fetch if status becomes master.
+
+  const fetchPaymentTypes = async () => {
+    try {
+      const response = await fetch('/api/payment_types');
+      const data = await response.json();
+      setPaymentTypes(data);
+    } catch (error) {
+      alert("Failed to fetch payment types");
+      setStatus('error');
+    }
+  };
+
+  const handleAddPaymentType = async () => {
+    if (!newPaymentTypeName.trim()) {
+      alert("Payment type name cannot be empty.");
+      return;
+    }
+    try {
+      const response = await fetch('/api/payment_types', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ new_name: newPaymentTypeName })
+      });
+      if (response.ok) {
+        setShowAddPaymentTypeForm(false);
+        setNewPaymentTypeName('');
+        fetchPaymentTypes();
+      } else {
+        const errorData = await response.json();
+        alert(`Failed to add payment type: ${errorData.detail || 'Unknown error'}`);
+      }
+    } catch (error) {
+      alert("Failed to add payment type: Network error");
+    }
+  };
+
+  const handleUpdatePaymentType = async (oldName: string) => {
+    if (!editPaymentTypeName.trim()) {
+      alert("Payment type name cannot be empty.");
+      return;
+    }
+    try {
+      const response = await fetch('/api/payment_types', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ old_name: oldName, new_name: editPaymentTypeName })
+      });
+      if (response.ok) {
+        setEditingPaymentType(null);
+        fetchPaymentTypes();
+      } else {
+        const errorData = await response.json();
+        alert(`Failed to update payment type: ${errorData.detail || 'Unknown error'}`);
+      }
+    } catch (error) {
+      alert("Failed to update payment type: Network error");
+    }
+  };
+
+  const handleDeletePaymentType = async (typeName: string) => {
+    if (!window.confirm(`Are you sure you want to delete payment type '${typeName}'?`)) return;
+    try {
+      const response = await fetch(`/api/payment_types/${encodeURIComponent(typeName)}`, { method: 'DELETE' });
+      if (response.ok) {
+        fetchPaymentTypes();
+      } else {
+        const errorData = await response.json();
+        alert(`Failed to delete payment type: ${errorData.detail || 'Unknown error'}`);
+      }
+    } catch (error) {
+      alert("Failed to delete payment type: Network error");
+    }
+  };
 
   const fetchMasterData = async () => {
     try {
@@ -98,8 +181,10 @@ function App() {
     
     items = items.filter(item => 
       (item.MERCHANT.toLowerCase().includes(masterSearch.toLowerCase()) ||
-       item.CATEGORY.toLowerCase().includes(masterSearch.toLowerCase())) &&
-      (masterCategoryFilter === 'All' || item.CATEGORY === masterCategoryFilter)
+       item.CATEGORY.toLowerCase().includes(masterSearch.toLowerCase()) ||
+       item.PAYMENT.toLowerCase().includes(masterSearch.toLowerCase())) && // Include Payment in search
+      (masterCategoryFilter === 'All' || item.CATEGORY === masterCategoryFilter) &&
+      (masterPaymentFilter === 'All' || item.PAYMENT === masterPaymentFilter) // Filter by Payment
     );
 
     if (masterSortConfig) {
@@ -151,7 +236,7 @@ function App() {
       });
       if (response.ok) {
         setShowAddMasterForm(false);
-        setNewMasterRow({ DATE: new Date().toISOString().split('T')[0], MERCHANT: '', CATEGORY: 'Unknown', PRICE: 0, PAYMENT: '' });
+        setNewMasterRow({ DATE: new Date().toISOString().split('T')[0], MERCHANT: '', CATEGORY: 'Unknown', PRICE: 0, PAYMENT: 'Other' });
         fetchMasterData(); // Refresh master data
       } else {
         const errorData = await response.json();
@@ -469,7 +554,10 @@ function App() {
               <button className="rollback-btn" onClick={fetchMappings} style={{marginRight: '10px'}}>🧠 Knowledge Base</button>
             )}
             {status !== 'backups' && (
-              <button className="rollback-btn" onClick={fetchBackups}>📂 Manage Backups</button>
+              <button className="rollback-btn" onClick={fetchBackups} style={{marginRight: '10px'}}>📂 Manage Backups</button>
+            )}
+            {status !== 'payment_types' && (
+              <button className="rollback-btn" onClick={() => { fetchPaymentTypes(); setStatus('payment_types'); }} style={{marginRight: '10px'}}>💳 Payment Types</button>
             )}
           </div>
         </header>
@@ -623,6 +711,17 @@ function App() {
                       <option key={c} value={c}>{c}</option>
                     ))}
                   </select>
+                  <select 
+                    className="category-select" 
+                    value={masterPaymentFilter}
+                    onChange={(e) => setMasterPaymentFilter(e.target.value)}
+                    style={{width: 'auto', marginRight: '10px'}}
+                  >
+                    <option value="All">All Payments</option>
+                    {paymentTypes.map(pt => (
+                      <option key={pt} value={pt}>{pt}</option>
+                    ))}
+                  </select>
                   <input 
                     type="text" 
                     placeholder="Search merchant..." 
@@ -661,8 +760,12 @@ function App() {
                       <option key={c} value={c}>{c}</option>
                     ))}
                   </select>
+                  <select value={newMasterRow.PAYMENT} onChange={(e) => setNewMasterRow({...newMasterRow, PAYMENT: e.target.value})} className="category-select">
+                    {paymentTypes.map(pt => (
+                      <option key={pt} value={pt}>{pt}</option>
+                    ))}
+                  </select>
                   <input type="number" step="0.01" value={newMasterRow.PRICE} onChange={(e) => setNewMasterRow({...newMasterRow, PRICE: parseFloat(e.target.value)})} placeholder="Price" />
-                  <input type="text" value={newMasterRow.PAYMENT} onChange={(e) => setNewMasterRow({...newMasterRow, PAYMENT: e.target.value})} placeholder="Payment" />
                 </div>
                 <button onClick={handleAddMasterRow} className="primary-btn success" style={{width: 'auto', marginTop: '15px'}}>Create Record</button>
               </div>
@@ -689,7 +792,7 @@ function App() {
                         <th onClick={() => handleMasterSort('MERCHANT')} className="sortable">Merchant {masterSortConfig?.key === 'MERCHANT' && (masterSortConfig.direction === 'asc' ? '↑' : '↓')}</th>
                         <th onClick={() => handleMasterSort('CATEGORY')} className="sortable">Category {masterSortConfig?.key === 'CATEGORY' && (masterSortConfig.direction === 'asc' ? '↑' : '↓')}</th>
                         <th onClick={() => handleMasterSort('PRICE')} className="sortable">Price {masterSortConfig?.key === 'PRICE' && (masterSortConfig.direction === 'asc' ? '↑' : '↓')}</th>
-                        <th>Payment</th>
+                        <th onClick={() => handleMasterSort('PAYMENT')} className="sortable">Payment {masterSortConfig?.key === 'PAYMENT' && (masterSortConfig.direction === 'asc' ? '↑' : '↓')}</th>
                         <th>Actions</th>
                       </tr>
                     </thead>
@@ -729,7 +832,11 @@ function App() {
                           </td>
                           <td>
                             {editingMasterIndex === r.originalIndex ? (
-                              <input value={editMasterRow?.PAYMENT} onChange={(e) => setEditMasterRow({...editMasterRow!, PAYMENT: e.target.value})} className="inline-edit" />
+                              <select value={editMasterRow?.PAYMENT} onChange={(e) => setEditMasterRow({...editMasterRow!, PAYMENT: e.target.value})} className="category-select">
+                                {paymentTypes.map(pt => (
+                                  <option key={pt} value={pt}>{pt}</option>
+                                ))}
+                              </select>
                             ) : r.PAYMENT}
                           </td>
                           <td>
@@ -909,6 +1016,72 @@ function App() {
                 </div>
               </div>
             )}
+          </div>
+        )}
+
+        {status === 'payment_types' && (
+          <div className="payment-types-section">
+            <div className="section-header">
+              <div>
+                <h2>Manage Payment Types</h2>
+                <p className="disclaimer">💳 Add, edit or delete payment methods available in the app.</p>
+              </div>
+              <button 
+                onClick={() => setShowAddPaymentTypeForm(!showAddPaymentTypeForm)} 
+                className="secondary-btn sm"
+                style={{width: 'auto'}}
+              >
+                {showAddPaymentTypeForm ? '✖️ Cancel Add' : '➕ Add New Payment Type'}
+              </button>
+            </div>
+
+            {showAddPaymentTypeForm && (
+              <div className="add-form card">
+                <h3>Add New Payment Type</h3>
+                <div className="form-fields" style={{display: 'flex', gap: '10px', flexWrap: 'wrap'}}>
+                  <input type="text" value={newPaymentTypeName} onChange={(e) => setNewPaymentTypeName(e.target.value)} placeholder="New Payment Type Name" className="inline-edit" style={{flex: 1}} />
+                </div>
+                <button onClick={handleAddPaymentType} className="primary-btn success" style={{width: 'auto', marginTop: '15px'}}>Create Payment Type</button>
+              </div>
+            )}
+
+            <div className="table-container">
+              <table>
+                <thead>
+                  <tr>
+                    <th>Payment Type</th>
+                    <th>Actions</th>
+                  </tr>
+                </thead>
+                <tbody>
+                  {paymentTypes.map(pt => (
+                    <tr key={pt}>
+                      <td>
+                        {editingPaymentType === pt ? (
+                          <input value={editPaymentTypeName} onChange={(e) => setEditPaymentTypeName(e.target.value)} className="inline-edit" />
+                        ) : pt}
+                      </td>
+                      <td>
+                        {editingPaymentType === pt ? (
+                          <div className="actions">
+                            <button onClick={() => handleUpdatePaymentType(pt)} className="primary-btn success sm">Save</button>
+                            <button onClick={() => setEditingPaymentType(null)} className="secondary-btn sm">Cancel</button>
+                          </div>
+                        ) : (
+                          <div className="actions">
+                            <button onClick={() => {
+                              setEditingPaymentType(pt);
+                              setEditPaymentTypeName(pt);
+                            }} className="secondary-btn sm">Edit</button>
+                            <button onClick={() => handleDeletePaymentType(pt)} className="rollback-btn sm error-text">Delete</button>
+                          </div>
+                        )}
+                      </td>
+                    </tr>
+                  ))}
+                </tbody>
+              </table>
+            </div>
           </div>
         )}
 

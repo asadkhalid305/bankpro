@@ -8,7 +8,7 @@ import processor
 import pandas as pd
 from datetime import datetime
 from pydantic import BaseModel
-from typing import List
+from typing import List, Optional
 
 app = FastAPI()
 
@@ -29,6 +29,23 @@ os.makedirs(UPLOAD_DIR, exist_ok=True)
 os.makedirs(BACKUP_DIR, exist_ok=True)
 
 CATEGORIES = ['Benefit', 'Bill', 'Conversion', 'Dependant', 'Extra', 'Food & Outing', 'Gifts', 'Grocery', 'Investment', 'Medical', 'Office', 'Salary', 'Shopping', 'Transport', 'Vacation', 'Car', 'Unknown']
+PAYMENT_TYPES_FILE = os.path.join(os.path.dirname(__file__), 'payment_types.json')
+
+# Initialize PAYMENT_TYPES from file or default
+if os.path.exists(PAYMENT_TYPES_FILE) and os.path.getsize(PAYMENT_TYPES_FILE) > 0:
+    try:
+        with open(PAYMENT_TYPES_FILE, 'r') as f:
+            PAYMENT_TYPES = json.load(f)
+    except json.JSONDecodeError:
+        PAYMENT_TYPES = ['Deutsche Bank', 'Wise', 'Paypal', 'Cash', 'Revolut', 'Other']
+else:
+    PAYMENT_TYPES = ['Deutsche Bank', 'Wise', 'Paypal', 'Cash', 'Revolut', 'Other']
+    with open(PAYMENT_TYPES_FILE, 'w') as f:
+        json.dump(PAYMENT_TYPES, f, indent=2)
+
+def save_payment_types():
+    with open(PAYMENT_TYPES_FILE, 'w') as f:
+        json.dump(PAYMENT_TYPES, f, indent=2)
 
 class Transaction(BaseModel):
     DATE: str
@@ -43,7 +60,11 @@ class MergeRequest(BaseModel):
 class MappingUpdate(BaseModel):
     merchant: str
     category: str
-    old_merchant: str = None
+    old_merchant: str | None = None
+
+class PaymentTypeUpdate(BaseModel):
+    old_name: Optional[str] = None
+    new_name: str
 
 class MasterUpdate(BaseModel):
     index: int
@@ -69,6 +90,39 @@ class MappingBulkDeleteRequest(BaseModel):
 @app.get("/mappings")
 async def get_mappings():
     return processor.load_mappings()
+
+@app.get("/payment_types")
+async def get_payment_types():
+    return PAYMENT_TYPES
+
+@app.post("/payment_types")
+async def add_or_update_payment_type(update: PaymentTypeUpdate):
+    global PAYMENT_TYPES
+    if update.old_name:
+        # Update existing
+        if update.old_name not in PAYMENT_TYPES:
+            raise HTTPException(status_code=404, detail=f"Payment type '{update.old_name}' not found.")
+        if update.new_name in PAYMENT_TYPES and update.new_name != update.old_name:
+            raise HTTPException(status_code=400, detail=f"Payment type '{update.new_name}' already exists.")
+        
+        index = PAYMENT_TYPES.index(update.old_name)
+        PAYMENT_TYPES[index] = update.new_name
+    else:
+        # Add new
+        if update.new_name in PAYMENT_TYPES:
+            raise HTTPException(status_code=400, detail=f"Payment type '{update.new_name}' already exists.")
+        PAYMENT_TYPES.append(update.new_name)
+    save_payment_types()
+    return {"status": "success", "payment_types": PAYMENT_TYPES}
+
+@app.delete("/payment_types/{type_name}")
+async def delete_payment_type(type_name: str):
+    global PAYMENT_TYPES
+    if type_name not in PAYMENT_TYPES:
+        raise HTTPException(status_code=404, detail=f"Payment type '{type_name}' not found.")
+    PAYMENT_TYPES.remove(type_name)
+    save_payment_types()
+    return {"status": "success", "payment_types": PAYMENT_TYPES}
 
 @app.post("/mappings")
 async def update_mapping(update: MappingUpdate):
@@ -225,7 +279,8 @@ async def upload_file(file: UploadFile = File(...)):
         return {
             "metadata": metadata,
             "transactions": df.to_dict(orient="records"),
-            "categories": CATEGORIES
+            "categories": CATEGORIES,
+            "payment_types": PAYMENT_TYPES # Return payment types for review page
         }
     except Exception as e:
         raise HTTPException(status_code=500, detail=str(e))
