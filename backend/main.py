@@ -45,6 +45,17 @@ class MappingUpdate(BaseModel):
     category: str
     old_merchant: str = None
 
+class MasterUpdate(BaseModel):
+    index: int
+    DATE: str
+    MERCHANT: str
+    CATEGORY: str
+    PRICE: float
+    PAYMENT: str
+
+class DeleteRequest(BaseModel):
+    indices: List[int]
+
 @app.get("/mappings")
 async def get_mappings():
     return processor.load_mappings()
@@ -73,6 +84,58 @@ async def delete_mapping(merchant: str):
             with open(processor.MAPPING_FILE, 'w') as f:
                 json.dump(mappings, f, indent=2)
         return {"status": "success"}
+    except Exception as e:
+        raise HTTPException(status_code=500, detail=str(e))
+
+@app.get("/master")
+async def get_master_data():
+    if not os.path.exists(OUTPUT_FILE):
+        return []
+    try:
+        df = pd.read_excel(OUTPUT_FILE)
+        df = df.fillna("")
+        return df.to_dict(orient="records")
+    except Exception as e:
+        raise HTTPException(status_code=500, detail=str(e))
+
+@app.post("/master/update")
+async def update_master_row(update: MasterUpdate):
+    if not os.path.exists(OUTPUT_FILE):
+        raise HTTPException(status_code=404, detail="Master file not found")
+    try:
+        df = pd.read_excel(OUTPUT_FILE)
+        if update.index >= len(df) or update.index < 0:
+            raise HTTPException(status_code=400, detail="Invalid row index")
+        
+        # Update values
+        df.at[update.index, 'DATE'] = update.DATE
+        df.at[update.index, 'MERCHANT'] = update.MERCHANT
+        df.at[update.index, 'CATEGORY'] = update.CATEGORY
+        df.at[update.index, 'PRICE'] = update.PRICE
+        df.at[update.index, 'PAYMENT'] = update.PAYMENT
+        
+        df.to_excel(OUTPUT_FILE, index=False)
+        return {"status": "success"}
+    except Exception as e:
+        raise HTTPException(status_code=500, detail=str(e))
+
+@app.delete("/master/bulk_delete")
+async def bulk_delete_master_rows(request: DeleteRequest):
+    if not os.path.exists(OUTPUT_FILE):
+        raise HTTPException(status_code=404, detail="Master file not found")
+    try:
+        df = pd.read_excel(OUTPUT_FILE)
+        
+        # Sort indices in descending order to avoid issues when dropping
+        indices_to_drop = sorted(request.indices, reverse=True)
+        
+        for index in indices_to_drop:
+            if index < 0 or index >= len(df):
+                raise HTTPException(status_code=400, detail=f"Invalid row index {index} for deletion")
+        
+        df = df.drop(indices_to_drop).reset_index(drop=True)
+        df.to_excel(OUTPUT_FILE, index=False)
+        return {"status": "success", "deleted_count": len(request.indices)}
     except Exception as e:
         raise HTTPException(status_code=500, detail=str(e))
 
@@ -122,11 +185,6 @@ async def merge_transactions(request: MergeRequest):
     try:
         new_df = pd.DataFrame([t.dict() for t in request.transactions])
         
-        # Learn from user: Save category mappings
-        for _, row in new_df.iterrows():
-            if row['CATEGORY'] != 'Unknown':
-                processor.save_mapping(row['MERCHANT'], row['CATEGORY'])
-        
         # Backup existing file
         if os.path.exists(OUTPUT_FILE):
             timestamp = datetime.now().strftime("%Y%m%d_%H%M%S")
@@ -140,69 +198,6 @@ async def merge_transactions(request: MergeRequest):
             
         final_df.to_excel(OUTPUT_FILE, index=False)
         return {"status": "Success", "total_rows": len(final_df)}
-    except Exception as e:
-        raise HTTPException(status_code=500, detail=str(e))
-
-class MasterUpdate(BaseModel):
-    index: int
-    DATE: str
-    MERCHANT: str
-    CATEGORY: str
-    PRICE: float
-    PAYMENT: str
-
-@app.post("/master/update")
-async def update_master_row(update: MasterUpdate):
-    if not os.path.exists(OUTPUT_FILE):
-        raise HTTPException(status_code=404, detail="Master file not found")
-    try:
-        df = pd.read_excel(OUTPUT_FILE)
-        if update.index >= len(df):
-            raise HTTPException(status_code=400, detail="Invalid row index")
-        
-        # Update values
-        df.at[update.index, 'DATE'] = update.DATE
-        df.at[update.index, 'MERCHANT'] = update.MERCHANT
-        df.at[update.index, 'CATEGORY'] = update.CATEGORY
-        df.at[update.index, 'PRICE'] = update.PRICE
-        df.at[update.index, 'PAYMENT'] = update.PAYMENT
-        
-        df.to_excel(OUTPUT_FILE, index=False)
-        return {"status": "success"}
-    except Exception as e:
-        raise HTTPException(status_code=500, detail=str(e))
-
-class DeleteRequest(BaseModel):
-    indices: List[int]
-
-@app.delete("/master/bulk_delete")
-async def bulk_delete_master_rows(request: DeleteRequest):
-    if not os.path.exists(OUTPUT_FILE):
-        raise HTTPException(status_code=404, detail="Master file not found")
-    try:
-        df = pd.read_excel(OUTPUT_FILE)
-        
-        # Sort indices in descending order to avoid issues when dropping
-        indices_to_drop = sorted(request.indices, reverse=True)
-        
-        for index in indices_to_drop:
-            if index < 0 or index >= len(df):
-                raise HTTPException(status_code=400, detail=f"Invalid row index {index} for deletion")
-        
-        df = df.drop(indices_to_drop).reset_index(drop=True)
-        df.to_excel(OUTPUT_FILE, index=False)
-        return {"status": "success", "deleted_count": len(request.indices)}
-    except Exception as e:
-        raise HTTPException(status_code=500, detail=str(e))
-
-@app.get("/master")
-async def get_master_data():
-    if not os.path.exists(OUTPUT_FILE):
-        return []
-    try:
-        df = pd.read_excel(OUTPUT_FILE)
-        df = df.fillna("")
-        return df.to_dict(orient="records")
     except Exception as e:
         raise HTTPException(status_code=500, detail=str(e))
 
