@@ -7,15 +7,26 @@ import os
 TARGET_COLUMNS = ['DATE', 'WHERE', 'CATEGORY', 'PAYMENT', 'PRICE']
 OUTPUT_FILE = 'files/Final_Statement.xlsx'
 
-def clean_currency(value):
-    if isinstance(value, str):
-        # Handle formats like "- 1,331.55" or "1.331,55"
-        value = value.replace(',', '').strip()
-        try:
-            return float(value)
-        except:
-            return 0.0
-    return value
+def clean_merchant_name(text):
+    if not text: return ""
+    
+    # 1. Conservative Regex Cleaning (Always runs)
+    # Remove IBANs
+    text = re.sub(r'[A-Z]{2}\d{2}[A-Z0-9]{11,30}', '', text)
+    # Remove common transaction noise like "ID:...", "Ref:...", "Terminal..."
+    text = re.sub(r'(ID|REF|TRACE|SEQ|AUTH|TERMINAL|CARD|BATCH|VISA|MC)[:\s]*\d+', '', text, flags=re.IGNORECASE)
+    # Remove strings of 6+ numbers (likely reference codes)
+    text = re.sub(r'\d{6,}', '', text)
+    # Remove common bank prefixes
+    text = re.sub(r'^(DIRECT DEBIT|CREDIT TRANSFER|PAYMENT TO|PURCHASE AT)\s+', '', text, flags=re.IGNORECASE)
+    # Remove excess special characters and multiple spaces
+    text = re.sub(r'[^\w\s\.\-]', ' ', text)
+    text = re.sub(r'\s+', ' ', text).strip()
+    
+    # Optional: You can extend this with a local LLM call here if Ollama is running
+    # Example: return call_ollama_cleaner(text)
+    
+    return text.title()
 
 def process_excel(file_path):
     print(f"Processing Excel: {file_path}")
@@ -45,7 +56,7 @@ def process_excel(file_path):
         if 'Payee Name' in row and pd.notna(row['Payee Name']): return row['Payee Name']
         return row.get('Description', '')
         
-    new_df['WHERE'] = df.apply(get_where, axis=1)
+    new_df['WHERE'] = df.apply(get_where, axis=1).apply(clean_merchant_name)
     new_df['PAYMENT'] = 'Wise'
     new_df['CATEGORY'] = ''
     new_df['PRICE'] = df.get('Amount', 0)
@@ -115,7 +126,7 @@ def process_pdf(file_path):
         full_date = f"{year}-{month}-{day}"
         data.append({
             'DATE': full_date,
-            'WHERE': " ".join(t['item_lines']),
+            'WHERE': clean_merchant_name(" ".join(t['item_lines'])),
             'CATEGORY': '',
             'PAYMENT': 'Deutsche Bank',
             'PRICE': t['amount']
