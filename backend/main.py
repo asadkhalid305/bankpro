@@ -172,18 +172,26 @@ async def update_master_row(update: MasterUpdate):
     except Exception as e:
         raise HTTPException(status_code=500, detail=str(e))
 
-@app.delete("/master/{index}")
-async def delete_master_row(index: int):
+class DeleteRequest(BaseModel):
+    indices: List[int]
+
+@app.delete("/master/bulk_delete")
+async def bulk_delete_master_rows(request: DeleteRequest):
     if not os.path.exists(OUTPUT_FILE):
         raise HTTPException(status_code=404, detail="Master file not found")
     try:
         df = pd.read_excel(OUTPUT_FILE)
-        if index >= len(df) or index < 0:
-            raise HTTPException(status_code=400, detail="Invalid row index for deletion")
         
-        df = df.drop(index).reset_index(drop=True)
+        # Sort indices in descending order to avoid issues when dropping
+        indices_to_drop = sorted(request.indices, reverse=True)
+        
+        for index in indices_to_drop:
+            if index < 0 or index >= len(df):
+                raise HTTPException(status_code=400, detail=f"Invalid row index {index} for deletion")
+        
+        df = df.drop(indices_to_drop).reset_index(drop=True)
         df.to_excel(OUTPUT_FILE, index=False)
-        return {"status": "success"}
+        return {"status": "success", "deleted_count": len(request.indices)}
     except Exception as e:
         raise HTTPException(status_code=500, detail=str(e))
 
