@@ -4,7 +4,7 @@ import pdfplumber
 import re
 import os
 
-TARGET_COLUMNS = ['DATE', 'WHERE', 'CATEGORY', 'PAYMENT', 'PRICE']
+TARGET_COLUMNS = ['DATE', 'MERCHANT', 'CATEGORY', 'PAYMENT', 'PRICE']
 OUTPUT_FILE = 'files/Final_Statement.xlsx'
 
 def clean_merchant_name(text):
@@ -56,7 +56,7 @@ def process_excel(file_path):
         if 'Payee Name' in row and pd.notna(row['Payee Name']): return row['Payee Name']
         return row.get('Description', '')
         
-    new_df['WHERE'] = df.apply(get_where, axis=1).apply(clean_merchant_name)
+    new_df['MERCHANT'] = df.apply(get_where, axis=1).apply(clean_merchant_name)
     new_df['PAYMENT'] = 'Wise'
     new_df['CATEGORY'] = ''
     new_df['PRICE'] = df.get('Amount', 0)
@@ -126,7 +126,7 @@ def process_pdf(file_path):
         full_date = f"{year}-{month}-{day}"
         data.append({
             'DATE': full_date,
-            'WHERE': clean_merchant_name(" ".join(t['item_lines'])),
+            'MERCHANT': clean_merchant_name(" ".join(t['item_lines'])),
             'CATEGORY': '',
             'PAYMENT': 'Deutsche Bank',
             'PRICE': t['amount']
