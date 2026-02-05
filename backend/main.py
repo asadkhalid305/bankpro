@@ -172,6 +172,21 @@ async def update_master_row(update: MasterUpdate):
     except Exception as e:
         raise HTTPException(status_code=500, detail=str(e))
 
+@app.delete("/master/{index}")
+async def delete_master_row(index: int):
+    if not os.path.exists(OUTPUT_FILE):
+        raise HTTPException(status_code=404, detail="Master file not found")
+    try:
+        df = pd.read_excel(OUTPUT_FILE)
+        if index >= len(df) or index < 0:
+            raise HTTPException(status_code=400, detail="Invalid row index for deletion")
+        
+        df = df.drop(index).reset_index(drop=True)
+        df.to_excel(OUTPUT_FILE, index=False)
+        return {"status": "success"}
+    except Exception as e:
+        raise HTTPException(status_code=500, detail=str(e))
+
 @app.get("/master")
 async def get_master_data():
     if not os.path.exists(OUTPUT_FILE):

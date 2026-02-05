@@ -124,6 +124,21 @@ function App() {
     }
   };
 
+  const handleMasterDelete = async (originalIndex: number) => {
+    if (!window.confirm(`Are you sure you want to delete this transaction from your master statement?`)) return;
+    try {
+      const response = await fetch(`/api/master/${originalIndex}`, { method: 'DELETE' });
+      if (response.ok) {
+        fetchMasterData(); // Refresh master data after deletion
+      } else {
+        const errorData = await response.json();
+        alert(`Failed to delete master row: ${errorData.detail || 'Unknown error'}`);
+      }
+    } catch (error) {
+      alert("Failed to delete master row: Network error");
+    }
+  };
+
   const handleMasterSort = (key: keyof Transaction) => {
     let direction: 'asc' | 'desc' = 'asc';
     if (masterSortConfig && masterSortConfig.key === key && masterSortConfig.direction === 'asc') {
@@ -514,10 +529,13 @@ function App() {
                                 <button onClick={() => setEditingMasterIndex(null)} className="secondary-btn sm">Cancel</button>
                               </div>
                             ) : (
-                              <button onClick={() => {
-                                setEditingMasterIndex(r.originalIndex);
-                                setEditMasterRow(r);
-                              }} className="secondary-btn sm">Edit</button>
+                              <div className="actions">
+                                <button onClick={() => {
+                                  setEditingMasterIndex(r.originalIndex);
+                                  setEditMasterRow(r);
+                                }} className="secondary-btn sm">Edit</button>
+                                <button onClick={() => handleMasterDelete(r.originalIndex)} className="rollback-btn sm error-text">Delete</button>
+                              </div>
                             )}
                           </td>
                         </tr>
