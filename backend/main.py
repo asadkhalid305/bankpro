@@ -143,32 +143,44 @@ async def update_mapping(update: MappingUpdate):
     except Exception as e:
         raise HTTPException(status_code=500, detail=str(e))
 
-@app.delete("/mappings/{merchant}")
-async def delete_mapping(merchant: str):
-    try:
-        mappings = processor.load_mappings()
-        cleaned_merchant = processor.clean_merchant_name(merchant)
-        if cleaned_merchant in mappings:
-            del mappings[cleaned_merchant]
-            with open(processor.MAPPING_FILE, 'w') as f:
-                json.dump(mappings, f, indent=2)
-        return {"status": "success"}
-    except Exception as e:
-        raise HTTPException(status_code=500, detail=str(e))
-
 @app.delete("/mappings/bulk_delete")
 async def bulk_delete_mappings(request: MappingBulkDeleteRequest):
     try:
         mappings = processor.load_mappings()
         deleted_count = 0
         for merchant in request.merchants:
-            cleaned_merchant = processor.clean_merchant_name(merchant)
-            if cleaned_merchant in mappings:
-                del mappings[cleaned_merchant]
-                deleted_count += 1
+            # Try raw first, then cleaned
+            targets = [merchant, processor.clean_merchant_name(merchant)]
+            for t in targets:
+                if t in mappings:
+                    del mappings[t]
+                    deleted_count += 1
+                    break
+        
         with open(processor.MAPPING_FILE, 'w') as f:
             json.dump(mappings, f, indent=2)
         return {"status": "success", "deleted_count": deleted_count}
+    except Exception as e:
+        raise HTTPException(status_code=500, detail=str(e))
+
+@app.delete("/mappings/{merchant}")
+async def delete_mapping(merchant: str):
+    try:
+        mappings = processor.load_mappings()
+        # Try raw first, then cleaned
+        targets = [merchant, processor.clean_merchant_name(merchant)]
+        deleted = False
+        for t in targets:
+            if t in mappings:
+                del mappings[t]
+                deleted = True
+                break
+        
+        if deleted:
+            with open(processor.MAPPING_FILE, 'w') as f:
+                json.dump(mappings, f, indent=2)
+            return {"status": "success"}
+        return {"status": "success", "info": "Merchant not found in mappings"}
     except Exception as e:
         raise HTTPException(status_code=500, detail=str(e))
 
