@@ -6,5 +6,6 @@ backend/files/*.xlsx
 backend/files/backups/
 frontend/node_modules/
 frontend/dist/
+frontend/.npm-cache/
 .DS_Store
 .env
