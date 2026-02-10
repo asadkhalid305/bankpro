@@ -133,12 +133,14 @@ function App() {
 
           <Route path="/import" element={
             <>
-              {upload.status !== 'review' && upload.status !== 'success' && upload.status !== 'error' && upload.status !== 'merging' && (
+              {(upload.status === 'idle' || upload.status === 'uploading') && (
                 <UploadSection 
                   file={upload.file}
                   status={upload.status}
                   onFileChange={upload.handleFileChange}
                   onUpload={upload.uploadFile}
+                  createNewFile={upload.createNewFile}
+                  setCreateNewFile={upload.setCreateNewFile}
                 />
               )}
 
@@ -154,16 +156,20 @@ function App() {
                 />
               )}
 
-              {upload.status === 'success' && (
+              {(upload.status === 'success' || upload.status === 'new_file_created') && (
                 <Card className="max-w-md mx-auto mt-12">
                   <CardHeader>
-                     <CardTitle className="text-emerald-600">Import Successful!</CardTitle>
+                     <CardTitle className={upload.status === 'success' ? "text-emerald-600" : "text-blue-600"}>
+                        {upload.status === 'success' ? "Import Successful!" : "New File Created!"}
+                     </CardTitle>
                      <CardDescription>{upload.message}</CardDescription>
                   </CardHeader>
                   <CardContent className="space-y-4">
-                    <Button onClick={() => window.open('/api/download', '_blank')} className="w-full">
-                      📥 Download Master File
-                    </Button>
+                    {upload.status === 'success' && (
+                      <Button onClick={() => window.open('/api/download', '_blank')} className="w-full">
+                        📥 Download Master File
+                      </Button>
+                    )}
                     <Button onClick={() => window.location.href = '/transactions'} variant="outline" className="w-full">
                       View All Transactions
                     </Button>

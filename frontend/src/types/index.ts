@@ -17,10 +17,12 @@ export interface Metadata {
 }
 
 export interface UploadResponse {
-  metadata: Metadata;
-  transactions: Transaction[];
-  categories: string[];
-  payment_types: string[];
+  metadata?: Metadata; // Make optional for new file creation
+  transactions?: Transaction[]; // Make optional for new file creation
+  categories?: string[]; // Make optional for new file creation
+  accounts?: string[]; // Corrected from payment_types to accounts, and made optional
+  message?: string; // New: For success message when creating a new file
+  new_filename?: string; // New: For filename when creating a new file
 }
 
 export interface Backup {

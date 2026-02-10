@@ -334,7 +334,7 @@ async def bulk_delete_master_rows(request: DeleteRequest):
         raise HTTPException(status_code=500, detail=str(e))
 
 @app.post("/upload/")
-async def upload_file(file: UploadFile = File(...)):
+async def upload_file(file: UploadFile = File(...), create_new_file: bool = False):
     try:
         temp_file_path = os.path.join(UPLOAD_DIR, file.filename)
         with open(temp_file_path, "wb") as buffer:
@@ -346,32 +346,50 @@ async def upload_file(file: UploadFile = File(...)):
             df, metadata = processor.process_excel(temp_file_path)
         else:
             raise HTTPException(status_code=400, detail="Unsupported file type")
+
+        if create_new_file:
+            if not metadata.get("start_date") or not metadata.get("end_date"):
+                raise HTTPException(status_code=400, detail="Cannot create new file: date range metadata missing from statement.")
             
-        # Check for duplicates against master file
-        duplicates = []
-        if os.path.exists(OUTPUT_FILE):
-            master_df = pd.read_excel(OUTPUT_FILE)
+            # Generate filename based on date range
+            start_date_str = datetime.strptime(metadata["start_date"], '%Y-%m-%d').strftime('%Y-%m-%d')
+            end_date_str = datetime.strptime(metadata["end_date"], '%Y-%m-%d').strftime('%Y-%m-%d')
+            new_filename = f"Statement_{start_date_str}_to_{end_date_str}.xlsx"
+            new_file_path = os.path.join(UPLOAD_DIR, new_filename)
             
-            # Simple check: Date + Merchant + Price
-            for _, row in df.iterrows():
-                is_dup = not master_df[
-                    (master_df['DATE'] == row['DATE']) & 
-                    (master_df['MERCHANT'] == row['MERCHANT']) & 
-                    (master_df['PRICE'] == row['PRICE'])
-                ].empty
-                duplicates.append(is_dup)
+            df.to_excel(new_file_path, index=False)
+            return {
+                "status": "success",
+                "message": f"New file '{new_filename}' created successfully.",
+                "new_filename": new_filename,
+                "metadata": metadata
+            }
         else:
-            # If no master file, everything is new
-            duplicates = [False] * len(df)
-        
-        df['is_duplicate'] = duplicates
-        
-        return {
-            "metadata": metadata,
-            "transactions": df.to_dict(orient="records"),
-            "categories": CATEGORIES,
-            "payment_types": [acc.name for acc in ACCOUNTS] # Return payment types for review page
-        }
+            # Existing logic for merging
+            duplicates = []
+            if os.path.exists(OUTPUT_FILE):
+                master_df = pd.read_excel(OUTPUT_FILE)
+                
+                # Simple check: Date + Merchant + Price
+                for _, row in df.iterrows():
+                    is_dup = not master_df[
+                        (master_df['DATE'] == row['DATE']) & 
+                        (master_df['MERCHANT'] == row['MERCHANT']) & 
+                        (master_df['PRICE'] == row['PRICE'])
+                    ].empty
+                    duplicates.append(is_dup)
+            else:
+                # If no master file, everything is new
+                duplicates = [False] * len(df)
+            
+            df['is_duplicate'] = duplicates
+            
+            return {
+                "metadata": metadata,
+                "transactions": df.to_dict(orient="records"),
+                "categories": CATEGORIES,
+                "accounts": [acc.name for acc in ACCOUNTS] # Return account names for review page
+            }
     except Exception as e:
         raise HTTPException(status_code=500, detail=str(e))
 

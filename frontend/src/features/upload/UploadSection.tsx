@@ -6,16 +6,20 @@ import { cn } from "@/lib/utils";
 
 interface UploadSectionProps {
   file: File | null;
-  status: 'idle' | 'uploading' | 'review' | 'merging' | 'success' | 'error';
+  status: 'idle' | 'uploading' | 'review' | 'merging' | 'success' | 'error' | 'new_file_created';
   onFileChange: (e: React.ChangeEvent<HTMLInputElement>) => void;
   onUpload: () => void;
+  createNewFile: boolean; // New prop
+  setCreateNewFile: (value: boolean) => void; // New prop
 }
 
 export const UploadSection: React.FC<UploadSectionProps> = ({ 
   file, 
   status, 
   onFileChange, 
-  onUpload 
+  onUpload,
+  createNewFile,
+  setCreateNewFile
 }) => {
   const fileInputRef = useRef<HTMLInputElement>(null);
 
@@ -107,6 +111,19 @@ export const UploadSection: React.FC<UploadSectionProps> = ({
         </CardContent>
       </Card>
 
+      <div className="flex items-center space-x-2">
+        <input
+          type="checkbox"
+          id="createNewFile"
+          checked={createNewFile}
+          onChange={(e) => setCreateNewFile(e.target.checked)}
+          className="form-checkbox h-5 w-5 text-primary rounded"
+        />
+        <label htmlFor="createNewFile" className="text-base font-medium leading-none peer-disabled:cursor-not-allowed peer-disabled:opacity-70">
+          Create a new file instead of merging with master statement
+        </label>
+      </div>
+
       <div className="flex flex-col gap-4">
         <Button 
           onClick={onUpload} 
@@ -133,3 +150,4 @@ export const UploadSection: React.FC<UploadSectionProps> = ({
     </div>
   );
 };
+

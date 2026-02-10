@@ -3,10 +3,11 @@ import type { UploadResponse, Transaction } from '../types';
 
 export const useUpload = () => {
   const [file, setFile] = useState<File | null>(null);
-  const [status, setStatus] = useState<'idle' | 'uploading' | 'review' | 'merging' | 'success' | 'error'>('idle');
+  const [status, setStatus] = useState<'idle' | 'uploading' | 'review' | 'merging' | 'success' | 'error' | 'new_file_created'>('idle');
   const [message, setMessage] = useState('');
   const [stagedData, setStagedData] = useState<UploadResponse | null>(null);
   const [selectedTransactions, setSelectedTransactions] = useState<number[]>([]);
+  const [createNewFile, setCreateNewFile] = useState(false); // New state for checkbox
 
   const handleFileChange = useCallback((e: React.ChangeEvent<HTMLInputElement>) => {
     if (e.target.files && e.target.files.length > 0) {
@@ -22,20 +23,26 @@ export const useUpload = () => {
     setStatus('uploading');
     const formData = new FormData();
     formData.append('file', file);
+    formData.append('create_new_file', String(createNewFile)); // Send the flag
 
     try {
       const response = await fetch('/api/upload/', { method: 'POST', body: formData });
       const data = await response.json();
       if (response.ok) {
-        setStagedData(data);
-        setStatus('review');
-        setFile(null); // Clear file input state in React
-        // Note: Clearing the actual DOM element needs to happen in the UI component
-        
-        const nonDups = data.transactions
-          .map((t: Transaction, i: number) => t.is_duplicate ? -1 : i)
-          .filter((i: number) => i !== -1);
-        setSelectedTransactions(nonDups);
+        if (createNewFile) {
+          setStatus('new_file_created');
+          setMessage(data.message || `File '${data.new_filename}' created successfully.`);
+        } else {
+          setStagedData(data);
+          setStatus('review');
+          setFile(null); // Clear file input state in React
+          // Note: Clearing the actual DOM element needs to happen in the UI component
+          
+          const nonDups = data.transactions
+            .map((t: Transaction, i: number) => t.is_duplicate ? -1 : i)
+            .filter((i: number) => i !== -1);
+          setSelectedTransactions(nonDups);
+        }
       } else {
         setStatus('error');
         setMessage(data.detail || 'Upload failed');
@@ -44,7 +51,7 @@ export const useUpload = () => {
       setStatus('error');
       setMessage('Network error');
     }
-  }, [file]);
+  }, [file, createNewFile]);
 
   const mergeTransactions = useCallback(async () => {
     if (!stagedData) return;
@@ -98,6 +105,11 @@ export const useUpload = () => {
 
   const resetStatus = useCallback(() => {
       setStatus('idle');
+      setFile(null); // Also clear file here for a complete reset
+      setStagedData(null);
+      setSelectedTransactions([]);
+      setMessage('');
+      setCreateNewFile(false); // Reset create new file checkbox state
   }, []);
 
   return {
@@ -106,12 +118,14 @@ export const useUpload = () => {
     message,
     stagedData,
     selectedTransactions,
+    createNewFile, // Expose for UI
     handleFileChange,
     uploadFile,
     mergeTransactions,
     updateCategory,
     toggleTransactionSelection,
     toggleAllTransactions,
-    resetStatus
+    resetStatus,
+    setCreateNewFile // Expose setter for UI
   };
 };
