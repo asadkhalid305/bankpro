@@ -29,23 +29,51 @@ os.makedirs(UPLOAD_DIR, exist_ok=True)
 os.makedirs(BACKUP_DIR, exist_ok=True)
 
 CATEGORIES = ['Benefit', 'Bill', 'Conversion', 'Dependant', 'Extra', 'Food & Outing', 'Gifts', 'Grocery', 'Investment', 'Medical', 'Office', 'Salary', 'Shopping', 'Transport', 'Vacation', 'Car', 'Unknown']
+ACCOUNTS_FILE = os.path.join(UPLOAD_DIR, 'accounts.json')
 PAYMENT_TYPES_FILE = os.path.join(os.path.dirname(__file__), 'payment_types.json')
 
-# Initialize PAYMENT_TYPES from file or default
-if os.path.exists(PAYMENT_TYPES_FILE) and os.path.getsize(PAYMENT_TYPES_FILE) > 0:
-    try:
-        with open(PAYMENT_TYPES_FILE, 'r') as f:
-            PAYMENT_TYPES = json.load(f)
-    except json.JSONDecodeError:
-        PAYMENT_TYPES = ['Deutsche Bank', 'Wise', 'Paypal', 'Cash', 'Revolut', 'Other']
-else:
-    PAYMENT_TYPES = ['Deutsche Bank', 'Wise', 'Paypal', 'Cash', 'Revolut', 'Other']
-    with open(PAYMENT_TYPES_FILE, 'w') as f:
-        json.dump(PAYMENT_TYPES, f, indent=2)
+class Account(BaseModel):
+    name: str
+    initial_balance: float = 0.0
+    currency: str = "EUR"
 
-def save_payment_types():
-    with open(PAYMENT_TYPES_FILE, 'w') as f:
-        json.dump(PAYMENT_TYPES, f, indent=2)
+# Initialize ACCOUNTS from file or migrate from payment_types
+ACCOUNTS: List[Account] = []
+
+def load_accounts():
+    global ACCOUNTS
+    if os.path.exists(ACCOUNTS_FILE):
+        try:
+            with open(ACCOUNTS_FILE, 'r') as f:
+                data = json.load(f)
+                ACCOUNTS = [Account(**item) for item in data]
+        except json.JSONDecodeError:
+            ACCOUNTS = []
+    elif os.path.exists(PAYMENT_TYPES_FILE):
+        # Migration logic
+        print("Migrating payment types to accounts...")
+        try:
+            with open(PAYMENT_TYPES_FILE, 'r') as f:
+                payment_types = json.load(f)
+                ACCOUNTS = [Account(name=pt, initial_balance=0.0) for pt in payment_types]
+            save_accounts()
+            # Optional: Rename/Delete old file after successful migration? Keeping it for safety now.
+            # os.rename(PAYMENT_TYPES_FILE, PAYMENT_TYPES_FILE + ".bak") 
+        except Exception as e:
+            print(f"Error migrating payment types: {e}")
+            ACCOUNTS = []
+    else:
+        # Default accounts if nothing exists
+        defaults = ['Deutsche Bank', 'Wise', 'Paypal', 'Cash', 'Revolut']
+        ACCOUNTS = [Account(name=name, initial_balance=0.0) for name in defaults]
+        save_accounts()
+
+def save_accounts():
+    with open(ACCOUNTS_FILE, 'w') as f:
+        json.dump([acc.dict() for acc in ACCOUNTS], f, indent=2)
+
+# Load accounts on startup
+load_accounts()
 
 class Transaction(BaseModel):
     DATE: str
@@ -62,9 +90,11 @@ class MappingUpdate(BaseModel):
     category: str
     old_merchant: str | None = None
 
-class PaymentTypeUpdate(BaseModel):
+class AccountUpdate(BaseModel):
     old_name: Optional[str] = None
     new_name: str
+    initial_balance: float
+    currency: str = "EUR"
 
 class MasterUpdate(BaseModel):
     index: int
@@ -91,38 +121,86 @@ class MappingBulkDeleteRequest(BaseModel):
 async def get_mappings():
     return processor.load_mappings()
 
-@app.get("/payment_types")
-async def get_payment_types():
-    return PAYMENT_TYPES
+def get_account_balance(account_name: str, initial_balance: float) -> float:
+    if not os.path.exists(OUTPUT_FILE):
+        return initial_balance
+    
+    try:
+        df = pd.read_excel(OUTPUT_FILE)
+        # Filter transactions for this account
+        account_txns = df[df['PAYMENT'] == account_name]
+        
+        # Calculate sum of PRICE (assuming PRICE is signed float)
+        # Need to ensure PRICE is numeric
+        total_transaction_value = pd.to_numeric(account_txns['PRICE'], errors='coerce').sum()
+        
+        return initial_balance + total_transaction_value
+    except Exception as e:
+        print(f"Error calculating balance for {account_name}: {e}")
+        return initial_balance
 
-@app.post("/payment_types")
-async def add_or_update_payment_type(update: PaymentTypeUpdate):
-    global PAYMENT_TYPES
+@app.get("/accounts")
+async def get_accounts():
+    # Return accounts with current calculated balance
+    response_data = []
+    for acc in ACCOUNTS:
+        current_bal = get_account_balance(acc.name, acc.initial_balance)
+        acc_dict = acc.dict()
+        acc_dict['current_balance'] = current_bal
+        response_data.append(acc_dict)
+    return response_data
+
+@app.post("/accounts")
+async def add_or_update_account(update: AccountUpdate):
+    global ACCOUNTS
+    
+    # Check if duplicate name (exclude self if updating)
+    if any(acc.name == update.new_name and acc.name != update.old_name for acc in ACCOUNTS):
+        raise HTTPException(status_code=400, detail=f"Account '{update.new_name}' already exists.")
+
     if update.old_name:
         # Update existing
-        if update.old_name not in PAYMENT_TYPES:
-            raise HTTPException(status_code=404, detail=f"Payment type '{update.old_name}' not found.")
-        if update.new_name in PAYMENT_TYPES and update.new_name != update.old_name:
-            raise HTTPException(status_code=400, detail=f"Payment type '{update.new_name}' already exists.")
+        account = next((acc for acc in ACCOUNTS if acc.name == update.old_name), None)
+        if not account:
+            raise HTTPException(status_code=404, detail=f"Account '{update.old_name}' not found.")
         
-        index = PAYMENT_TYPES.index(update.old_name)
-        PAYMENT_TYPES[index] = update.new_name
+        # If name changed, we need to update transactions and mappings? 
+        # For now, let's just update the Account definition. 
+        # Ideally, we should update the Master File (Final_Statement.xlsx) to reflect the new Payment method name.
+        if update.old_name != update.new_name:
+             if os.path.exists(OUTPUT_FILE):
+                try:
+                    df = pd.read_excel(OUTPUT_FILE)
+                    df.loc[df['PAYMENT'] == update.old_name, 'PAYMENT'] = update.new_name
+                    df.to_excel(OUTPUT_FILE, index=False)
+                except Exception as e:
+                    print(f"Error updating payment name in master file: {e}")
+        
+        account.name = update.new_name
+        account.initial_balance = update.initial_balance
+        account.currency = update.currency
     else:
         # Add new
-        if update.new_name in PAYMENT_TYPES:
-            raise HTTPException(status_code=400, detail=f"Payment type '{update.new_name}' already exists.")
-        PAYMENT_TYPES.append(update.new_name)
-    save_payment_types()
-    return {"status": "success", "payment_types": PAYMENT_TYPES}
+        new_acc = Account(
+            name=update.new_name, 
+            initial_balance=update.initial_balance,
+            currency=update.currency
+        )
+        ACCOUNTS.append(new_acc)
+    
+    save_accounts()
+    return {"status": "success", "accounts": await get_accounts()}
 
-@app.delete("/payment_types/{type_name}")
-async def delete_payment_type(type_name: str):
-    global PAYMENT_TYPES
-    if type_name not in PAYMENT_TYPES:
-        raise HTTPException(status_code=404, detail=f"Payment type '{type_name}' not found.")
-    PAYMENT_TYPES.remove(type_name)
-    save_payment_types()
-    return {"status": "success", "payment_types": PAYMENT_TYPES}
+@app.delete("/accounts/{account_name}")
+async def delete_account(account_name: str):
+    global ACCOUNTS
+    account = next((acc for acc in ACCOUNTS if acc.name == account_name), None)
+    if not account:
+        raise HTTPException(status_code=404, detail=f"Account '{account_name}' not found.")
+    
+    ACCOUNTS.remove(account)
+    save_accounts()
+    return {"status": "success", "accounts": await get_accounts()}
 
 @app.post("/mappings")
 async def update_mapping(update: MappingUpdate):
@@ -292,7 +370,7 @@ async def upload_file(file: UploadFile = File(...)):
             "metadata": metadata,
             "transactions": df.to_dict(orient="records"),
             "categories": CATEGORIES,
-            "payment_types": PAYMENT_TYPES # Return payment types for review page
+            "payment_types": [acc.name for acc in ACCOUNTS] # Return payment types for review page
         }
     except Exception as e:
         raise HTTPException(status_code=500, detail=str(e))

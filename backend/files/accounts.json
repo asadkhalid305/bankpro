@@ -1,0 +1,32 @@
+[
+  {
+    "name": "Deutsche Bank",
+    "initial_balance": 0.0,
+    "currency": "EUR"
+  },
+  {
+    "name": "Wise",
+    "initial_balance": 0.0,
+    "currency": "EUR"
+  },
+  {
+    "name": "Paypal",
+    "initial_balance": 0.0,
+    "currency": "EUR"
+  },
+  {
+    "name": "Cash",
+    "initial_balance": 0.0,
+    "currency": "EUR"
+  },
+  {
+    "name": "Revolut",
+    "initial_balance": 0.0,
+    "currency": "EUR"
+  },
+  {
+    "name": "Other",
+    "initial_balance": 0.0,
+    "currency": "EUR"
+  }
+]

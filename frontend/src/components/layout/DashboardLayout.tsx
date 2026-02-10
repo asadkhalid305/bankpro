@@ -7,7 +7,7 @@ import {
   Brain, 
   Settings, 
   FileStack, 
-  CreditCard,
+  Landmark,
   ChevronLeft,
   ChevronRight
 } from 'lucide-react';
@@ -60,7 +60,7 @@ export const DashboardLayout = ({ children }: DashboardLayoutProps) => {
       case pathname.startsWith('/import'): return 'Import';
       case pathname.startsWith('/mappings'): return 'Mappings';
       case pathname.startsWith('/backups'): return 'Backups';
-      case pathname.startsWith('/payment-types'): return 'Payment Types';
+      case pathname.startsWith('/accounts'): return 'Accounts';
       case pathname.startsWith('/settings'): return 'Settings';
       default: return 'BankPro';
     }
@@ -131,10 +131,10 @@ export const DashboardLayout = ({ children }: DashboardLayoutProps) => {
             collapsed={collapsed}
           />
           <NavItem 
-            icon={CreditCard} 
-            label="Payment Types" 
-            active={isActive('/payment-types')} 
-            onClick={() => navigate('/payment-types')}
+            icon={Landmark} 
+            label="Accounts" 
+            active={isActive('/accounts')} 
+            onClick={() => navigate('/accounts')}
             collapsed={collapsed}
           />
         </nav>

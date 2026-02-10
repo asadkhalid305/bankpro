@@ -4,7 +4,7 @@ import { DashboardLayout } from './components/layout/DashboardLayout';
 import { UploadSection } from './features/upload/UploadSection';
 import { ReviewSection } from './features/review/ReviewSection';
 import { BackupsSection } from './features/backups/BackupsSection';
-import { PaymentTypesManager } from './features/payment-types/PaymentTypesManager';
+import { AccountsManager } from './features/accounts/AccountsManager';
 import { MasterStatement } from './features/master/MasterStatement';
 import { MappingKnowledgeBase } from './features/mappings/MappingKnowledgeBase';
 import { DashboardView } from './features/dashboard/DashboardView';
@@ -17,7 +17,7 @@ import { ThemeProvider } from './components/theme/ThemeProvider';
 // Hooks
 import { useUpload } from './hooks/useUpload';
 import { useBackups } from './hooks/useBackups';
-import { usePaymentTypes } from './hooks/usePaymentTypes';
+import { useAccounts } from './hooks/useAccounts';
 import { useMasterData } from './hooks/useMasterData';
 import { useMappings } from './hooks/useMappings';
 
@@ -27,22 +27,22 @@ function App() {
   
   const upload = useUpload();
   const backups = useBackups();
-  const pt = usePaymentTypes();
+  const accounts = useAccounts();
   const master = useMasterData();
   const mappings = useMappings();
 
   // Load initial data
   useEffect(() => {
-    pt.fetchPaymentTypes();
-  }, [pt.fetchPaymentTypes]);
+    accounts.fetchAccounts();
+  }, [accounts.fetchAccounts]);
 
   // Load view-specific data based on URL
   useEffect(() => {
     if (path.startsWith('/transactions') || path === '/') master.fetchMasterData();
     if (path.startsWith('/mappings')) mappings.fetchMappings();
     if (path.startsWith('/backups')) backups.fetchBackups();
-    if (path.startsWith('/payment-types')) pt.fetchPaymentTypes();
-  }, [path, master.fetchMasterData, mappings.fetchMappings, backups.fetchBackups, pt.fetchPaymentTypes]);
+    if (path.startsWith('/accounts')) accounts.fetchAccounts();
+  }, [path, master.fetchMasterData, mappings.fetchMappings, backups.fetchBackups, accounts.fetchAccounts]);
 
   // Sync upload status to navigation (optional, or handle via protected route logic)
   /* 
@@ -83,7 +83,7 @@ function App() {
             <MasterStatement 
               data={master.getFilteredData()}
               totalCount={master.data.length}
-              paymentTypes={pt.paymentTypes}
+              paymentTypes={accounts.accounts.map(a => a.name)}
               search={master.search}
               onSearchChange={master.setSearch}
               categoryFilter={master.categoryFilter}
@@ -101,12 +101,12 @@ function App() {
             />
           } />
 
-          <Route path="/payment-types" element={
-            <PaymentTypesManager 
-              paymentTypes={pt.paymentTypes}
-              onAdd={pt.addPaymentType}
-              onUpdate={pt.updatePaymentType}
-              onDelete={pt.deletePaymentType}
+          <Route path="/accounts" element={
+            <AccountsManager 
+              accounts={accounts.accounts}
+              onAdd={accounts.addAccount}
+              onUpdate={accounts.updateAccount}
+              onDelete={accounts.deleteAccount}
             />
           } />
 
