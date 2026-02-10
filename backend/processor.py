@@ -26,6 +26,18 @@ def save_mapping(merchant, category):
     with open(MAPPING_FILE, 'w') as f:
         json.dump(mappings, f, indent=2)
 
+def clean_currency(s):
+    if isinstance(s, (int, float)):
+        return float(s)
+    s = str(s).strip()
+    s = s.replace('.', '')  # Remove thousand separators for European format
+    s = s.replace(',', '.')  # Replace decimal comma with dot
+    s = re.sub(r'[^\d.-]', '', s)  # Remove any other non-numeric chars except . and -
+    try:
+        return float(s)
+    except ValueError:
+        return 0.0
+
 def clean_merchant_name(text):
     if not text: return ""
     
