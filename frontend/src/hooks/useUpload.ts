@@ -23,7 +23,8 @@ export const useUpload = () => {
     setStatus('uploading');
     const formData = new FormData();
     formData.append('file', file);
-    formData.append('create_new_file', String(createNewFile)); // Send the flag
+    formData.append('create_new_file', createNewFile ? 'true' : 'false'); // Send as string "true" or "false"
+
 
     try {
       const response = await fetch('/api/upload/', { method: 'POST', body: formData });
