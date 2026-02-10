@@ -31,7 +31,8 @@ export const useUpload = () => {
       if (response.ok) {
         if (createNewFile) {
           setStatus('new_file_created');
-          setMessage(data.message || `File '${data.new_filename}' created successfully.`);
+          setMessage(data.message || `File created successfully.`); // Use data.message directly, with a generic fallback
+
         } else {
           setStagedData(data);
           setStatus('review');
