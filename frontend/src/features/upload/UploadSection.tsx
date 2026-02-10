@@ -1,4 +1,4 @@
-import React, { useRef } from 'react';
+import React, { useRef, useEffect } from 'react';
 import { Upload, FileText, X, AlertCircle } from 'lucide-react';
 import { Button } from '../../components/ui/Button';
 import { Card, CardContent } from "@/components/ui/Card";
@@ -22,6 +22,13 @@ export const UploadSection: React.FC<UploadSectionProps> = ({
   setCreateNewFile
 }) => {
   const fileInputRef = useRef<HTMLInputElement>(null);
+
+  // Clear the actual file input element when the 'file' prop becomes null
+  useEffect(() => {
+    if (!file && fileInputRef.current) {
+      fileInputRef.current.value = '';
+    }
+  }, [file]);
 
   const handleDragOver = (e: React.DragEvent) => {
     e.preventDefault();
