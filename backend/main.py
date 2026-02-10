@@ -349,21 +349,35 @@ async def upload_file(file: UploadFile = File(...), create_new_file: bool = Fals
 
         if create_new_file:
             if not metadata.get("start_date") or not metadata.get("end_date"):
+                print(f"Error: Date range metadata missing from statement. Metadata: {metadata}")
                 raise HTTPException(status_code=400, detail="Cannot create new file: date range metadata missing from statement.")
             
-            # Generate filename based on date range
-            start_date_str = datetime.strptime(metadata["start_date"], '%Y-%m-%d').strftime('%Y-%m-%d')
-            end_date_str = datetime.strptime(metadata["end_date"], '%Y-%m-%d').strftime('%Y-%m-%d')
-            new_filename = f"Statement_{start_date_str}_to_{end_date_str}.xlsx"
-            new_file_path = os.path.join(UPLOAD_DIR, new_filename)
-            
-            df.to_excel(new_file_path, index=False)
-            return {
-                "status": "success",
-                "message": f"New file '{new_filename}' created successfully.",
-                "new_filename": new_filename,
-                "metadata": metadata
-            }
+            try:
+                start_date_obj = datetime.strptime(metadata["start_date"], '%Y-%m-%d')
+                end_date_obj = datetime.strptime(metadata["end_date"], '%Y-%m-%d')
+                start_date_str = start_date_obj.strftime('%Y-%m-%d')
+                end_date_str = end_date_obj.strftime('%Y-%m-%d')
+                new_filename = f"Statement_{start_date_str}_to_{end_date_str}.xlsx"
+                new_file_path = os.path.join(UPLOAD_DIR, new_filename)
+                
+                print(f"Attempting to create new file: {new_file_path}")
+                print(f"Start Date: {metadata['start_date']}, End Date: {metadata['end_date']}")
+                print(f"Formatted Start Date: {start_date_str}, Formatted End Date: {end_date_str}")
+
+                df.to_excel(new_file_path, index=False)
+                print(f"Successfully created new file: {new_file_path}")
+                return {
+                    "status": "success",
+                    "message": f"New file '{new_filename}' created successfully.",
+                    "new_filename": new_filename,
+                    "metadata": metadata
+                }
+            except ValueError as ve:
+                print(f"ValueError during date parsing or file creation: {ve}. Metadata dates: {metadata.get('start_date')}, {metadata.get('end_date')}")
+                raise HTTPException(status_code=500, detail=f"Error processing dates for new file: {ve}")
+            except Exception as e:
+                print(f"General error during new file creation: {e}")
+                raise HTTPException(status_code=500, detail=f"Error creating new file: {e}")
         else:
             # Existing logic for merging
             duplicates = []
