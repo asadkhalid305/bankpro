@@ -120,17 +120,17 @@ export const DashboardLayout = ({ children }: DashboardLayoutProps) => {
             collapsed={collapsed}
           />
           <NavItem
-            icon={UploadCloud}
-            label="Import"
-            active={isActive('/import')}
-            onClick={() => navigate('/import')}
-            collapsed={collapsed}
-          />
-          <NavItem
             icon={Brain}
             label="Categorization Rules"
             active={isActive('/mappings')}
             onClick={() => navigate('/mappings')}
+            collapsed={collapsed}
+          />
+          <NavItem
+            icon={UploadCloud}
+            label="Import"
+            active={isActive('/import')}
+            onClick={() => navigate('/import')}
             collapsed={collapsed}
           />
           <NavItem
