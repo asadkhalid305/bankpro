@@ -24,6 +24,7 @@ export const useBuckets = () => {
       await fetchBuckets();
       return true;
     } catch (error) {
+      console.error("Failed to save buckets:", error);
       return false;
     }
   }, [fetchBuckets]);

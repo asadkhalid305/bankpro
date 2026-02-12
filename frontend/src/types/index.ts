@@ -15,6 +15,13 @@ export interface Transaction {
   is_duplicate?: boolean;
 }
 
+export interface Account {
+  name: string;
+  initial_balance: number;
+  current_balance: number;
+  currency?: string;
+}
+
 export interface Metadata {
   source: string;
   start_date: string;

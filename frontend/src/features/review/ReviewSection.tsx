@@ -18,7 +18,7 @@ interface ReviewSectionProps {
   onMerge: () => void;
   onCategoryChange: (index: number, newCategory: string) => void;
   onBucketChange: (index: number, newBucket: string) => void;
-  onTypeChange: (index: number, newType: any) => void;
+  onTypeChange: (index: number, newType: string) => void;
   onToggleSelect: (index: number) => void;
   onToggleAll: () => void;
 }
@@ -40,8 +40,8 @@ export const ReviewSection: React.FC<ReviewSectionProps> = ({
 
   return (
     <div className="space-y-6">
-      <PageHeader 
-        title="Review Imports" 
+      <PageHeader
+        title="Review Imports"
         description="Verify and fine-tune your transactions before they are committed to the database."
       >
         <Button onClick={onCancel} variant="outline">
@@ -101,8 +101,8 @@ export const ReviewSection: React.FC<ReviewSectionProps> = ({
               <thead className="text-xs uppercase bg-muted/50 text-muted-foreground border-b font-bold tracking-wider">
                 <tr>
                   <th className="px-6 py-4 w-12 text-center">
-                    <input 
-                      type="checkbox" 
+                    <input
+                      type="checkbox"
                       className="rounded border-gray-300 text-primary focus:ring-primary"
                       checked={selectedTransactions.length === stagedData.data.length}
                       onChange={onToggleAll}
@@ -126,46 +126,46 @@ export const ReviewSection: React.FC<ReviewSectionProps> = ({
                     t.transaction_type === 'TRANSFER' ? "bg-blue-50/20 dark:bg-blue-900/5" : ""
                   )}>
                     <td className="px-6 py-4 text-center">
-                      <input 
-                        type="checkbox" 
+                      <input
+                        type="checkbox"
                         className="rounded border-gray-300 text-primary focus:ring-primary"
-                        checked={selectedTransactions.includes(i)} 
+                        checked={selectedTransactions.includes(i)}
                         onChange={() => onToggleSelect(i)}
                       />
                     </td>
                     <td className="px-6 py-4 text-xs font-medium text-muted-foreground whitespace-nowrap">{t.date}</td>
                     <td className="px-6 py-4 font-semibold text-foreground/90 max-w-[150px] truncate" title={t.merchant}>{t.merchant}</td>
                     <td className="px-6 py-4 text-[10px] text-muted-foreground max-w-[200px] truncate" title={t.details}>
-                        {t.details || "-"}
+                      {t.details || "-"}
                     </td>
                     <td className="px-6 py-4">
-                      <Select 
-                        value={t.transaction_type} 
+                      <Select
+                        value={t.transaction_type}
                         onChange={(e) => onTypeChange(i, e.target.value)}
                         options={TYPE_OPTIONS}
                         className="h-8 text-[10px] font-bold max-w-[100px]"
                       />
                     </td>
                     <td className="px-6 py-4">
-                      <Select 
-                        value={t.bucket} 
+                      <Select
+                        value={t.bucket}
                         onChange={(e) => onBucketChange(i, e.target.value)}
                         options={buckets}
                         className="h-8 text-xs max-w-[120px]"
                       />
                     </td>
                     <td className="px-6 py-4">
-                      <Select 
-                        value={t.category} 
+                      <Select
+                        value={t.category}
                         onChange={(e) => onCategoryChange(i, e.target.value)}
                         options={categories}
                         className="h-8 text-xs max-w-[150px]"
                       />
                     </td>
                     <td className="px-6 py-4 font-mono font-bold whitespace-nowrap">
-                       <span className={t.amount < 0 ? "text-red-600" : "text-emerald-600"}>
-                         {t.amount.toFixed(2)} €
-                       </span>
+                      <span className={t.amount < 0 ? "text-red-600" : "text-emerald-600"}>
+                        {t.amount.toFixed(2)} €
+                      </span>
                     </td>
                     <td className="px-6 py-4 text-right">
                       {t.is_duplicate ? (

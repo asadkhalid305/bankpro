@@ -21,6 +21,7 @@ export const useCategories = () => {
       await fetchCategories();
       return true;
     } catch (error) {
+      console.error("Failed to add category:", error);
       return false;
     }
   }, [categories, fetchCategories]);
@@ -32,6 +33,7 @@ export const useCategories = () => {
       await fetchCategories();
       return true;
     } catch (error) {
+      console.error("Failed to delete category:", error);
       return false;
     }
   }, [categories, fetchCategories]);

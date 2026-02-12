@@ -27,7 +27,7 @@ export const useBackups = () => {
         alert(`Failed to load preview: ${data.detail || 'Unknown error'}`);
       }
     } catch (error) {
-      alert(`Failed to load preview: ${error instanceof Error ? error.message : 'Network error'}`);
+      console.error("Failed to load preview:", error);
     }
   }, []);
 
@@ -44,7 +44,7 @@ export const useBackups = () => {
         return false;
       }
     } catch (error) {
-      alert("Restore failed: Network error");
+      console.error("Failed to restore backup:", error);
       return false;
     }
   }, []);

@@ -25,13 +25,13 @@ export const useMappings = () => {
   }, []);
 
   const getSortedMappings = useCallback(() => {
-    let items = mappings.filter(m => {
+    const items = mappings.filter(m => {
       const matchesSearch = m.pattern.toLowerCase().includes(search.toLowerCase()) ||
-                            m.category.toLowerCase().includes(search.toLowerCase());
+        m.category.toLowerCase().includes(search.toLowerCase());
       const matchesFilter = categoryFilter === 'All' || m.category === categoryFilter;
       return matchesSearch && matchesFilter;
     });
-    
+
     if (sortConfig) {
       items.sort((a, b) => {
         const valA = String(a[sortConfig.key]).toLowerCase();
@@ -50,6 +50,7 @@ export const useMappings = () => {
       await fetchMappings();
       return true;
     } catch (error) {
+      console.error("Failed to add mapping:", error);
       return false;
     }
   }, [fetchMappings]);
@@ -65,6 +66,7 @@ export const useMappings = () => {
       await fetchMappings();
       return true;
     } catch (error) {
+      console.error("Failed to update mapping:", error);
       return false;
     }
   }, [fetchMappings]);
@@ -77,6 +79,7 @@ export const useMappings = () => {
       await fetchMappings();
       return true;
     } catch (error) {
+      console.error("Failed to delete mappings:", error);
       return false;
     }
   }, [fetchMappings]);
