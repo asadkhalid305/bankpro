@@ -1,82 +1,116 @@
-# 🏦 BankPro: Personal Statement Processor
+# 🏦 BankPro: Intelligent Financial Engine
 
-BankPro is a robust, local-first application designed to help you organize your finances by extracting, cleaning, and categorizing transactions from bank statements. It uniquely separates **Physical Reality** (where your money is) from **Logical Reality** (what your money is for).
+[![License: MIT](https://img.shields.io/badge/License-MIT-yellow.svg)](https://opensource.org/licenses/MIT)
+[![Python 3.10+](https://img.shields.io/badge/python-3.10+-blue.svg)](https://www.python.org/downloads/)
+[![React 18](https://img.shields.io/badge/React-18-61dafb.svg)](https://reactjs.org/)
+[![FastAPI](https://img.shields.io/badge/FastAPI-0.100+-05998b.svg)](https://fastapi.tiangolo.com/)
 
-## 🚀 Key Features
+**BankPro** is a specialized financial tool designed to solve the "Shadow Accounting" problem. It goes beyond simple transaction tracking by separating your **Physical Reality** (where your money sits) from your **Logical Reality** (what your money is for).
 
-- **Physical vs. Logical Tracking**: Track bank accounts (Deutsche Bank, Wise, TR) separately from your "Buckets" (Main, Kindergeld, Savings).
-- **Auto-Learning Categorization**: Correct a transaction's category once, and the app remembers that rule for every future statement you upload.
-- **German SEPA Optimization**: Advanced cleaning logic for technical SEPA strings (specifically for Deutsche Bank PDFs).
-- **SQLite Source of Truth**: All data is stored locally in a fast, reliable database.
-- **Excel Export (V2 Style)**: Download a structured Excel file compatible with your existing financial formulas and dashboards.
+Built for users who manage multiple bank accounts (like Deutsche Bank and Wise) while maintaining complex personal budgets, investment portfolios, and family funds (like Kindergeld).
 
 ---
 
-## 🛠️ Getting Started
+## 💎 Core Philosophy: Physical vs. Logical
 
-### 1. Requirements
-- Python 3.10+
-- Node.js & npm
+Unlike standard banking apps, BankPro uses a dual-ledger system:
 
-### 2. Setup
+1.  **Physical Accounts**: These represent your actual bank accounts (e.g., `Deutsche Bank`, `Wise`, `Cash`). They track the real-world flow of money and balances.
+2.  **Logical Buckets**: These represent the *purpose* of the money (e.g., `Main Budget`, `Kindergeld Account`, `Personal Savings`).
+
+**Example**: You receive €250 Kindergeld in your Deutsche Bank account. Physically, the money is in DB. Logically, it belongs to the Kindergeld Bucket. BankPro keeps these worlds perfectly synced without messy manual Excel formulas.
+
+---
+
+## 🚀 Key Features
+
+### 🧠 Auto-Learning Categorization
+BankPro features a "Dynamic Brain." When you manually categorize a new merchant during import or edit, the system **automatically creates a rule** in your database. Next time you upload a statement, the categorization is done for you.
+
+### 🧹 German SEPA Optimization
+Directly addresses the technical noise in German bank statements. It automatically strips technical SEPA prefixes (`Sepalastschrifteinzugvon`), IBANs, BICs, and legal footers from Deutsche Bank PDFs, leaving you with clean, readable merchant names.
+
+### 📈 Smart Dashboard
+- **Net Worth Tracking**: Live aggregate balance across all bank accounts.
+- **Bucket Allocation**: Visual progress bars showing how your funds are distributed across purposes.
+- **Investment Principal**: Automatically calculates the total value moved into investment accounts.
+- **Monthly Activity**: Real-time spending trackers and internal transfer summaries.
+
+### 📥 Excel Engine
+Maintains compatibility with your legacy workflows. Export your entire database into a structured Excel format that includes calculated category summaries and internal transfer logs.
+
+---
+
+## 🛠️ Technical Stack
+
+- **Backend**: Python 3.10, FastAPI, Pandas, PDFPlumber, SQLite.
+- **Frontend**: React 18, Vite, TypeScript, Tailwind CSS, Lucide Icons.
+- **Persistence**: SQLite (Local DB) + `config_seed.json` (Portable Logic Backup).
+
+---
+
+## 🏁 Getting Started
+
+### 1. Prerequisities
+Ensure you have **Python 3.10+** and **Node.js 18+** installed.
+
+### 2. Installation
 ```bash
-# Setup Backend
+# Clone the repository
+git clone git@github.com-personal:asadkhalid305/bankpro.git
+cd bankpro
+
+# Setup the Backend
 cd backend
 python3 -m venv .venv
-source .venv/bin/env/activate  # macOS/Linux
+source .venv/bin/activate
 pip install -r requirements.txt
 
-# Setup Frontend
+# Setup the Frontend
 cd ../frontend
 npm install
 ```
 
-### 3. Running the App
-Start the Backend:
+### 3. Execution
+**Run Backend:**
 ```bash
 cd backend
 uvicorn main:app --reload
 ```
 
-Start the Frontend:
+**Run Frontend:**
 ```bash
 cd frontend
 npm run dev
 ```
-Open [http://localhost:5173](http://localhost:5173) in your browser.
+Navigate to `http://localhost:5173`.
 
 ---
 
-## 📖 How to Use
+## 🔌 Extending to New Banks
 
-1.  **Configure**: Go to **Accounts** and **Buckets** to set up your bank sources and your logical fund purposes.
-2.  **Import**: Upload a PDF (Deutsche Bank) or XLSX (Wise) statement.
-3.  **Review**:
-    *   Verify the **Type** (Income, Expense, or Transfer).
-    *   Assign the correct **Bucket** (e.g., move Kindergeld payments to the Kindergeld bucket).
-    *   Select the **Category**.
-4.  **Confirm**: Click "Confirm & Merge" to commit transactions to your database.
-5.  **Dashboard**: View your live Net Worth, Account Balances, and Monthly Spending.
+The parsing engine is currently optimized for **Deutsche Bank (PDF)** and **Wise (XLSX)**.
 
----
+### The Extension Pattern
+All parsing logic resides in `backend/processor.py`. To add a new bank:
+1. Extract raw text using `pdfplumber`.
+2. Define a regex pattern for that bank's specific transaction lines.
+3. Update the `upload_file` router in `main.py` to recognize the file.
 
-## 🔌 Extending to Other Banks
+### AI-Accelerated Extension (Recommended)
+You can use AI tools (ChatGPT/Gemini) to generate parsing logic for any bank in seconds. Use this specific prompt:
 
-Currently, the parsing logic is optimized for:
-- **Deutsche Bank (PDF)**
-- **Wise (XLSX)**
-
-### How to add a new bank:
-The parsing logic lives in `backend/processor.py`. To add a new bank, you need to define its date and amount patterns.
-
-**The "AI-Vibe" Hack:**
-If you want to add a new bank using an AI tool (like ChatGPT or Gemini), use the following prompt:
-
-> "I have a bank statement processor built with Python and `pdfplumber`. I want to add support for a new bank. Here is a sample of the raw text extracted from the PDF: **[PASTE 5-10 LINES OF PDF TEXT HERE]**. Please provide a regex pattern and a Python extraction loop that identifies the **Date**, **Merchant/Description**, and **Amount** for each transaction in this specific format."
-
-Once you have the logic, simply add it as a new function in `processor.py` and update the `upload_file` router in `main.py`.
+> **"I am using a Python-based financial processor. I need to add support for a new bank PDF layout. Here is a sample of the raw text extracted from the PDF: [PASTE SAMPLE TEXT HERE]. Please write a Python function `process_[BANK_NAME](file_path)` using `pdfplumber` that iterates through pages and uses regex to extract DATE, DESCRIPTION, and AMOUNT into a list of dictionaries."**
 
 ---
 
-## 🔐 Privacy & Security
-This app is designed to run **locally**. Your financial data never leaves your computer. The SQLite database (`processor.db`) stays entirely on your machine.
+## 🔐 Privacy by Design
+BankPro is **local-first**.
+- Your bank statements never leave your machine.
+- No cloud accounts or 3rd party API connections are required.
+- Your database is a local `.db` file under your control.
+
+---
+
+## 📄 License
+Distributed under the MIT License. See `LICENSE` for more information.
