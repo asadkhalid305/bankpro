@@ -1,5 +1,6 @@
 import { useState, useCallback } from 'react';
 import type { Transaction, SortConfig } from '../types';
+import { api } from '../lib/api';
 
 export const useMasterData = () => {
   const [data, setData] = useState<Transaction[]>([]);
@@ -12,8 +13,7 @@ export const useMasterData = () => {
 
   const fetchMasterData = useCallback(async () => {
     try {
-      const response = await fetch('/api/transactions/');
-      const jsonData = await response.json();
+      const jsonData = await api.get('/transactions/');
       setData(jsonData);
     } catch (error) {
       console.error("Failed to fetch transactions:", error);
@@ -46,16 +46,9 @@ export const useMasterData = () => {
 
   const addRow = useCallback(async (newRow: Partial<Transaction>): Promise<boolean> => {
     try {
-      const response = await fetch('/api/transactions/manual', {
-        method: 'POST',
-        headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify(newRow)
-      });
-      if (response.ok) {
-        await fetchMasterData();
-        return true;
-      }
-      return false;
+      await api.post('/transactions/manual', newRow);
+      await fetchMasterData();
+      return true;
     } catch (error) {
       console.error("Failed to add transaction:", error);
       return false;
@@ -66,7 +59,7 @@ export const useMasterData = () => {
     if (!window.confirm(`Delete ${ids.length} transaction(s)?`)) return false;
     try {
       for (const id of ids) {
-        await fetch(`/api/transactions/${id}`, { method: 'DELETE' });
+        await api.delete(`/transactions/${id}`);
       }
       setSelectedRows(new Set());
       await fetchMasterData();
@@ -105,16 +98,9 @@ export const useMasterData = () => {
 
   const updateRow = useCallback(async (id: number, updates: Partial<Transaction>): Promise<boolean> => {
     try {
-      const response = await fetch('/api/transactions/update', {
-        method: 'POST',
-        headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify({ id, ...updates })
-      });
-      if (response.ok) {
-        await fetchMasterData();
-        return true;
-      }
-      return false;
+      await api.post('/transactions/update', { id, ...updates });
+      await fetchMasterData();
+      return true;
     } catch (error) {
       console.error("Failed to update transaction:", error);
       return false;

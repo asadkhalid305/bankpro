@@ -1,16 +1,25 @@
 import React from 'react';
-import type { Backup, Transaction } from '../../types';
+import { 
+  FileStack, 
+  Download, 
+  RotateCcw, 
+  Eye, 
+  X,
+  History,
+  Calendar,
+  Database
+} from 'lucide-react';
 import { Button } from '../../components/ui/Button';
-import { Modal } from '../../components/ui/Modal';
-import { Input } from '../../components/ui/Input';
-import { History, FileArchive, ArrowRight, AlertTriangle, Search, Check } from 'lucide-react';
 import { Card, CardContent, CardHeader, CardTitle, CardDescription } from "@/components/ui/Card";
+import { PageHeader } from '../../components/ui/PageHeader';
+import { Badge } from '../../components/ui/Badge';
 import { cn } from "@/lib/utils";
+import type { Backup } from '../../types';
 
 interface BackupsSectionProps {
   backups: Backup[];
   onPreview: (filename: string) => void;
-  previewData: Transaction[] | null;
+  previewData: any[] | null;
   selectedBackup: string | null;
   onRestore: (filename: string) => void;
   onClosePreview: () => void;
@@ -24,139 +33,113 @@ export const BackupsSection: React.FC<BackupsSectionProps> = ({
   onRestore,
   onClosePreview
 }) => {
-  const [confirmText, setConfirmText] = React.useState('');
-
-  const handleRestoreClick = () => {
-    if (selectedBackup && confirmText === 'RESTORE') {
-      onRestore(selectedBackup);
-      setConfirmText('');
-    }
-  };
-
   return (
     <div className="space-y-6">
-      <div className="flex flex-col gap-4 md:flex-row md:items-center md:justify-between">
-        <div>
-          <h1 className="text-2xl font-bold tracking-tight">System Backups</h1>
-          <p className="text-sm text-muted-foreground flex items-center mt-1">
-            <History className="w-4 h-4 mr-2" />
-            Automatic snapshots of your master statement.
-          </p>
-        </div>
-      </div>
+      <PageHeader 
+        title="System Backups" 
+        description="Access historical snapshots of your master statement and restore previous versions."
+      />
 
-      <Card>
-        <CardHeader>
-          <CardTitle>Backup History</CardTitle>
-          <CardDescription>Select a version to preview and restore your data.</CardDescription>
-        </CardHeader>
-        <CardContent className="p-0">
-          <div className="divide-y">
-            {backups.length === 0 && (
-              <div className="p-12 text-center text-muted-foreground italic">
-                No backups found yet. They are created automatically after each import.
-              </div>
-            )}
-            {backups.map(b => (
-              <div key={b.filename} className="flex items-center justify-between p-4 hover:bg-muted/30 transition-colors">
-                <div className="flex items-center gap-4">
-                  <div className="p-2 rounded-lg bg-primary/10 text-primary">
-                    <FileArchive className="w-5 h-5" />
+      <div className="grid gap-6 lg:grid-cols-12">
+        <Card className="lg:col-span-4">
+          <CardHeader>
+            <CardTitle className="text-lg flex items-center gap-2">
+                <History className="w-5 h-5 text-primary" />
+                Backup History
+            </CardTitle>
+            <CardDescription>Generated every time you merge new data.</CardDescription>
+          </CardHeader>
+          <CardContent className="p-0">
+            <div className="divide-y max-h-[600px] overflow-y-auto">
+              {backups.length === 0 && (
+                <div className="p-12 text-center text-muted-foreground italic">
+                  No backups found yet.
+                </div>
+              )}
+              {backups.map((backup) => (
+                <div 
+                  key={backup.filename} 
+                  className={cn(
+                    "flex flex-col p-4 hover:bg-muted/30 transition-colors cursor-pointer group",
+                    selectedBackup === backup.filename && "bg-primary/5 border-l-2 border-primary"
+                  )}
+                  onClick={() => onPreview(backup.filename)}
+                >
+                  <div className="flex items-center justify-between mb-1">
+                    <span className="font-semibold text-sm truncate">{backup.filename}</span>
+                    <Badge variant="default">{backup.size}</Badge>
                   </div>
-                  <div>
-                    <p className="font-medium text-sm">{b.date}</p>
-                    <p className="text-xs text-muted-foreground font-mono">{b.filename} • {b.size}</p>
+                  <div className="flex items-center justify-between">
+                    <div className="flex items-center text-xs text-muted-foreground">
+                      <Calendar className="w-3 h-3 mr-1" />
+                      {backup.date}
+                    </div>
+                    <div className="flex gap-1 opacity-0 group-hover:opacity-100 transition-opacity">
+                        <Button size="icon" variant="ghost" className="h-7 w-7 text-emerald-600" onClick={(e) => { e.stopPropagation(); onRestore(backup.filename); }}>
+                            <RotateCcw className="w-3.5 h-3.5" />
+                        </Button>
+                    </div>
                   </div>
                 </div>
-                <Button onClick={() => onPreview(b.filename)} variant="outline" size="sm">
-                  Preview <ArrowRight className="w-4 h-4 ml-2" />
-                </Button>
-              </div>
-            ))}
-          </div>
-        </CardContent>
-      </Card>
-
-      <Modal 
-        isOpen={!!previewData} 
-        onClose={onClosePreview}
-        title={`Restore point identified`}
-        size="lg"
-        footer={
-          <>
-            <Button onClick={onClosePreview} variant="ghost">Cancel</Button>
-            <Button 
-                onClick={handleRestoreClick} 
-                variant="destructive"
-                disabled={confirmText !== 'RESTORE'}
-            >
-                Restore Statement
-            </Button>
-          </>
-        }
-      >
-        <div className="space-y-6">
-          <div className="bg-orange-50 border border-orange-100 dark:bg-orange-950/20 dark:border-orange-900/30 p-4 rounded-lg flex items-start gap-3">
-            <AlertTriangle className="w-5 h-5 text-orange-600 dark:text-orange-400 mt-0.5 shrink-0" />
-            <div className="text-sm text-orange-800 dark:text-orange-300">
-              <p className="font-semibold">Destructive Action</p>
-              <p>Restoring will permanently overwrite your current <code>master_statement.xlsx</code> with this version.</p>
+              ))}
             </div>
-          </div>
+          </CardContent>
+        </Card>
 
-          <div className="space-y-3">
-             <div className="flex items-center justify-between">
-                <h4 className="text-sm font-semibold uppercase tracking-wider text-muted-foreground flex items-center">
-                  <Search className="w-4 h-4 mr-2" /> Preview Sample
-                </h4>
-                <span className="text-xs text-muted-foreground">{selectedBackup}</span>
-             </div>
-             <div className="border rounded-lg overflow-hidden">
-                <table className="w-full text-xs text-left">
-                  <thead className="bg-muted text-muted-foreground border-b">
+        <Card className="lg:col-span-8">
+          <CardHeader className="flex flex-row items-center justify-between">
+            <div>
+              <CardTitle className="text-lg flex items-center gap-2">
+                  <Database className="w-5 h-5 text-primary" />
+                  Backup Preview
+              </CardTitle>
+              <CardDescription>
+                {selectedBackup ? `Viewing contents of ${selectedBackup}` : 'Select a backup from the list to see its contents.'}
+              </CardDescription>
+            </div>
+            {previewData && (
+              <Button size="icon" variant="ghost" onClick={onClosePreview}>
+                <X className="w-4 h-4" />
+              </Button>
+            )}
+          </CardHeader>
+          <CardContent className="p-0">
+            {!previewData ? (
+              <div className="flex flex-col items-center justify-center py-32 text-muted-foreground bg-muted/10">
+                <FileStack className="w-12 h-12 mb-4 opacity-20" />
+                <p>No backup selected for preview</p>
+              </div>
+            ) : (
+              <div className="relative overflow-x-auto max-h-[550px]">
+                <table className="w-full text-sm text-left">
+                  <thead className="text-xs uppercase bg-muted/50 text-muted-foreground border-b font-bold sticky top-0 z-10">
                     <tr>
-                      <th className="px-4 py-2">Date</th>
-                      <th className="px-4 py-2">Merchant</th>
-                      <th className="px-4 py-2">Category</th>
-                      <th className="px-4 py-2 text-right">Price</th>
+                      <th className="px-4 py-3">Date</th>
+                      <th className="px-4 py-3">Merchant</th>
+                      <th className="px-4 py-3">Category</th>
+                      <th className="px-4 py-3 text-right">Amount</th>
                     </tr>
                   </thead>
                   <tbody className="divide-y">
-                    {previewData?.map((r, i) => (
-                      <tr key={i} className="hover:bg-muted/30">
-                        <td className="px-4 py-2 whitespace-nowrap">{r.DATE}</td>
-                        <td className="px-4 py-2 font-medium truncate max-w-[150px]">{r.MERCHANT}</td>
-                        <td className="px-4 py-2">
-                           <span className="px-1.5 py-0.5 bg-secondary text-secondary-foreground rounded">{r.CATEGORY}</span>
+                    {previewData.map((row, i) => (
+                      <tr key={i} className="hover:bg-muted/20">
+                        <td className="px-4 py-3 text-xs">{row.DATE || row.date}</td>
+                        <td className="px-4 py-3 font-medium text-xs truncate max-w-[200px]">{row.MERCHANT || row.merchant}</td>
+                        <td className="px-4 py-3 text-xs">
+                            <Badge variant="default">{row.CATEGORY || row.category}</Badge>
                         </td>
-                        <td className="px-4 py-2 text-right font-mono">{r.PRICE}</td>
+                        <td className="px-4 py-3 text-right font-mono text-xs">
+                          {(row.PRICE || row.amount || 0).toFixed(2)} €
+                        </td>
                       </tr>
                     ))}
                   </tbody>
                 </table>
-             </div>
-          </div>
-
-          <div className="space-y-3 p-4 bg-muted/30 rounded-lg">
-              <label className="text-sm font-medium">To confirm restoration, type <strong>RESTORE</strong> below:</label>
-              <div className="relative">
-                <Input 
-                  type="text" 
-                  value={confirmText} 
-                  onChange={(e) => setConfirmText(e.target.value)}
-                  placeholder="RESTORE"
-                  className={cn(
-                    "uppercase tracking-widest font-bold text-center",
-                    confirmText === 'RESTORE' && "border-emerald-500 focus-visible:ring-emerald-500"
-                  )}
-                />
-                {confirmText === 'RESTORE' && (
-                  <Check className="absolute right-3 top-2.5 w-5 h-5 text-emerald-500 animate-in zoom-in" />
-                )}
               </div>
-          </div>
-        </div>
-      </Modal>
+            )}
+          </CardContent>
+        </Card>
+      </div>
     </div>
   );
 };

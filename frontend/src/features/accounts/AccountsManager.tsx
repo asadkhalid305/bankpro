@@ -8,14 +8,17 @@ import {
   CreditCard,
   Banknote,
   Landmark,
+  Globe,
   Wallet,
   Smartphone,
-  Globe,
-  Coins
+  Coins,
+  PiggyBank
 } from 'lucide-react';
 import { Button } from '../../components/ui/Button';
 import { Input } from '../../components/ui/Input';
 import { Card, CardContent, CardHeader } from "@/components/ui/Card";
+import { PageHeader } from '../../components/ui/PageHeader';
+import { Badge } from '../../components/ui/Badge';
 import { cn } from "@/lib/utils";
 import type { Account } from '../../types/Account';
 
@@ -42,10 +45,7 @@ export const AccountsManager: React.FC<AccountsManagerProps> = ({
 
   const handleAdd = () => {
     const balance = parseFloat(newInitialBalance);
-    if (isNaN(balance)) {
-        alert("Invalid initial balance");
-        return;
-    }
+    if (isNaN(balance)) return;
     onAdd(newAccountName, balance);
     setNewAccountName('');
     setNewInitialBalance('0');
@@ -54,23 +54,9 @@ export const AccountsManager: React.FC<AccountsManagerProps> = ({
 
   const handleUpdate = (oldName: string) => {
     const balance = parseFloat(editInitialBalance);
-    if (isNaN(balance)) {
-        alert("Invalid initial balance");
-        return;
-    }
+    if (isNaN(balance)) return;
     onUpdate(oldName, editAccountName, balance);
     setEditingAccount(null);
-  };
-
-  const getAccountStyle = (name: string) => {
-    const n = name.toLowerCase();
-    if (n.includes('cash')) return { icon: Banknote, color: 'bg-green-100 text-green-700 dark:bg-green-900/30 dark:text-green-400' };
-    if (n.includes('bank') || n.includes('sparkasse') || n.includes('deutsche')) return { icon: Landmark, color: 'bg-blue-100 text-blue-700 dark:bg-blue-900/30 dark:text-blue-400' };
-    if (n.includes('paypal') || n.includes('wise') || n.includes('revolut')) return { icon: Globe, color: 'bg-indigo-100 text-indigo-700 dark:bg-indigo-900/30 dark:text-indigo-400' };
-    if (n.includes('visa') || n.includes('mastercard') || n.includes('amex')) return { icon: CreditCard, color: 'bg-purple-100 text-purple-700 dark:bg-purple-900/30 dark:text-purple-400' };
-    if (n.includes('apple') || n.includes('google') || n.includes('pay')) return { icon: Smartphone, color: 'bg-slate-100 text-slate-700 dark:bg-slate-800 dark:text-slate-400' };
-    
-    return { icon: Wallet, color: 'bg-emerald-100 text-emerald-700 dark:bg-emerald-900/30 dark:text-emerald-400' };
   };
 
   const formatCurrency = (amount: number, currency: string = 'EUR') => {
@@ -79,143 +65,135 @@ export const AccountsManager: React.FC<AccountsManagerProps> = ({
 
   return (
     <div className="space-y-6">
-      <div className="flex flex-col gap-4 md:flex-row md:items-center md:justify-between">
-        <div>
-          <h1 className="text-2xl font-bold tracking-tight">Accounts</h1>
-          <p className="text-sm text-muted-foreground flex items-center mt-1">
-            <Coins className="w-4 h-4 mr-2" />
-            Manage your bank accounts, wallets, and payment methods.
-          </p>
-        </div>
-        <div className="flex items-center gap-2">
-           <Button onClick={() => setShowAddForm(!showAddForm)} variant={showAddForm ? 'outline' : 'default'} size="sm">
-            {showAddForm ? <X className="w-4 h-4 mr-2" /> : <Plus className="w-4 h-4 mr-2" />}
-            {showAddForm ? 'Cancel' : 'Add Account'}
-          </Button>
-        </div>
-      </div>
+      <PageHeader 
+        title="Physical Accounts" 
+        description="Manage your bank accounts, wallets, and their initial balances."
+      >
+        <Button onClick={() => setShowAddForm(!showAddForm)} variant={showAddForm ? 'outline' : 'default'}>
+          {showAddForm ? <X className="w-4 h-4 mr-2" /> : <Plus className="w-4 h-4 mr-2" />}
+          {showAddForm ? 'Cancel' : 'Add Account'}
+        </Button>
+      </PageHeader>
 
       <Card>
-        <CardHeader>
-          <div className="space-y-1">
-            <h3 className="font-semibold leading-none tracking-tight">Your Accounts</h3>
-            <p className="text-sm text-muted-foreground">Configure accounts and their initial balances.</p>
-          </div>
-        </CardHeader>
         <CardContent className="p-0">
           {showAddForm && (
-            <div className="p-4 border-b bg-muted/30 animate-in fade-in slide-in-from-top-2">
-              <div className="flex gap-2 items-end">
-                <div className="grid gap-1.5 flex-1">
-                    <label className="text-xs font-medium text-muted-foreground">Account Name</label>
+            <div className="p-6 border-b bg-muted/30 animate-in fade-in slide-in-from-top-2">
+              <div className="grid grid-cols-1 md:grid-cols-3 gap-4 items-end max-w-3xl">
+                <div className="space-y-1.5">
+                    <label className="text-xs font-bold uppercase text-muted-foreground tracking-wider">Account Name</label>
                     <Input 
-                    placeholder="e.g. Deutsche Bank" 
-                    value={newAccountName} 
-                    onChange={(e) => setNewAccountName(e.target.value)} 
+                      placeholder="e.g. Deutsche Bank" 
+                      value={newAccountName} 
+                      onChange={(e) => setNewAccountName(e.target.value)} 
                     />
                 </div>
-                <div className="grid gap-1.5 w-32">
-                    <label className="text-xs font-medium text-muted-foreground">Initial Balance</label>
+                <div className="space-y-1.5">
+                    <label className="text-xs font-bold uppercase text-muted-foreground tracking-wider">Initial Balance</label>
                     <Input 
-                    type="number"
-                    step="0.01"
-                    placeholder="0.00" 
-                    value={newInitialBalance} 
-                    onChange={(e) => setNewInitialBalance(e.target.value)} 
+                      type="number"
+                      step="0.01"
+                      placeholder="0.00" 
+                      value={newInitialBalance} 
+                      onChange={(e) => setNewInitialBalance(e.target.value)} 
                     />
                 </div>
-                <Button onClick={handleAdd} className="shrink-0">Create</Button>
+                <Button onClick={handleAdd} className="w-full">Create Account</Button>
               </div>
             </div>
           )}
 
-          <div className="divide-y">
-            {accounts.length === 0 && (
-              <div className="p-12 text-center text-muted-foreground italic">
-                No accounts defined.
-              </div>
-            )}
-            {accounts.map(account => {
-              const style = getAccountStyle(account.name);
-              const Icon = style.icon;
-              const isEditing = editingAccount === account.name;
-
-              return (
-                <div key={account.name} className="flex items-center justify-between p-4 hover:bg-muted/30 transition-colors">
-                  <div className="flex items-center gap-4 flex-1">
-                    <div className={cn("p-2 rounded-lg", style.color)}>
-                      <Icon className="w-5 h-5" />
-                    </div>
-                    <div className="flex-1 grid grid-cols-1 md:grid-cols-3 gap-4 items-center">
-                      {isEditing ? (
-                        <>
-                            <Input 
-                                value={editAccountName} 
-                                onChange={(e) => setEditAccountName(e.target.value)} 
-                                className="h-8 text-sm"
-                                autoFocus
-                            />
-                             <Input 
-                                type="number"
-                                step="0.01"
-                                value={editInitialBalance} 
-                                onChange={(e) => setEditInitialBalance(e.target.value)} 
-                                className="h-8 text-sm w-32"
-                            />
-                             <div className="text-sm text-muted-foreground italic">
-                                Updating...
-                            </div>
-                        </>
+          <div className="relative overflow-x-auto">
+            <table className="w-full text-sm text-left">
+              <thead className="text-xs uppercase bg-muted/50 text-muted-foreground border-b">
+                <tr>
+                  <th className="px-6 py-4 font-bold tracking-wider">Account Name</th>
+                  <th className="px-6 py-4 font-bold tracking-wider">Initial Balance</th>
+                  <th className="px-6 py-4 font-bold tracking-wider">Current Balance</th>
+                  <th className="px-6 py-4 text-right">Actions</th>
+                </tr>
+              </thead>
+              <tbody className="divide-y">
+                {accounts.length === 0 && (
+                  <tr>
+                    <td colSpan={4} className="px-6 py-12 text-center text-muted-foreground italic">
+                      No accounts defined.
+                    </td>
+                  </tr>
+                )}
+                {accounts.map(account => (
+                  <tr key={account.name} className="hover:bg-muted/30 transition-colors">
+                    <td className="px-6 py-4">
+                      {editingAccount === account.name ? (
+                        <Input 
+                          value={editAccountName} 
+                          onChange={(e) => setEditAccountName(e.target.value)} 
+                          className="h-8 text-sm"
+                          autoFocus
+                        />
                       ) : (
-                        <>
-                            <p className="font-medium text-sm">{account.name}</p>
-                            <div className="text-sm">
-                                <span className="text-muted-foreground mr-2">Initial:</span>
-                                {formatCurrency(account.initial_balance, account.currency)}
-                            </div>
-                            <div className="text-sm font-semibold">
-                                <span className="text-muted-foreground mr-2 font-normal">Current:</span>
-                                <span className={account.current_balance < 0 ? "text-destructive" : "text-emerald-600"}>
-                                    {formatCurrency(account.current_balance, account.currency)}
-                                </span>
-                            </div>
-                        </>
+                        <div className="flex items-center gap-3">
+                          <div className="p-1.5 bg-primary/10 rounded">
+                            <PiggyBank className="w-4 h-4 text-primary" />
+                          </div>
+                          <span className="font-semibold text-foreground/90">{account.name}</span>
+                        </div>
                       )}
-                    </div>
-                  </div>
-                  
-                  <div className="flex items-center gap-2 ml-4">
-                    {isEditing ? (
-                      <>
-                        <Button onClick={() => handleUpdate(account.name)} size="icon" variant="ghost" className="text-emerald-600">
-                          <Check className="w-4 h-4" />
-                        </Button>
-                        <Button onClick={() => setEditingAccount(null)} size="icon" variant="ghost" className="text-muted-foreground">
-                          <X className="w-4 h-4" />
-                        </Button>
-                      </>
-                    ) : (
-                      <>
-                        <Button 
-                          onClick={() => {
-                            setEditingAccount(account.name);
-                            setEditAccountName(account.name);
-                            setEditInitialBalance(account.initial_balance.toString());
-                          }} 
-                          size="icon" 
-                          variant="ghost"
-                        >
-                          <Edit3 className="w-4 h-4" />
-                        </Button>
-                        <Button onClick={() => onDelete(account.name)} size="icon" variant="ghost" className="text-destructive">
-                          <Trash2 className="w-4 h-4" />
-                        </Button>
-                      </>
-                    )}
-                  </div>
-                </div>
-              );
-            })}
+                    </td>
+                    <td className="px-6 py-4 font-mono">
+                      {editingAccount === account.name ? (
+                        <Input 
+                          type="number"
+                          step="0.01"
+                          value={editInitialBalance} 
+                          onChange={(e) => setEditInitialBalance(e.target.value)} 
+                          className="h-8 text-sm w-32"
+                        />
+                      ) : (
+                        <span className="text-muted-foreground">{formatCurrency(account.initial_balance, account.currency)}</span>
+                      )}
+                    </td>
+                    <td className="px-6 py-4 font-mono font-bold">
+                      <span className={account.current_balance < 0 ? "text-destructive" : "text-emerald-600"}>
+                        {formatCurrency(account.current_balance, account.currency)}
+                      </span>
+                    </td>
+                    <td className="px-6 py-4 text-right">
+                      <div className="flex justify-end gap-2">
+                        {editingAccount === account.name ? (
+                          <>
+                            <Button onClick={() => handleUpdate(account.name)} size="icon" variant="ghost" className="h-8 w-8 text-emerald-600">
+                              <Check className="w-4 h-4" />
+                            </Button>
+                            <Button onClick={() => setEditingAccount(null)} size="icon" variant="ghost" className="h-8 w-8 text-muted-foreground">
+                              <X className="w-4 h-4" />
+                            </Button>
+                          </>
+                        ) : (
+                          <>
+                            <Button 
+                              onClick={() => {
+                                setEditingAccount(account.name);
+                                setEditAccountName(account.name);
+                                setEditInitialBalance(account.initial_balance.toString());
+                              }} 
+                              size="icon" 
+                              variant="ghost"
+                              className="h-8 w-8"
+                            >
+                              <Edit3 className="w-4 h-4" />
+                            </Button>
+                            <Button onClick={() => onDelete(account.name)} size="icon" variant="ghost" className="h-8 w-8 text-destructive">
+                              <Trash2 className="w-4 h-4" />
+                            </Button>
+                          </>
+                        )}
+                      </div>
+                    </td>
+                  </tr>
+                ))}
+              </tbody>
+            </table>
           </div>
         </CardContent>
       </Card>

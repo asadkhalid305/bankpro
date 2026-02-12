@@ -58,9 +58,10 @@ export const DashboardLayout = ({ children }: DashboardLayoutProps) => {
       case pathname === '/': return 'Dashboard';
       case pathname.startsWith('/transactions'): return 'Transactions';
       case pathname.startsWith('/import'): return 'Import';
-      case pathname.startsWith('/mappings'): return 'Mappings';
+      case pathname.startsWith('/mappings'): return 'Categorization Rules';
       case pathname.startsWith('/backups'): return 'Backups';
       case pathname.startsWith('/accounts'): return 'Accounts';
+      case pathname.startsWith('/buckets'): return 'Buckets';
       case pathname.startsWith('/settings'): return 'Settings';
       default: return 'BankPro';
     }
@@ -127,7 +128,7 @@ export const DashboardLayout = ({ children }: DashboardLayoutProps) => {
           />
           <NavItem
             icon={Brain}
-            label="Mappings"
+            label="Categorization Rules"
             active={isActive('/mappings')}
             onClick={() => navigate('/mappings')}
             collapsed={collapsed}

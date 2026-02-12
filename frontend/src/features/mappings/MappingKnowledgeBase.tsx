@@ -7,7 +7,6 @@ import {
   Check, 
   X, 
   Brain,
-  Info,
   ChevronUp,
   ChevronDown
 } from 'lucide-react';
@@ -16,6 +15,8 @@ import { Button } from '../../components/ui/Button';
 import { Input } from '../../components/ui/Input';
 import { Select } from '../../components/ui/Select';
 import { Card, CardContent, CardHeader } from "@/components/ui/Card";
+import { PageHeader } from '../../components/ui/PageHeader';
+import { Badge } from '../../components/ui/Badge';
 import { cn } from "@/lib/utils";
 import { type Mapping } from '../../hooks/useMappings';
 
@@ -91,21 +92,15 @@ export const MappingKnowledgeBase: React.FC<MappingKnowledgeBaseProps> = ({
 
   return (
     <div className="space-y-6">
-      <div className="flex flex-col gap-4 md:flex-row md:items-center md:justify-between">
-        <div>
-          <h1 className="text-2xl font-bold tracking-tight">Categorization Rules</h1>
-          <p className="text-sm text-muted-foreground flex items-center mt-1">
-            <Brain className="w-4 h-4 mr-2 text-primary" />
-            Patterns used to automatically assign categories and buckets.
-          </p>
-        </div>
-        <div className="flex items-center gap-2">
-           <Button onClick={() => setShowAddForm(!showAddForm)} variant={showAddForm ? 'outline' : 'default'} size="sm">
-            {showAddForm ? <X className="w-4 h-4 mr-2" /> : <Plus className="w-4 h-4 mr-2" />}
-            {showAddForm ? 'Cancel' : 'New Pattern'}
-          </Button>
-        </div>
-      </div>
+      <PageHeader 
+        title="Categorization Rules" 
+        description="Patterns used to automatically assign categories and buckets to your transactions."
+      >
+        <Button onClick={() => setShowAddForm(!showAddForm)} variant={showAddForm ? 'outline' : 'default'}>
+          {showAddForm ? <X className="w-4 h-4 mr-2" /> : <Plus className="w-4 h-4 mr-2" />}
+          {showAddForm ? 'Cancel' : 'New Rule'}
+        </Button>
+      </PageHeader>
 
       <Card>
         <CardHeader className="p-4 border-b">
@@ -136,25 +131,25 @@ export const MappingKnowledgeBase: React.FC<MappingKnowledgeBaseProps> = ({
                 onClick={() => onDelete(Array.from(selectedRows))}
               >
                 <Trash2 className="w-4 h-4 mr-2" />
-                Delete ({selectedRows.size})
+                Delete Selected ({selectedRows.size})
               </Button>
             )}
           </div>
         </CardHeader>
         <CardContent className="p-0">
           {showAddForm && (
-            <div className="p-4 border-b bg-muted/30 animate-in fade-in slide-in-from-top-2">
+            <div className="p-6 border-b bg-muted/30 animate-in fade-in slide-in-from-top-2">
               <div className="grid grid-cols-1 gap-4 md:grid-cols-4 items-end">
-                <div className="space-y-1">
-                    <label className="text-[10px] uppercase font-bold text-muted-foreground">Pattern</label>
+                <div className="space-y-1.5">
+                    <label className="text-xs font-bold uppercase text-muted-foreground tracking-wider">Pattern</label>
                     <Input placeholder="e.g. REWE" value={newPattern} onChange={(e) => setNewPattern(e.target.value)} />
                 </div>
-                <div className="space-y-1">
-                    <label className="text-[10px] uppercase font-bold text-muted-foreground">Category</label>
+                <div className="space-y-1.5">
+                    <label className="text-xs font-bold uppercase text-muted-foreground tracking-wider">Category</label>
                     <Select value={newCategory} onChange={(e) => setNewCategory(e.target.value)} options={categories} />
                 </div>
-                <div className="space-y-1">
-                    <label className="text-[10px] uppercase font-bold text-muted-foreground">Bucket</label>
+                <div className="space-y-1.5">
+                    <label className="text-xs font-bold uppercase text-muted-foreground tracking-wider">Bucket</label>
                     <Select value={newBucket} onChange={(e) => setNewBucket(e.target.value)} options={buckets} />
                 </div>
                 <Button onClick={handleAdd} className="w-full">Create Rule</Button>
@@ -166,7 +161,7 @@ export const MappingKnowledgeBase: React.FC<MappingKnowledgeBaseProps> = ({
             <table className="w-full text-sm text-left">
               <thead className="text-xs uppercase bg-muted/50 text-muted-foreground border-b">
                 <tr>
-                  <th className="px-6 py-3 w-4">
+                  <th className="px-6 py-4 w-12">
                     <input 
                       type="checkbox" 
                       className="rounded border-gray-300 text-primary focus:ring-primary"
@@ -174,19 +169,26 @@ export const MappingKnowledgeBase: React.FC<MappingKnowledgeBaseProps> = ({
                       onChange={onToggleAll}
                     />
                   </th>
-                  <th onClick={() => onSort('pattern')} className="px-6 py-3 cursor-pointer hover:text-foreground transition-colors group">
+                  <th onClick={() => onSort('pattern')} className="px-6 py-4 cursor-pointer hover:text-foreground transition-colors">
                     <div className="flex items-center">Pattern <SortIcon column="pattern" /></div>
                   </th>
-                  <th onClick={() => onSort('category')} className="px-6 py-3 cursor-pointer hover:text-foreground transition-colors group">
+                  <th onClick={() => onSort('category')} className="px-6 py-4 cursor-pointer hover:text-foreground transition-colors">
                     <div className="flex items-center">Category <SortIcon column="category" /></div>
                   </th>
-                  <th onClick={() => onSort('bucket')} className="px-6 py-3 cursor-pointer hover:text-foreground transition-colors group">
+                  <th onClick={() => onSort('bucket')} className="px-6 py-4 cursor-pointer hover:text-foreground transition-colors">
                     <div className="flex items-center">Bucket <SortIcon column="bucket" /></div>
                   </th>
-                  <th className="px-6 py-3 text-right">Actions</th>
+                  <th className="px-6 py-4 text-right w-24">Actions</th>
                 </tr>
               </thead>
               <tbody className="divide-y">
+                {mappings.length === 0 && (
+                  <tr>
+                    <td colSpan={5} className="px-6 py-12 text-center text-muted-foreground italic">
+                      No categorization rules found.
+                    </td>
+                  </tr>
+                )}
                 {mappings.map((m) => (
                   <tr key={m.pattern} className={cn(
                     "hover:bg-muted/30 transition-colors",
@@ -200,7 +202,7 @@ export const MappingKnowledgeBase: React.FC<MappingKnowledgeBaseProps> = ({
                         onChange={() => onToggleRow(m.pattern)}
                       />
                     </td>
-                    <td className="px-6 py-4 font-medium font-mono text-xs">
+                    <td className="px-6 py-4 font-mono text-xs">
                       {editingKey === m.pattern ? (
                         <Input value={editPattern} onChange={(e) => setEditPattern(e.target.value)} className="h-8" />
                       ) : m.pattern}
@@ -209,55 +211,44 @@ export const MappingKnowledgeBase: React.FC<MappingKnowledgeBaseProps> = ({
                       {editingKey === m.pattern ? (
                         <Select value={editCategory} onChange={(e) => setEditCategory(e.target.value)} options={categories} className="h-8 text-xs" />
                       ) : (
-                        <span className="inline-flex items-center px-2.5 py-0.5 rounded-full text-[10px] font-bold uppercase bg-slate-100 text-slate-700 dark:bg-slate-800 dark:text-slate-300">
-                          {m.category}
-                        </span>
+                        <Badge variant="default">{m.category}</Badge>
                       )}
                     </td>
                     <td className="px-6 py-4">
                       {editingKey === m.pattern ? (
                         <Select value={editBucket} onChange={(e) => setEditBucket(e.target.value)} options={buckets} className="h-8 text-xs" />
                       ) : (
-                        <span className={cn(
-                            "text-[10px] font-bold uppercase",
-                            m.bucket === 'Kindergeld' ? "text-blue-600" : "text-muted-foreground"
-                        )}>
-                          {m.bucket}
-                        </span>
+                        <Badge variant={m.bucket === 'Kindergeld' ? 'info' : 'default'}>{m.bucket}</Badge>
                       )}
                     </td>
                     <td className="px-6 py-4 text-right">
-                      {editingKey === m.pattern ? (
-                        <div className="flex justify-end gap-2">
-                          <Button onClick={() => handleUpdateClick(m.pattern)} size="icon" variant="ghost" className="h-8 w-8 text-emerald-600">
-                            <Check className="w-4 h-4" />
-                          </Button>
-                          <Button onClick={() => setEditingKey(null)} size="icon" variant="ghost" className="h-8 w-8 text-muted-foreground">
-                            <X className="w-4 h-4" />
-                          </Button>
-                        </div>
-                      ) : (
-                        <div className="flex justify-end gap-2">
-                          <Button onClick={() => handleEditClick(m)} size="icon" variant="ghost" className="h-8 w-8">
-                            <Edit3 className="w-4 h-4" />
-                          </Button>
-                          <Button onClick={() => onDelete([m.pattern])} size="icon" variant="ghost" className="h-8 w-8 text-destructive">
-                            <Trash2 className="w-4 h-4" />
-                          </Button>
-                        </div>
-                      )}
+                      <div className="flex justify-end gap-2">
+                        {editingKey === m.pattern ? (
+                          <>
+                            <Button onClick={() => handleUpdateClick(m.pattern)} size="icon" variant="ghost" className="h-8 w-8 text-emerald-600">
+                              <Check className="w-4 h-4" />
+                            </Button>
+                            <Button onClick={() => setEditingKey(null)} size="icon" variant="ghost" className="h-8 w-8 text-muted-foreground">
+                              <X className="w-4 h-4" />
+                            </Button>
+                          </>
+                        ) : (
+                          <>
+                            <Button onClick={() => handleEditClick(m)} size="icon" variant="ghost" className="h-8 w-8">
+                              <Edit3 className="w-4 h-4" />
+                            </Button>
+                            <Button onClick={() => onDelete([m.pattern])} size="icon" variant="ghost" className="h-8 w-8 text-destructive">
+                              <Trash2 className="w-4 h-4" />
+                            </Button>
+                          </>
+                        )}
+                      </div>
                     </td>
                   </tr>
                 ))}
               </tbody>
             </table>
           </div>
-          {mappings.length === 0 && (
-            <div className="flex flex-col items-center justify-center py-12 text-center text-muted-foreground">
-              <Brain className="w-12 h-12 mb-4 opacity-20" />
-              <p>No categorization rules found.</p>
-            </div>
-          )}
         </CardContent>
       </Card>
     </div>

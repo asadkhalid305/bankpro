@@ -1,25 +1,20 @@
 import { 
   PlusCircle, 
   ArrowUpRight, 
-  Clock, 
-  AlertCircle, 
-  FileCheck2,
   TrendingUp,
-  Brain,
   Wallet,
   Baby,
   PiggyBank,
   ArrowLeftRight,
-  TrendingDown,
   CreditCard
 } from 'lucide-react';
 import { Card, CardContent, CardHeader, CardTitle, CardDescription } from "@/components/ui/Card";
 import { Button } from "@/components/ui/Button";
+import { PageHeader } from '@/components/ui/PageHeader';
 import { cn } from "@/lib/utils";
 import { useNavigate } from 'react-router-dom';
 import { useState, useEffect } from 'react';
-
-const API_URL = "http://localhost:8000";
+import { api } from '@/lib/api';
 
 const StatCard = ({ title, value, description, icon: Icon, trend, trendType }: {
   title: string;
@@ -39,15 +34,6 @@ const StatCard = ({ title, value, description, icon: Icon, trend, trendType }: {
       <p className="text-[10px] text-muted-foreground mt-1 text-nowrap truncate">
         {description}
       </p>
-      {trend && (
-        <div className={cn(
-          "flex items-center mt-2 text-xs font-medium",
-          trendType === 'positive' ? "text-emerald-500" : trendType === 'negative' ? "text-red-500" : "text-slate-500"
-        )}>
-          {trendType === 'positive' ? <TrendingUp className="w-3 h-3 mr-1" /> : trendType === 'negative' ? <TrendingDown className="w-3 h-3 mr-1" /> : null}
-          {trend}
-        </div>
-      )}
     </CardContent>
   </Card>
 );
@@ -57,27 +43,22 @@ export const DashboardView = () => {
   const [summary, setSummary] = useState<any>(null);
 
   useEffect(() => {
-    fetch(`${API_URL}/dashboard/summary`)
-      .then(res => res.json())
-      .then(data => setSummary(data));
+    api.get('/dashboard/summary').then(setSummary);
   }, []);
 
   const totalBalance = summary?.buckets?.reduce((acc: number, b: any) => acc + b.balance, 0) || 0;
 
   return (
     <div className="space-y-8 pb-12">
-      <div className="flex justify-between items-center text-center md:text-left">
-        <div>
-          <h1 className="text-3xl font-bold tracking-tight text-foreground">Financial Dashboard</h1>
-          <p className="text-muted-foreground">Detailed overview of your accounts, buckets and investments.</p>
-        </div>
-        <div className="hidden md:flex gap-3">
-          <Button onClick={() => navigate('/import')} className="shadow-lg">
-            <PlusCircle className="mr-2 h-4 w-4" />
-            Import Statement
-          </Button>
-        </div>
-      </div>
+      <PageHeader 
+        title="Dashboard" 
+        description="Comprehensive overview of your financial health and activity."
+      >
+        <Button onClick={() => navigate('/import')} className="shadow-lg">
+          <PlusCircle className="mr-2 h-4 w-4" />
+          Import Statement
+        </Button>
+      </PageHeader>
 
       {/* Main Highlights */}
       <div className="grid gap-4 md:grid-cols-2 lg:grid-cols-4">

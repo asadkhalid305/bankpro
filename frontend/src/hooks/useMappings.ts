@@ -1,5 +1,6 @@
 import { useState, useCallback } from 'react';
 import type { SortConfig } from '../types';
+import { api } from '../lib/api';
 
 export interface Mapping {
   pattern: string;
@@ -16,8 +17,7 @@ export const useMappings = () => {
 
   const fetchMappings = useCallback(async () => {
     try {
-      const response = await fetch('/api/mappings/');
-      const data = await response.json();
+      const data = await api.get('/mappings/');
       setMappings(Array.isArray(data) ? data : []);
     } catch (error) {
       console.error("Failed to fetch mappings:", error);
@@ -46,16 +46,9 @@ export const useMappings = () => {
 
   const addMapping = useCallback(async (merchant: string, category: string, bucket: string = "Main"): Promise<boolean> => {
     try {
-      const response = await fetch('/api/mappings/', {
-        method: 'POST',
-        headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify({ merchant, category, bucket })
-      });
-      if (response.ok) {
-        await fetchMappings();
-        return true;
-      }
-      return false;
+      await api.post('/mappings/', { merchant, category, bucket });
+      await fetchMappings();
+      return true;
     } catch (error) {
       return false;
     }
@@ -63,40 +56,26 @@ export const useMappings = () => {
 
   const updateMapping = useCallback(async (oldMerchant: string | null, newMerchant: string, newCategory: string, bucket: string): Promise<boolean> => {
     try {
-      const response = await fetch('/api/mappings/', {
-        method: 'POST',
-        headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify({
-          merchant: newMerchant,
-          category: newCategory,
-          bucket: bucket,
-          old_merchant: oldMerchant
-        })
+      await api.post('/mappings/', {
+        merchant: newMerchant,
+        category: newCategory,
+        bucket: bucket,
+        old_merchant: oldMerchant
       });
-      if (response.ok) {
-        await fetchMappings();
-        return true;
-      }
-      return false;
+      await fetchMappings();
+      return true;
     } catch (error) {
       return false;
     }
   }, [fetchMappings]);
 
   const deleteMappings = useCallback(async (merchants: string[]): Promise<boolean> => {
-    if (!window.confirm(`Delete ${merchants.length} mapping(s)?`)) return false;
+    if (!window.confirm(`Delete ${merchants.length} categorization rule(s)?`)) return false;
     try {
-      const response = await fetch(`/api/mappings/bulk_delete`, { 
-        method: 'DELETE',
-        headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify({ merchants })
-      });
-      if (response.ok) {
-        setSelectedRows(new Set());
-        await fetchMappings();
-        return true;
-      }
-      return false;
+      await api.delete(`/mappings/bulk_delete`, { merchants });
+      setSelectedRows(new Set());
+      await fetchMappings();
+      return true;
     } catch (error) {
       return false;
     }

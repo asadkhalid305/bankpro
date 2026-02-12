@@ -1,5 +1,6 @@
 import { useState, useCallback } from 'react';
 import type { UploadResponse, Transaction } from '../types';
+import { api } from '../lib/api';
 
 export const useUpload = () => {
   const [file, setFile] = useState<File | null>(null);
@@ -26,31 +27,25 @@ export const useUpload = () => {
     formData.append('create_new_file', createNewFile ? 'true' : 'false');
 
     try {
-      const response = await fetch('/api/upload/', { method: 'POST', body: formData });
-      const data = await response.json();
-      if (response.ok) {
-        if (createNewFile) {
-          setStatus('new_file_created');
-          setMessage(data.message || `File created successfully.`);
-        } else {
-          setStagedData(data);
-          setStatus('review');
-          setFile(null);
-          
-          if (data.data) {
-            const nonDups = data.data
-              .map((t: Transaction, i: number) => t.is_duplicate ? -1 : i)
-              .filter((i: number) => i !== -1);
-            setSelectedTransactions(nonDups);
-          }
-        }
+      const data = await api.upload('/upload/', formData);
+      if (createNewFile) {
+        setStatus('new_file_created');
+        setMessage(data.message || `File created successfully.`);
       } else {
-        setStatus('error');
-        setMessage(data.detail || 'Upload failed');
+        setStagedData(data);
+        setStatus('review');
+        setFile(null);
+        
+        if (data.data) {
+          const nonDups = data.data
+            .map((t: Transaction, i: number) => t.is_duplicate ? -1 : i)
+            .filter((i: number) => i !== -1);
+          setSelectedTransactions(nonDups);
+        }
       }
-    } catch (error) {
+    } catch (error: any) {
       setStatus('error');
-      setMessage('Network error');
+      setMessage(error.detail || 'Upload failed');
     }
   }, [file, createNewFile]);
 
@@ -60,22 +55,12 @@ export const useUpload = () => {
     const toMerge = stagedData.data.filter((_, i) => selectedTransactions.includes(i));
     
     try {
-      const response = await fetch('/api/merge', {
-        method: 'POST',
-        headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify({ transactions: toMerge })
-      });
-      if (response.ok) {
-        setStatus('success');
-        setMessage(`Successfully merged ${toMerge.length} transactions.`);
-      } else {
-        const data = await response.json();
-        setStatus('error');
-        setMessage(data.detail || 'Merge failed');
-      }
-    } catch (error) {
+      await api.post('/merge', { transactions: toMerge });
+      setStatus('success');
+      setMessage(`Successfully merged ${toMerge.length} transactions.`);
+    } catch (error: any) {
       setStatus('error');
-      setMessage('Merge failed');
+      setMessage(error.detail || 'Merge failed');
     }
   }, [stagedData, selectedTransactions]);
 

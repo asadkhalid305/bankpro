@@ -16,6 +16,9 @@ import { Button } from '../../components/ui/Button';
 import { Input } from '../../components/ui/Input';
 import { Select } from '../../components/ui/Select';
 import { Card, CardContent, CardHeader } from "@/components/ui/Card";
+import { PageHeader } from '../../components/ui/PageHeader';
+import { Badge } from '../../components/ui/Badge';
+import { api } from '../../lib/api';
 import { cn } from "@/lib/utils";
 
 interface MasterStatementProps {
@@ -75,7 +78,7 @@ export const MasterStatement: React.FC<MasterStatementProps> = ({
     details: '',
     category: 'Unknown',
     amount: 0,
-    account: 'Cash',
+    account: paymentTypes[0] || 'Cash',
     bucket: 'Main',
     transaction_type: 'EXPENSE'
   });
@@ -98,7 +101,7 @@ export const MasterStatement: React.FC<MasterStatementProps> = ({
         details: '',
         category: 'Unknown', 
         amount: 0, 
-        account: 'Cash', 
+        account: paymentTypes[0] || 'Cash', 
         bucket: 'Main', 
         transaction_type: 'EXPENSE' 
     });
@@ -112,24 +115,19 @@ export const MasterStatement: React.FC<MasterStatementProps> = ({
 
   return (
     <div className="space-y-6">
-      <div className="flex flex-col gap-4 md:flex-row md:items-center md:justify-between">
-        <div>
-          <h1 className="text-2xl font-bold tracking-tight">Transaction Log</h1>
-          <p className="text-sm text-muted-foreground">
-            Central database of all bank statements and manual entries.
-          </p>
-        </div>
-        <div className="flex items-center gap-2">
-          <Button onClick={() => setShowAddForm(!showAddForm)} variant={showAddForm ? 'outline' : 'default'} size="sm">
-            {showAddForm ? <X className="w-4 h-4 mr-2" /> : <Plus className="w-4 h-4 mr-2" />}
-            {showAddForm ? 'Cancel' : 'Manual Entry'}
-          </Button>
-          <Button variant="outline" size="sm" onClick={() => window.open('http://localhost:8000/export/targetV2', '_blank')}>
-            <Download className="w-4 h-4 mr-2" />
-            V2 Excel
-          </Button>
-        </div>
-      </div>
+      <PageHeader 
+        title="Transaction Log" 
+        description="Central database of all your financial records and movements."
+      >
+        <Button onClick={() => setShowAddForm(!showAddForm)} variant={showAddForm ? 'outline' : 'default'}>
+          {showAddForm ? <X className="w-4 h-4 mr-2" /> : <Plus className="w-4 h-4 mr-2" />}
+          {showAddForm ? 'Cancel' : 'Manual Entry'}
+        </Button>
+        <Button variant="outline" onClick={() => window.open(`${api.baseUrl}/export/targetV2`, '_blank')}>
+          <Download className="w-4 h-4 mr-2" />
+          V2 Excel
+        </Button>
+      </PageHeader>
 
       <Card>
         <CardHeader className="p-4 border-b">
@@ -137,7 +135,7 @@ export const MasterStatement: React.FC<MasterStatementProps> = ({
             <div className="relative col-span-4">
               <Search className="absolute left-2.5 top-2.5 h-4 w-4 text-muted-foreground" />
               <Input
-                placeholder="Search..."
+                placeholder="Search history..."
                 className="pl-9"
                 value={search}
                 onChange={(e) => onSearchChange(e.target.value)}
@@ -185,50 +183,50 @@ export const MasterStatement: React.FC<MasterStatementProps> = ({
         </CardHeader>
         <CardContent className="p-0">
           {showAddForm && (
-            <div className="p-4 border-b bg-muted/30 animate-in fade-in slide-in-from-top-2">
+            <div className="p-6 border-b bg-muted/30 animate-in fade-in slide-in-from-top-2">
               <div className="grid grid-cols-1 gap-4 md:grid-cols-9 items-end">
-                <div className="space-y-1">
-                    <label className="text-[10px] uppercase font-bold text-muted-foreground">Date</label>
+                <div className="space-y-1.5">
+                    <label className="text-xs font-bold uppercase text-muted-foreground tracking-wider">Date</label>
                     <Input type="date" value={newRow.date} onChange={(e) => setNewRow({...newRow, date: e.target.value})} />
                 </div>
-                <div className="space-y-1">
-                    <label className="text-[10px] uppercase font-bold text-muted-foreground">Merchant</label>
+                <div className="space-y-1.5">
+                    <label className="text-xs font-bold uppercase text-muted-foreground tracking-wider">Merchant</label>
                     <Input placeholder="Who" value={newRow.merchant} onChange={(e) => setNewRow({...newRow, merchant: e.target.value})} />
                 </div>
-                <div className="space-y-1">
-                    <label className="text-[10px] uppercase font-bold text-muted-foreground">Type</label>
+                <div className="space-y-1.5">
+                    <label className="text-xs font-bold uppercase text-muted-foreground tracking-wider">Type</label>
                     <Select value={newRow.transaction_type} onChange={(e) => setNewRow({...newRow, transaction_type: e.target.value as any})} options={TYPE_OPTIONS} />
                 </div>
-                <div className="space-y-1">
-                    <label className="text-[10px] uppercase font-bold text-muted-foreground">Details</label>
+                <div className="space-y-1.5">
+                    <label className="text-xs font-bold uppercase text-muted-foreground tracking-wider">Details</label>
                     <Input placeholder="Ref/Order#" value={newRow.details} onChange={(e) => setNewRow({...newRow, details: e.target.value})} />
                 </div>
-                <div className="space-y-1">
-                    <label className="text-[10px] uppercase font-bold text-muted-foreground">Amount</label>
+                <div className="space-y-1.5">
+                    <label className="text-xs font-bold uppercase text-muted-foreground tracking-wider">Amount</label>
                     <Input type="number" step="0.01" value={newRow.amount} onChange={(e) => setNewRow({...newRow, amount: parseFloat(e.target.value)})} />
                 </div>
-                <div className="space-y-1">
-                    <label className="text-[10px] uppercase font-bold text-muted-foreground">Account</label>
+                <div className="space-y-1.5">
+                    <label className="text-xs font-bold uppercase text-muted-foreground tracking-wider">Account</label>
                     <Select value={newRow.account} onChange={(e) => setNewRow({...newRow, account: e.target.value})} options={paymentTypes} />
                 </div>
-                <div className="space-y-1">
-                    <label className="text-[10px] uppercase font-bold text-muted-foreground">Bucket</label>
+                <div className="space-y-1.5">
+                    <label className="text-xs font-bold uppercase text-muted-foreground tracking-wider">Bucket</label>
                     <Select value={newRow.bucket} onChange={(e) => setNewRow({...newRow, bucket: e.target.value})} options={buckets} />
                 </div>
-                <div className="space-y-1">
-                    <label className="text-[10px] uppercase font-bold text-muted-foreground">Category</label>
+                <div className="space-y-1.5">
+                    <label className="text-xs font-bold uppercase text-muted-foreground tracking-wider">Category</label>
                     <Select value={newRow.category} onChange={(e) => setNewRow({...newRow, category: e.target.value})} options={categories} />
                 </div>
-                <Button onClick={handleAddClick} className="w-full"><Check className="w-4 h-4 mr-2" /> Save</Button>
+                <Button onClick={handleAddClick} className="w-full">Save Entry</Button>
               </div>
             </div>
           )}
 
           <div className="relative overflow-x-auto">
             <table className="w-full text-sm text-left table-fixed">
-              <thead className="text-xs uppercase bg-muted/50 text-muted-foreground border-b">
+              <thead className="text-xs uppercase bg-muted/50 text-muted-foreground border-b font-bold tracking-wider">
                 <tr>
-                  <th className="px-6 py-3 w-12">
+                  <th className="px-6 py-4 w-12 text-center">
                     <input 
                       type="checkbox" 
                       className="rounded border-gray-300 text-primary focus:ring-primary"
@@ -236,31 +234,31 @@ export const MasterStatement: React.FC<MasterStatementProps> = ({
                       onChange={onToggleAll}
                     />
                   </th>
-                  <th onClick={() => onSort('date')} className="px-6 py-3 cursor-pointer hover:text-foreground transition-colors w-[110px]">
+                  <th onClick={() => onSort('date')} className="px-6 py-4 cursor-pointer hover:text-foreground transition-colors w-[110px]">
                     <div className="flex items-center">Date <SortIcon column="date" /></div>
                   </th>
-                  <th onClick={() => onSort('merchant')} className="px-6 py-3 cursor-pointer hover:text-foreground transition-colors w-[18%]">
+                  <th onClick={() => onSort('merchant')} className="px-6 py-4 cursor-pointer hover:text-foreground transition-colors w-[18%]">
                     <div className="flex items-center">Merchant <SortIcon column="merchant" /></div>
                   </th>
-                  <th onClick={() => onSort('transaction_type')} className="px-6 py-3 cursor-pointer hover:text-foreground transition-colors w-[100px]">
+                  <th onClick={() => onSort('transaction_type')} className="px-6 py-4 cursor-pointer hover:text-foreground transition-colors w-[100px]">
                     <div className="flex items-center">Type <SortIcon column="transaction_type" /></div>
                   </th>
-                  <th onClick={() => onSort('details')} className="px-6 py-3 cursor-pointer hover:text-foreground transition-colors w-[15%]">
+                  <th onClick={() => onSort('details')} className="px-6 py-4 cursor-pointer hover:text-foreground transition-colors w-[15%]">
                     <div className="flex items-center">Details <SortIcon column="details" /></div>
                   </th>
-                  <th onClick={() => onSort('category')} className="px-6 py-3 cursor-pointer hover:text-foreground transition-colors w-[130px]">
+                  <th onClick={() => onSort('category')} className="px-6 py-4 cursor-pointer hover:text-foreground transition-colors w-[130px]">
                     <div className="flex items-center">Category <SortIcon column="category" /></div>
                   </th>
-                  <th onClick={() => onSort('bucket')} className="px-6 py-3 cursor-pointer hover:text-foreground transition-colors w-[110px]">
+                  <th onClick={() => onSort('bucket')} className="px-6 py-4 cursor-pointer hover:text-foreground transition-colors w-[110px]">
                     <div className="flex items-center">Bucket <SortIcon column="bucket" /></div>
                   </th>
-                  <th onClick={() => onSort('amount')} className="px-6 py-3 cursor-pointer hover:text-foreground transition-colors w-[110px]">
+                  <th onClick={() => onSort('amount')} className="px-6 py-4 cursor-pointer hover:text-foreground transition-colors w-[110px]">
                     <div className="flex items-center">Amount <SortIcon column="amount" /></div>
                   </th>
-                  <th onClick={() => onSort('account')} className="px-6 py-3 cursor-pointer hover:text-foreground transition-colors w-[120px]">
+                  <th onClick={() => onSort('account')} className="px-6 py-4 cursor-pointer hover:text-foreground transition-colors w-[120px]">
                     <div className="flex items-center">Account <SortIcon column="account" /></div>
                   </th>
-                  <th className="px-6 py-3 text-right w-[100px]">Actions</th>
+                  <th className="px-6 py-4 text-right w-[100px]">Actions</th>
                 </tr>
               </thead>
               <tbody className="divide-y">
@@ -270,7 +268,7 @@ export const MasterStatement: React.FC<MasterStatementProps> = ({
                     selectedRows.has(r.id!) && "bg-primary/5",
                     r.transaction_type === 'TRANSFER' && "bg-blue-50/20 dark:bg-blue-900/5"
                   )}>
-                    <td className="px-6 py-4">
+                    <td className="px-6 py-4 text-center">
                       <input 
                         type="checkbox" 
                         className="rounded border-gray-300 text-primary focus:ring-primary"
@@ -278,7 +276,7 @@ export const MasterStatement: React.FC<MasterStatementProps> = ({
                         onChange={() => onToggleRow(r.id!)}
                       />
                     </td>
-                    <td className="px-6 py-4 text-xs text-muted-foreground">
+                    <td className="px-6 py-4 text-xs text-muted-foreground whitespace-nowrap font-medium">
                       {editingId === r.id ? (
                         <Input type="date" className="h-8 text-xs px-1" value={editRow.date} onChange={e => setEditRow({...editRow, date: e.target.value})} />
                       ) : r.date}
@@ -287,21 +285,16 @@ export const MasterStatement: React.FC<MasterStatementProps> = ({
                         {editingId === r.id ? (
                           <Input className="h-8 text-xs" value={editRow.merchant} onChange={e => setEditRow({...editRow, merchant: e.target.value})} />
                         ) : (
-                          <div className="font-medium text-foreground/90 break-words leading-tight">{r.merchant}</div>
+                          <div className="font-semibold text-foreground/90 break-words leading-tight">{r.merchant}</div>
                         )}
                     </td>
                     <td className="px-6 py-4">
                         {editingId === r.id ? (
                            <Select value={editRow.transaction_type} onChange={e => setEditRow({...editRow, transaction_type: e.target.value as any})} options={TYPE_OPTIONS} className="h-8 text-[10px] font-bold" />
                         ) : (
-                          <span className={cn(
-                            "text-[10px] font-bold px-1.5 py-0.5 rounded",
-                            r.transaction_type === 'EXPENSE' ? "text-red-600 bg-red-50 dark:bg-red-950/20" : 
-                            r.transaction_type === 'INCOME' ? "text-emerald-600 bg-emerald-50 dark:bg-emerald-950/20" : 
-                            "text-blue-600 bg-blue-50 dark:bg-blue-950/20"
-                          )}>
+                          <Badge variant={r.transaction_type === 'EXPENSE' ? 'destructive' : r.transaction_type === 'INCOME' ? 'success' : 'info'}>
                             {r.transaction_type}
-                          </span>
+                          </Badge>
                         )}
                     </td>
                     <td className="px-6 py-4">
@@ -315,23 +308,17 @@ export const MasterStatement: React.FC<MasterStatementProps> = ({
                       {editingId === r.id ? (
                          <Select value={editRow.category} onChange={e => setEditRow({...editRow, category: e.target.value})} options={categories} className="h-8 text-xs" />
                       ) : (
-                        <span className="text-[11px] font-semibold text-muted-foreground uppercase">{r.category}</span>
+                        <Badge variant="default">{r.category}</Badge>
                       )}
                     </td>
                     <td className="px-6 py-4">
                         {editingId === r.id ? (
                            <Select value={editRow.bucket} onChange={e => setEditRow({...editRow, bucket: e.target.value})} options={buckets} className="h-8 text-xs" />
                         ) : (
-                          <span className={cn(
-                              "inline-flex items-center px-2 py-0.5 rounded text-[10px] font-bold uppercase",
-                              r.bucket === 'Kindergeld' ? "bg-blue-100 text-blue-700 dark:bg-blue-900/30 dark:text-blue-400" :
-                              r.bucket === 'Savings' ? "bg-amber-100 text-amber-700" : "bg-slate-100 text-slate-600"
-                          )}>
-                            {r.bucket}
-                          </span>
+                          <Badge variant={r.bucket === 'Kindergeld' ? 'info' : 'default'}>{r.bucket}</Badge>
                         )}
                     </td>
-                    <td className="px-6 py-4 font-mono font-bold">
+                    <td className="px-6 py-4 font-mono font-bold whitespace-nowrap">
                         {editingId === r.id ? (
                            <Input type="number" step="0.01" className="h-8 text-xs" value={editRow.amount} onChange={e => setEditRow({...editRow, amount: parseFloat(e.target.value)})} />
                         ) : (
@@ -343,7 +330,7 @@ export const MasterStatement: React.FC<MasterStatementProps> = ({
                           </span>
                         )}
                     </td>
-                    <td className="px-6 py-4 text-xs font-medium">
+                    <td className="px-6 py-4 text-xs font-medium text-muted-foreground">
                       {editingId === r.id ? (
                          <Select value={editRow.account} onChange={e => setEditRow({...editRow, account: e.target.value})} options={paymentTypes} className="h-8 text-xs" />
                       ) : r.account}
@@ -387,7 +374,7 @@ export const MasterStatement: React.FC<MasterStatementProps> = ({
           )}
         </CardContent>
         <CardHeader className="p-4 border-t bg-muted/20">
-           <div className="text-xs text-muted-foreground font-medium">
+           <div className="text-xs text-muted-foreground font-semibold uppercase tracking-widest">
              Total Records: {totalCount} | Filtered: {data.length}
            </div>
         </CardHeader>

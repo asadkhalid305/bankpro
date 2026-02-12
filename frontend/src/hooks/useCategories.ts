@@ -1,12 +1,12 @@
 import { useState, useCallback } from 'react';
+import { api } from '../lib/api';
 
 export const useCategories = () => {
   const [categories, setCategories] = useState<string[]>([]);
 
   const fetchCategories = useCallback(async () => {
     try {
-      const response = await fetch('/api/categories/');
-      const data = await response.json();
+      const data = await api.get('/categories/');
       setCategories(Array.isArray(data) ? data : []);
     } catch (error) {
       console.error("Failed to fetch categories:", error);
@@ -17,16 +17,9 @@ export const useCategories = () => {
     if (!name || categories.includes(name)) return false;
     const newCategories = [...categories, name];
     try {
-      const response = await fetch('/api/categories/', {
-        method: 'POST',
-        headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify(newCategories)
-      });
-      if (response.ok) {
-        await fetchCategories();
-        return true;
-      }
-      return false;
+      await api.post('/categories/', newCategories);
+      await fetchCategories();
+      return true;
     } catch (error) {
       return false;
     }
@@ -35,16 +28,9 @@ export const useCategories = () => {
   const deleteCategory = useCallback(async (name: string): Promise<boolean> => {
     const newCategories = categories.filter(c => c !== name);
     try {
-      const response = await fetch('/api/categories/', {
-        method: 'POST',
-        headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify(newCategories)
-      });
-      if (response.ok) {
-        await fetchCategories();
-        return true;
-      }
-      return false;
+      await api.post('/categories/', newCategories);
+      await fetchCategories();
+      return true;
     } catch (error) {
       return false;
     }

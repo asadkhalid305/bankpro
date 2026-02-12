@@ -1,4 +1,5 @@
 import { useState, useCallback } from 'react';
+import { api } from '../lib/api';
 
 export interface Bucket {
   name: string;
@@ -10,8 +11,7 @@ export const useBuckets = () => {
 
   const fetchBuckets = useCallback(async () => {
     try {
-      const response = await fetch('/api/buckets/');
-      const data = await response.json();
+      const data = await api.get('/buckets/');
       setBuckets(Array.isArray(data) ? data : []);
     } catch (error) {
       console.error("Failed to fetch buckets:", error);
@@ -20,16 +20,9 @@ export const useBuckets = () => {
 
   const saveBuckets = useCallback(async (newBuckets: Bucket[]): Promise<boolean> => {
     try {
-      const response = await fetch('/api/buckets/', {
-        method: 'POST',
-        headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify(newBuckets)
-      });
-      if (response.ok) {
-        await fetchBuckets();
-        return true;
-      }
-      return false;
+      await api.post('/buckets/', newBuckets);
+      await fetchBuckets();
+      return true;
     } catch (error) {
       return false;
     }
