@@ -1,6 +1,6 @@
-import { 
-  PlusCircle, 
-  ArrowUpRight, 
+import {
+  PlusCircle,
+  ArrowUpRight,
   TrendingUp,
   Wallet,
   Baby,
@@ -50,42 +50,42 @@ export const DashboardView = () => {
 
   return (
     <div className="space-y-8 pb-12">
-      <PageHeader 
-        title="Dashboard" 
+      <PageHeader
+        title="Dashboard"
         description="Comprehensive overview of your financial health and activity."
       >
         <Button onClick={() => navigate('/import')} className="shadow-lg">
           <PlusCircle className="mr-2 h-4 w-4" />
-          Import Statement
+          Import
         </Button>
       </PageHeader>
 
       {/* Main Highlights */}
       <div className="grid gap-4 md:grid-cols-2 lg:grid-cols-4">
-        <StatCard 
-          title="Total Net Worth" 
-          value={`${totalBalance.toFixed(2)} €`} 
-          description="Combined balance of all accounts" 
+        <StatCard
+          title="Total Net Worth"
+          value={`${totalBalance.toFixed(2)} €`}
+          description="Combined balance of all accounts"
           icon={Wallet}
         />
-        <StatCard 
-          title="Expenses (Month)" 
-          value={`${(summary?.monthly_expenses || 0).toFixed(2)} €`} 
-          description="Total spending in February" 
+        <StatCard
+          title="Expenses (Month)"
+          value={`${(summary?.monthly_expenses || 0).toFixed(2)} €`}
+          description="Total spending in February"
           icon={CreditCard}
           trendType="negative"
         />
-        <StatCard 
-          title="Investments" 
-          value={`${(summary?.investment_value || 0).toFixed(2)} €`} 
-          description="Total principal invested" 
+        <StatCard
+          title="Investments"
+          value={`${(summary?.investment_value || 0).toFixed(2)} €`}
+          description="Total principal invested"
           icon={TrendingUp}
           trendType="positive"
         />
-        <StatCard 
-          title="Monthly Transfers" 
-          value={`${(summary?.monthly_transfers || 0).toFixed(2)} €`} 
-          description="Internal movements this month" 
+        <StatCard
+          title="Monthly Transfers"
+          value={`${(summary?.monthly_transfers || 0).toFixed(2)} €`}
+          description="Internal movements this month"
           icon={ArrowLeftRight}
         />
       </div>
@@ -95,13 +95,13 @@ export const DashboardView = () => {
         <Card className="lg:col-span-4 shadow-sm border-muted/40">
           <CardHeader>
             <CardTitle className="text-lg flex items-center gap-2">
-                <PiggyBank className="w-5 h-5 text-primary" />
-                Physical Accounts
+              <PiggyBank className="w-5 h-5 text-primary" />
+              Physical Accounts
             </CardTitle>
             <CardDescription>Current balance per bank source.</CardDescription>
           </CardHeader>
           <CardContent className="space-y-3">
-            {summary?.accounts?.sort((a:any, b:any) => b.balance - a.balance).map((acc: any) => (
+            {summary?.accounts?.sort((a: any, b: any) => b.balance - a.balance).map((acc: any) => (
               <div key={acc.name} className="flex items-center justify-between p-2.5 rounded-lg border border-transparent hover:bg-muted/30 hover:border-muted transition-all">
                 <span className="font-medium text-sm text-foreground/80">{acc.name}</span>
                 <span className={cn("font-mono font-bold text-sm", acc.balance < 0 ? "text-red-500" : "text-emerald-500")}>
@@ -116,8 +116,8 @@ export const DashboardView = () => {
         <Card className="lg:col-span-4 shadow-sm border-muted/40">
           <CardHeader>
             <CardTitle className="text-lg flex items-center gap-2">
-                <Baby className="w-5 h-5 text-blue-500" />
-                Logical Buckets
+              <Baby className="w-5 h-5 text-blue-500" />
+              Logical Buckets
             </CardTitle>
             <CardDescription>Allocation across purposes.</CardDescription>
           </CardHeader>
@@ -129,13 +129,13 @@ export const DashboardView = () => {
                   <span className="font-bold">{bucket.balance.toFixed(2)} €</span>
                 </div>
                 <div className="h-1.5 bg-muted rounded-full overflow-hidden">
-                  <div 
+                  <div
                     className={cn(
-                        "h-full rounded-full transition-all duration-500",
-                        bucket.name === 'Main' ? "bg-primary" : 
+                      "h-full rounded-full transition-all duration-500",
+                      bucket.name === 'Main' ? "bg-primary" :
                         bucket.name === 'Kindergeld' ? "bg-blue-500" : "bg-amber-500"
                     )}
-                    style={{ width: `${Math.min(100, (Math.abs(bucket.balance) / (Math.abs(totalBalance) || 1)) * 100)}%` }} 
+                    style={{ width: `${Math.min(100, (Math.abs(bucket.balance) / (Math.abs(totalBalance) || 1)) * 100)}%` }}
                   />
                 </div>
               </div>
@@ -163,7 +163,7 @@ export const DashboardView = () => {
                   <div className={cn(
                     "text-xs font-bold ml-4 whitespace-nowrap",
                     t.transaction_type === 'TRANSFER' ? "text-slate-400" :
-                    t.amount < 0 ? "text-red-500" : "text-emerald-500"
+                      t.amount < 0 ? "text-red-500" : "text-emerald-500"
                   )}>
                     {t.amount.toFixed(2)} €
                   </div>
