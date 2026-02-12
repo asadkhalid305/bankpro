@@ -1,4 +1,4 @@
-from fastapi import FastAPI, UploadFile, File, HTTPException
+from fastapi import FastAPI, UploadFile, File, HTTPException, Form
 from fastapi.responses import FileResponse
 from fastapi.middleware.cors import CORSMiddleware
 import shutil
@@ -22,10 +22,13 @@ app.add_middleware(
 )
 
 UPLOAD_DIR = "files"
+UPLOADS_DIR = os.path.join(UPLOAD_DIR, "uploads")
+STATEMENTS_DIR = os.path.join(UPLOAD_DIR, "statements")
 BACKUP_DIR = os.path.join(UPLOAD_DIR, "backups")
 OUTPUT_FILE = os.path.join(UPLOAD_DIR, "Final_Statement.xlsx")
 
-os.makedirs(UPLOAD_DIR, exist_ok=True)
+os.makedirs(UPLOADS_DIR, exist_ok=True)
+os.makedirs(STATEMENTS_DIR, exist_ok=True)
 os.makedirs(BACKUP_DIR, exist_ok=True)
 
 CATEGORIES = ['Benefit', 'Bill', 'Conversion', 'Dependant', 'Extra', 'Food & Outing', 'Gifts', 'Grocery', 'Investment', 'Medical', 'Office', 'Salary', 'Shopping', 'Transport', 'Vacation', 'Car', 'Unknown']
@@ -334,9 +337,9 @@ async def bulk_delete_master_rows(request: DeleteRequest):
         raise HTTPException(status_code=500, detail=str(e))
 
 @app.post("/upload/")
-async def upload_file(file: UploadFile = File(...), create_new_file: bool = False):
+async def upload_file(file: UploadFile = File(...), create_new_file: bool = Form(False)):
     try:
-        temp_file_path = os.path.join(UPLOAD_DIR, file.filename)
+        temp_file_path = os.path.join(UPLOADS_DIR, file.filename)
         with open(temp_file_path, "wb") as buffer:
             shutil.copyfileobj(file.file, buffer)
         
@@ -357,8 +360,11 @@ async def upload_file(file: UploadFile = File(...), create_new_file: bool = Fals
                 end_date_obj = datetime.strptime(metadata["end_date"], '%Y-%m-%d')
                 start_date_str = start_date_obj.strftime('%Y-%m-%d')
                 end_date_str = end_date_obj.strftime('%Y-%m-%d')
-                new_filename = f"Statement_{start_date_str}_to_{end_date_str}.xlsx"
-                new_file_path = os.path.join(UPLOAD_DIR, new_filename)
+                
+                # Prepend bank name to the filename
+                bank_name = metadata.get("source", "Bank").replace(" ", "_")
+                new_filename = f"{bank_name}_Statement_{start_date_str}_to_{end_date_str}.xlsx"
+                new_file_path = os.path.join(STATEMENTS_DIR, new_filename)
                 
                 print(f"Attempting to create new file: {new_file_path}")
                 print(f"Start Date: {metadata['start_date']}, End Date: {metadata['end_date']}")

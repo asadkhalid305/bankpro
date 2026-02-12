@@ -100,20 +100,33 @@ export const UploadSection: React.FC<UploadSectionProps> = ({
           </div>
 
           {file && (
-            <Button 
-              variant="ghost" 
-              size="sm" 
-              className="mt-4"
-              onClick={(e) => {
-                e.stopPropagation();
-                if (fileInputRef.current) fileInputRef.current.value = '';
-                const emptyEvent = { target: { files: null } } as unknown as React.ChangeEvent<HTMLInputElement>;
-                onFileChange(emptyEvent);
-              }}
-            >
-              <X className="w-4 h-4 mr-2" />
-              Remove File
-            </Button>
+            <div className="flex gap-3 mt-4">
+              <Button 
+                variant="outline" 
+                size="sm"
+                className="bg-background/50"
+                onClick={(e) => {
+                  e.stopPropagation();
+                  fileInputRef.current?.click();
+                }}
+              >
+                <Upload size={16} className="mr-2" />
+                Change File
+              </Button>
+              <Button 
+                variant="ghost" 
+                size="sm" 
+                onClick={(e) => {
+                  e.stopPropagation();
+                  if (fileInputRef.current) fileInputRef.current.value = '';
+                  const emptyEvent = { target: { files: null } } as unknown as React.ChangeEvent<HTMLInputElement>;
+                  onFileChange(emptyEvent);
+                }}
+              >
+                <X className="w-4 h-4 mr-2" />
+                Remove
+              </Button>
+            </div>
           )}
         </CardContent>
       </Card>

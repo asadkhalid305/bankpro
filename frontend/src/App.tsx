@@ -170,6 +170,9 @@ function App() {
                         📥 Download Master File
                       </Button>
                     )}
+                    <Button onClick={() => upload.resetStatus()} className="w-full">
+                      🔄 Process Another Statement
+                    </Button>
                     <Button onClick={() => window.location.href = '/transactions'} variant="outline" className="w-full">
                       View All Transactions
                     </Button>
@@ -191,9 +194,14 @@ function App() {
                     <>
                       <AlertCircle className="w-12 h-12 mb-4 text-destructive" />
                       <p className="text-xl font-medium text-destructive">{upload.message}</p>
-                      <Button onClick={() => { master.fetchMasterData(); window.location.href = '/'; }} className="mt-6">
-                        Back to Safety
-                      </Button>
+                      <div className="flex gap-4 mt-6">
+                        <Button onClick={() => upload.resetStatus()}>
+                          Try Again
+                        </Button>
+                        <Button onClick={() => { master.fetchMasterData(); window.location.href = '/'; }} variant="outline">
+                          Back to Dashboard
+                        </Button>
+                      </div>
                     </>
                   )}
                 </div>

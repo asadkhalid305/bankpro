@@ -32,12 +32,15 @@ export const ReviewSection: React.FC<ReviewSectionProps> = ({
           <h1 className="text-2xl font-bold tracking-tight">Review Imports</h1>
           <p className="text-sm text-muted-foreground mt-1">
             Verify categorized transactions before merging them into your master file.
+            <span className="block mt-1 font-medium text-amber-600 dark:text-amber-400">
+              ⚠️ No changes have been saved to the master file yet.
+            </span>
           </p>
         </div>
-        <div className="flex items-center gap-2">
-          <Button onClick={onCancel} variant="outline" size="sm">Cancel</Button>
-          <Button onClick={onMerge} size="sm" className="bg-emerald-600 hover:bg-emerald-700 text-white">
-            <Check className="w-4 h-4 mr-2" />
+        <div className="flex items-center gap-3">
+          <Button onClick={onCancel} variant="outline">Re-upload / Cancel</Button>
+          <Button onClick={onMerge} size="lg" className="bg-emerald-600 hover:bg-emerald-700 text-white px-8 shadow-lg shadow-emerald-500/20">
+            <Check className="w-5 h-5 mr-2" />
             Confirm & Merge ({selectedTransactions.length})
           </Button>
         </div>

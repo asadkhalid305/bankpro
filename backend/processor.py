@@ -30,9 +30,38 @@ def clean_currency(s):
     if isinstance(s, (int, float)):
         return float(s)
     s = str(s).strip()
-    s = s.replace('.', '')  # Remove thousand separators for European format
-    s = s.replace(',', '.')  # Replace decimal comma with dot
-    s = re.sub(r'[^\d.-]', '', s)  # Remove any other non-numeric chars except . and -
+    
+    # Identify the positions of the last comma and last dot
+    last_comma = s.rfind(',')
+    last_dot = s.rfind('.')
+
+    if last_comma != -1 and last_dot != -1:
+        if last_comma > last_dot:
+            # European format: 1.234,56 -> comma is decimal
+            s = s.replace('.', '').replace(',', '.')
+        else:
+            # English format: 1,234.56 -> dot is decimal
+            s = s.replace(',', '')
+    elif last_comma != -1:
+        # Only comma present: 1,23 or 1.234 (but here no dot)
+        # In German bank statements, a single comma is always a decimal.
+        s = s.replace(',', '.')
+    elif last_dot != -1:
+        # Only dot present: 1.23 or 1.234
+        # If the dot is followed by exactly 3 digits and it's not the only dot, 
+        # it could be a thousand separator. But if there's only one dot, 
+        # it's most likely a decimal for amounts < 1000 or a thousand separator for exactly 1000.
+        # Most PDF extractors for German statements will extract 1.234,56. 
+        # If it's just 1.234, we'll assume it's 1.234 (float) unless it's very likely to be a thousand.
+        # Heuristic: if it's followed by 2 digits, it's a decimal.
+        if len(s.split('.')[-1]) == 3 and float(s.replace('.', '')) >= 1000:
+            # High probability of being a thousand separator (e.g., 1.000)
+            # However, for banking, 1.234 is more likely 1.23 in some cases? 
+            # No, let's stick to standard float parsing if only dot is present.
+            pass
+    
+    s = re.sub(r'[^\d.-]', '', s)
+    
     try:
         return float(s)
     except ValueError:
@@ -41,10 +70,23 @@ def clean_currency(s):
 def clean_merchant_name(text):
     if not text: return ""
     
-    # 1. Conservative Regex Cleaning (Always runs)
+    # 1. German SEPA Specific Cleaning
+    text = re.sub(r'^(Sepalastschrifteinzugvon|Sepaüberweisungan|Sepaüberweisungvon|Sepaechtzeitüberweisungan|Sepaechtzeitüberweisungvon)\s*', '', text, flags=re.IGNORECASE)
+    
+    # 2. Conservative Regex Cleaning (Always runs)
     # Remove IBANs
     text = re.sub(r'[A-Z]{2}\d{2}[A-Z0-9]{11,30}', '', text)
-    # ... (rest of regex remains same)
+    # Remove Payment/Reference noise (More comprehensive)
+    noise_patterns = [
+        r'Paymentreference', r'E2E-Ref\.', r'Creditor-Id', r'Mand-Id', 
+        r'Othrsonst\.Transakt\.', r'Rcurwiederholungslastschrift', 
+        r'Kd-Nr\.', r'Rg-Nr\.', r'Iban', r'Bic', r'Ultm', r'Ultd',
+        r'Niederlassung Deutschland', r'Ihre Tarifrechnung',
+        r'Folgenr\.\d+', r'Verfalld\.\d+'
+    ]
+    for pattern in noise_patterns:
+        text = re.sub(pattern, '', text, flags=re.IGNORECASE)
+
     text = re.sub(r'(ID|REF|TRACE|SEQ|AUTH|TERMINAL|CARD|BATCH|VISA|MC)[:\s]*\d+', '', text, flags=re.IGNORECASE)
     text = re.sub(r'\d{6,}', '', text)
     text = re.sub(r'^(DIRECT DEBIT|CREDIT TRANSFER|PAYMENT TO|PURCHASE AT)\s+', '', text, flags=re.IGNORECASE)
@@ -170,7 +212,8 @@ def process_pdf(file_path):
         year = t['year'] or "2025" # Fallback
         day, month = t['date_part'].split('-')[:2]
         full_date = f"{year}-{month}-{day}"
-        merchant = clean_merchant_name(" ".join(t['item_lines']))
+        raw_merchant = " ".join(t['item_lines'])
+        merchant = clean_merchant_name(raw_merchant)
         data.append({
             'DATE': full_date,
             'MERCHANT': merchant,
