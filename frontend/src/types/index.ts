@@ -1,11 +1,18 @@
 export interface Transaction {
-  DATE: string;
-  MERCHANT: string;
-  CATEGORY: string;
-  PAYMENT: string;
-  PRICE: number;
+  id?: number;
+  date: string;
+  merchant: string;
+  details: string;
+  category: string;
+  amount: number;
+  account: string;
+  bucket: string;
+  transaction_type: 'EXPENSE' | 'INCOME' | 'TRANSFER';
+  raw_merchant?: string;
+  payer?: string;
+  payee?: string;
+  is_manual?: boolean;
   is_duplicate?: boolean;
-  originalIndex?: number; // Added for master data editing
 }
 
 export interface Metadata {
@@ -17,12 +24,10 @@ export interface Metadata {
 }
 
 export interface UploadResponse {
-  metadata?: Metadata; // Make optional for new file creation
-  transactions?: Transaction[]; // Make optional for new file creation
-  categories?: string[]; // Make optional for new file creation
-  accounts?: string[]; // Corrected from payment_types to accounts, and made optional
-  message?: string; // New: For success message when creating a new file
-  new_filename?: string; // New: For filename when creating a new file
+  metadata?: Metadata;
+  data?: Transaction[]; 
+  message?: string;
+  new_filename?: string;
 }
 
 export interface Backup {
@@ -39,5 +44,8 @@ export interface SortConfig<T> {
 export const CATEGORY_OPTIONS = [
   'Benefit', 'Bill', 'Conversion', 'Dependant', 'Extra', 'Food & Outing', 
   'Gifts', 'Grocery', 'Investment', 'Medical', 'Office', 'Salary', 
-  'Shopping', 'Transport', 'Vacation', 'Car', 'Unknown'
+  'Shopping', 'Transport', 'Vacation', 'Car', 'Unknown', 'Kindergeld'
 ];
+
+export const BUCKET_OPTIONS = ['Main', 'Kindergeld', 'Savings'];
+export const TYPE_OPTIONS = ['EXPENSE', 'INCOME', 'TRANSFER'];

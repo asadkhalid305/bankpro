@@ -5,30 +5,31 @@ export const useMasterData = () => {
   const [data, setData] = useState<Transaction[]>([]);
   const [search, setSearch] = useState('');
   const [categoryFilter, setCategoryFilter] = useState('All');
-  const [paymentFilter, setPaymentFilter] = useState('All');
-  const [sortConfig, setSortConfig] = useState<SortConfig<Transaction> | null>({ key: 'DATE', direction: 'desc' });
+  const [accountFilter, setAccountFilter] = useState('All');
+  const [bucketFilter, setBucketFilter] = useState('All');
+  const [sortConfig, setSortConfig] = useState<SortConfig<Transaction> | null>({ key: 'date', direction: 'desc' });
   const [selectedRows, setSelectedRows] = useState<Set<number>>(new Set());
 
   const fetchMasterData = useCallback(async () => {
     try {
-      const response = await fetch('/api/master');
+      const response = await fetch('/api/transactions/');
       const jsonData = await response.json();
       setData(jsonData);
     } catch (error) {
-      alert("Failed to fetch master data");
-      throw error;
+      console.error("Failed to fetch transactions:", error);
     }
   }, []);
 
   const getFilteredData = useCallback(() => {
-    let items = data.map((item, index) => ({ ...item, originalIndex: index }));
+    let items = [...data];
     
     items = items.filter(item => 
-      (item.MERCHANT.toLowerCase().includes(search.toLowerCase()) ||
-       item.CATEGORY.toLowerCase().includes(search.toLowerCase()) ||
-       item.PAYMENT.toLowerCase().includes(search.toLowerCase())) &&
-      (categoryFilter === 'All' || item.CATEGORY === categoryFilter) &&
-      (paymentFilter === 'All' || item.PAYMENT === paymentFilter)
+      (item.merchant.toLowerCase().includes(search.toLowerCase()) ||
+       item.category.toLowerCase().includes(search.toLowerCase()) ||
+       item.account.toLowerCase().includes(search.toLowerCase())) &&
+      (categoryFilter === 'All' || item.category === categoryFilter) &&
+      (accountFilter === 'All' || item.account === accountFilter) &&
+      (bucketFilter === 'All' || item.bucket === bucketFilter)
     );
 
     if (sortConfig) {
@@ -41,39 +42,11 @@ export const useMasterData = () => {
       });
     }
     return items;
-  }, [data, search, categoryFilter, paymentFilter, sortConfig]);
+  }, [data, search, categoryFilter, accountFilter, bucketFilter, sortConfig]);
 
-  const updateRow = useCallback(async (originalIndex: number, updatedRow: Transaction): Promise<boolean> => {
+  const addRow = useCallback(async (newRow: Partial<Transaction>): Promise<boolean> => {
     try {
-      const response = await fetch('/api/master/update', {
-        method: 'POST',
-        headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify({
-          index: originalIndex,
-          ...updatedRow
-        })
-      });
-      if (response.ok) {
-        await fetchMasterData();
-        return true;
-      } else {
-        const errorData = await response.json();
-        alert(`Failed to update master row: ${errorData.detail || 'Unknown error'}`);
-        return false;
-      }
-    } catch (error) {
-      alert("Failed to update master row: Network error");
-      return false;
-    }
-  }, [fetchMasterData]);
-
-  const addRow = useCallback(async (newRow: Transaction): Promise<boolean> => {
-    if (!newRow.MERCHANT || !newRow.DATE || !newRow.CATEGORY || newRow.PRICE === undefined || newRow.PAYMENT === undefined) {
-      alert("Please fill all fields for the new record.");
-      return false;
-    }
-    try {
-      const response = await fetch('/api/master/add', {
+      const response = await fetch('/api/transactions/manual', {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
         body: JSON.stringify(newRow)
@@ -81,36 +54,25 @@ export const useMasterData = () => {
       if (response.ok) {
         await fetchMasterData();
         return true;
-      } else {
-        const errorData = await response.json();
-        alert(`Failed to add new master row: ${errorData.detail || 'Unknown error'}`);
-        return false;
       }
+      return false;
     } catch (error) {
-      alert("Failed to add new master row: Network error");
+      console.error("Failed to add transaction:", error);
       return false;
     }
   }, [fetchMasterData]);
 
-  const deleteRows = useCallback(async (indices: number[]): Promise<boolean> => {
-     if (!window.confirm(`Are you sure you want to delete ${indices.length} transaction(s) from your master statement?`)) return false;
+  const deleteRows = useCallback(async (ids: number[]): Promise<boolean> => {
+    if (!window.confirm(`Delete ${ids.length} transaction(s)?`)) return false;
     try {
-      const response = await fetch(`/api/master/bulk_delete`, { 
-        method: 'DELETE',
-        headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify({ indices })
-      });
-      if (response.ok) {
-        setSelectedRows(new Set());
-        await fetchMasterData();
-        return true;
-      } else {
-        const errorData = await response.json();
-        alert(`Failed to delete master row(s): ${errorData.detail || 'Unknown error'}`);
-        return false;
+      for (const id of ids) {
+        await fetch(`/api/transactions/${id}`, { method: 'DELETE' });
       }
+      setSelectedRows(new Set());
+      await fetchMasterData();
+      return true;
     } catch (error) {
-      alert("Failed to delete master row(s): Network error");
+      console.error("Failed to delete transactions:", error);
       return false;
     }
   }, [fetchMasterData]);
@@ -125,36 +87,52 @@ export const useMasterData = () => {
     });
   }, []);
 
-  const toggleSelection = useCallback((originalIndex: number) => {
+  const toggleSelection = useCallback((id: number) => {
     setSelectedRows(prev => {
       const newSelection = new Set(prev);
-      if (newSelection.has(originalIndex)) newSelection.delete(originalIndex);
-      else newSelection.add(originalIndex);
+      if (newSelection.has(id)) newSelection.delete(id);
+      else newSelection.add(id);
       return newSelection;
     });
   }, []);
 
-  const toggleAllSelection = useCallback((filteredIndices: number[]) => {
+  const toggleAllSelection = useCallback((ids: number[]) => {
     setSelectedRows(prev => {
-      if (prev.size === filteredIndices.length && filteredIndices.length > 0) {
-        return new Set();
-      } else {
-        return new Set(filteredIndices);
-      }
+      if (prev.size === ids.length && ids.length > 0) return new Set();
+      return new Set(ids);
     });
   }, []);
+
+  const updateRow = useCallback(async (id: number, updates: Partial<Transaction>): Promise<boolean> => {
+    try {
+      const response = await fetch('/api/transactions/update', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ id, ...updates })
+      });
+      if (response.ok) {
+        await fetchMasterData();
+        return true;
+      }
+      return false;
+    } catch (error) {
+      console.error("Failed to update transaction:", error);
+      return false;
+    }
+  }, [fetchMasterData]);
 
   return {
     data,
     fetchMasterData,
     search, setSearch,
     categoryFilter, setCategoryFilter,
-    paymentFilter, setPaymentFilter,
+    accountFilter, setAccountFilter,
+    bucketFilter, setBucketFilter,
     sortConfig, toggleSort,
     selectedRows, toggleSelection, toggleAllSelection,
     getFilteredData,
-    updateRow,
     addRow,
+    updateRow,
     deleteRows
   };
 };

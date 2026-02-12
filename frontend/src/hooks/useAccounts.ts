@@ -20,7 +20,7 @@ export const useAccounts = () => {
       return false;
     }
     try {
-      const response = await fetch('/api/accounts', {
+      const response = await fetch('/api/accounts/', {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
         body: JSON.stringify({ 
@@ -34,7 +34,8 @@ export const useAccounts = () => {
         return true;
       } else {
         const errorData = await response.json();
-        alert(`Failed to add account: ${errorData.detail || 'Unknown error'}`);
+        const detail = typeof errorData.detail === 'object' ? JSON.stringify(errorData.detail) : errorData.detail;
+        alert(`Failed to add account: ${detail || 'Unknown error'}`);
         return false;
       }
     } catch (error) {
@@ -49,7 +50,7 @@ export const useAccounts = () => {
       return false;
     }
     try {
-      const response = await fetch('/api/accounts', {
+      const response = await fetch('/api/accounts/', {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
         body: JSON.stringify({ 
@@ -64,7 +65,8 @@ export const useAccounts = () => {
         return true;
       } else {
         const errorData = await response.json();
-        alert(`Failed to update account: ${errorData.detail || 'Unknown error'}`);
+        const detail = typeof errorData.detail === 'object' ? JSON.stringify(errorData.detail) : errorData.detail;
+        alert(`Failed to update account: ${detail || 'Unknown error'}`);
         return false;
       }
     } catch (error) {
@@ -82,7 +84,8 @@ export const useAccounts = () => {
         return true;
       } else {
         const errorData = await response.json();
-        alert(`Failed to delete account: ${errorData.detail || 'Unknown error'}`);
+        const detail = typeof errorData.detail === 'object' ? JSON.stringify(errorData.detail) : errorData.detail;
+        alert(`Failed to delete account: ${detail || 'Unknown error'}`);
         return false;
       }
     } catch (error) {

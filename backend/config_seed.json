@@ -1,0 +1,3690 @@
+{
+  "categories": [
+    "Benefit",
+    "Bill",
+    "Conversion",
+    "Dependant",
+    "Extra",
+    "Food & Outing",
+    "Gifts",
+    "Grocery",
+    "Investment",
+    "Medical",
+    "Office",
+    "Salary",
+    "Shopping",
+    "Transport",
+    "Vacation",
+    "Car",
+    "Unknown",
+    "Kindergeld"
+  ],
+  "buckets": [
+    {
+      "name": "Main",
+      "description": null
+    },
+    {
+      "name": "Kindergeld",
+      "description": null
+    },
+    {
+      "name": "Savings",
+      "description": null
+    }
+  ],
+  "accounts": [
+    {
+      "name": "Deutsche Bank",
+      "initial_balance": 0.0,
+      "currency": "EUR"
+    },
+    {
+      "name": "Wise",
+      "initial_balance": 0.0,
+      "currency": "EUR"
+    },
+    {
+      "name": "Paypal",
+      "initial_balance": 0.0,
+      "currency": "EUR"
+    },
+    {
+      "name": "Cash",
+      "initial_balance": 0.0,
+      "currency": "EUR"
+    },
+    {
+      "name": "Revolut",
+      "initial_balance": 0.0,
+      "currency": "EUR"
+    },
+    {
+      "name": "TR - Personal",
+      "initial_balance": 0.0,
+      "currency": "EUR"
+    },
+    {
+      "name": "TR - Child",
+      "initial_balance": 0.0,
+      "currency": "EUR"
+    }
+  ],
+  "mappings": [
+    {
+      "pattern": "Kindergeld",
+      "category": "Benefit",
+      "bucket": "Kindergeld"
+    },
+    {
+      "pattern": "MB.io",
+      "category": "Salary",
+      "bucket": "Main"
+    },
+    {
+      "pattern": "Rewe",
+      "category": "Grocery",
+      "bucket": "Main"
+    },
+    {
+      "pattern": "Lidl",
+      "category": "Grocery",
+      "bucket": "Main"
+    },
+    {
+      "pattern": "Large Tissue",
+      "category": "Extra",
+      "bucket": "Main"
+    },
+    {
+      "pattern": "Pants",
+      "category": "Extra",
+      "bucket": "Main"
+    },
+    {
+      "pattern": "Folding Chairs",
+      "category": "Extra",
+      "bucket": "Main"
+    },
+    {
+      "pattern": "Chocolate",
+      "category": "Food & Outing",
+      "bucket": "Main"
+    },
+    {
+      "pattern": "Bread",
+      "category": "Extra",
+      "bucket": "Main"
+    },
+    {
+      "pattern": "Risa",
+      "category": "Food & Outing",
+      "bucket": "Main"
+    },
+    {
+      "pattern": "Chromecast",
+      "category": "Extra",
+      "bucket": "Main"
+    },
+    {
+      "pattern": "Dept Repayed To Javeria",
+      "category": "Extra",
+      "bucket": "Main"
+    },
+    {
+      "pattern": "Umbrella",
+      "category": "Extra",
+      "bucket": "Main"
+    },
+    {
+      "pattern": "Highlighter",
+      "category": "Extra",
+      "bucket": "Main"
+    },
+    {
+      "pattern": "Folic Acid",
+      "category": "Extra",
+      "bucket": "Main"
+    },
+    {
+      "pattern": "Edeka",
+      "category": "Grocery",
+      "bucket": "Main"
+    },
+    {
+      "pattern": "Lunch",
+      "category": "Food & Outing",
+      "bucket": "Main"
+    },
+    {
+      "pattern": "Bolu",
+      "category": "Grocery",
+      "bucket": "Main"
+    },
+    {
+      "pattern": "Primark",
+      "category": "Shopping",
+      "bucket": "Main"
+    },
+    {
+      "pattern": "Zafar",
+      "category": "Bill",
+      "bucket": "Main"
+    },
+    {
+      "pattern": "Deutche Fee",
+      "category": "Bill",
+      "bucket": "Main"
+    },
+    {
+      "pattern": "Ansur Play Station",
+      "category": "Extra",
+      "bucket": "Main"
+    },
+    {
+      "pattern": "Istanbul Markt",
+      "category": "Grocery",
+      "bucket": "Main"
+    },
+    {
+      "pattern": "Shore Capital",
+      "category": "Bill",
+      "bucket": "Main"
+    },
+    {
+      "pattern": "Doner",
+      "category": "Food & Outing",
+      "bucket": "Main"
+    },
+    {
+      "pattern": "Ts Foods",
+      "category": "Grocery",
+      "bucket": "Main"
+    },
+    {
+      "pattern": "Lime",
+      "category": "Transport",
+      "bucket": "Main"
+    },
+    {
+      "pattern": "Rossman",
+      "category": "Grocery",
+      "bucket": "Main"
+    },
+    {
+      "pattern": "Doner Fries",
+      "category": "Food & Outing",
+      "bucket": "Main"
+    },
+    {
+      "pattern": "Javeria",
+      "category": "Extra",
+      "bucket": "Main"
+    },
+    {
+      "pattern": "Bolt",
+      "category": "Office",
+      "bucket": "Main"
+    },
+    {
+      "pattern": "Zamzam",
+      "category": "Food & Outing",
+      "bucket": "Main"
+    },
+    {
+      "pattern": "Cash",
+      "category": "Vacation",
+      "bucket": "Main"
+    },
+    {
+      "pattern": "Microwave",
+      "category": "Extra",
+      "bucket": "Main"
+    },
+    {
+      "pattern": "Mietschuldenfreiheit",
+      "category": "Bill",
+      "bucket": "Main"
+    },
+    {
+      "pattern": "Ikea",
+      "category": "Shopping",
+      "bucket": "Main"
+    },
+    {
+      "pattern": "Movie",
+      "category": "Extra",
+      "bucket": "Main"
+    },
+    {
+      "pattern": "Euro Shop",
+      "category": "Grocery",
+      "bucket": "Main"
+    },
+    {
+      "pattern": "Taxi",
+      "category": "Transport",
+      "bucket": "Main"
+    },
+    {
+      "pattern": "Apotheke",
+      "category": "Medical",
+      "bucket": "Main"
+    },
+    {
+      "pattern": "Mobile Topup",
+      "category": "Bill",
+      "bucket": "Main"
+    },
+    {
+      "pattern": "Sheesha",
+      "category": "Food & Outing",
+      "bucket": "Main"
+    },
+    {
+      "pattern": "Immoscout",
+      "category": "Bill",
+      "bucket": "Main"
+    },
+    {
+      "pattern": "Dm",
+      "category": "Grocery",
+      "bucket": "Main"
+    },
+    {
+      "pattern": "H M",
+      "category": "Shopping",
+      "bucket": "Main"
+    },
+    {
+      "pattern": "Aldi Nord",
+      "category": "Grocery",
+      "bucket": "Main"
+    },
+    {
+      "pattern": "Sadiq Bhai",
+      "category": "Extra",
+      "bucket": "Main"
+    },
+    {
+      "pattern": "Radio",
+      "category": "Bill",
+      "bucket": "Main"
+    },
+    {
+      "pattern": "Ticket",
+      "category": "Transport",
+      "bucket": "Main"
+    },
+    {
+      "pattern": "Office Lunch",
+      "category": "Food & Outing",
+      "bucket": "Main"
+    },
+    {
+      "pattern": "S21 Fe",
+      "category": "Extra",
+      "bucket": "Main"
+    },
+    {
+      "pattern": "Amazon",
+      "category": "Shopping",
+      "bucket": "Main"
+    },
+    {
+      "pattern": "Zaddy",
+      "category": "Food & Outing",
+      "bucket": "Main"
+    },
+    {
+      "pattern": "Strabag Deposit",
+      "category": "Bill",
+      "bucket": "Main"
+    },
+    {
+      "pattern": "Strabag Rent",
+      "category": "Bill",
+      "bucket": "Main"
+    },
+    {
+      "pattern": "Saturn Charger",
+      "category": "Extra",
+      "bucket": "Main"
+    },
+    {
+      "pattern": "Bauhaus Lights",
+      "category": "Extra",
+      "bucket": "Main"
+    },
+    {
+      "pattern": "Starbucks",
+      "category": "Food & Outing",
+      "bucket": "Main"
+    },
+    {
+      "pattern": "Evergreen",
+      "category": "Grocery",
+      "bucket": "Main"
+    },
+    {
+      "pattern": "Bauhaus Skrews",
+      "category": "Extra",
+      "bucket": "Main"
+    },
+    {
+      "pattern": "Bio Market",
+      "category": "Grocery",
+      "bucket": "Main"
+    },
+    {
+      "pattern": "Ye-Mc",
+      "category": "Food & Outing",
+      "bucket": "Main"
+    },
+    {
+      "pattern": "Ansari Verkauf",
+      "category": "Extra",
+      "bucket": "Main"
+    },
+    {
+      "pattern": "Shifting - Zafar",
+      "category": "Transport",
+      "bucket": "Main"
+    },
+    {
+      "pattern": "Woolworth",
+      "category": "Car",
+      "bucket": "Main"
+    },
+    {
+      "pattern": "Tier",
+      "category": "Transport",
+      "bucket": "Main"
+    },
+    {
+      "pattern": "Game Pass",
+      "category": "Bill",
+      "bucket": "Main"
+    },
+    {
+      "pattern": "Bauhaus",
+      "category": "Shopping",
+      "bucket": "Main"
+    },
+    {
+      "pattern": "Blue Card",
+      "category": "Extra",
+      "bucket": "Main"
+    },
+    {
+      "pattern": "Kale Gida",
+      "category": "Grocery",
+      "bucket": "Main"
+    },
+    {
+      "pattern": "Dining Table",
+      "category": "Extra",
+      "bucket": "Main"
+    },
+    {
+      "pattern": "Dining Table Danyal",
+      "category": "Transport",
+      "bucket": "Main"
+    },
+    {
+      "pattern": "Xbox",
+      "category": "Extra",
+      "bucket": "Main"
+    },
+    {
+      "pattern": "Humidifier",
+      "category": "Extra",
+      "bucket": "Main"
+    },
+    {
+      "pattern": "Sofa - Danial",
+      "category": "Transport",
+      "bucket": "Main"
+    },
+    {
+      "pattern": "Sofa",
+      "category": "Extra",
+      "bucket": "Main"
+    },
+    {
+      "pattern": "Voi",
+      "category": "Transport",
+      "bucket": "Main"
+    },
+    {
+      "pattern": "Poco",
+      "category": "Shopping",
+      "bucket": "Main"
+    },
+    {
+      "pattern": "Burger Zimmer",
+      "category": "Food & Outing",
+      "bucket": "Main"
+    },
+    {
+      "pattern": "Eprimo",
+      "category": "Bill",
+      "bucket": "Main"
+    },
+    {
+      "pattern": "Bank Yearly Setlement",
+      "category": "Bill",
+      "bucket": "Main"
+    },
+    {
+      "pattern": "Unknown",
+      "category": "Office",
+      "bucket": "Main"
+    },
+    {
+      "pattern": "Ammi 2X",
+      "category": "Dependant",
+      "bucket": "Main"
+    },
+    {
+      "pattern": "Yumna Gift",
+      "category": "Extra",
+      "bucket": "Main"
+    },
+    {
+      "pattern": "Loon Mirch",
+      "category": "Grocery",
+      "bucket": "Main"
+    },
+    {
+      "pattern": "Hindi Restaurant",
+      "category": "Food & Outing",
+      "bucket": "Main"
+    },
+    {
+      "pattern": "Liability Insurance",
+      "category": "Bill",
+      "bucket": "Main"
+    },
+    {
+      "pattern": "Xbox Subscription",
+      "category": "Bill",
+      "bucket": "Main"
+    },
+    {
+      "pattern": "Rose Market",
+      "category": "Grocery",
+      "bucket": "Main"
+    },
+    {
+      "pattern": "Burger Home",
+      "category": "Food & Outing",
+      "bucket": "Main"
+    },
+    {
+      "pattern": "Ammi",
+      "category": "Extra",
+      "bucket": "Main"
+    },
+    {
+      "pattern": "Mevlana",
+      "category": "Grocery",
+      "bucket": "Main"
+    },
+    {
+      "pattern": "Dustbin",
+      "category": "Extra",
+      "bucket": "Main"
+    },
+    {
+      "pattern": "Vaccuum Cleaner",
+      "category": "Extra",
+      "bucket": "Main"
+    },
+    {
+      "pattern": "Burger City",
+      "category": "Food & Outing",
+      "bucket": "Main"
+    },
+    {
+      "pattern": "Doctor Letter",
+      "category": "Medical",
+      "bucket": "Main"
+    },
+    {
+      "pattern": "Free Now",
+      "category": "Transport",
+      "bucket": "Main"
+    },
+    {
+      "pattern": "Wool Worth",
+      "category": "Grocery",
+      "bucket": "Main"
+    },
+    {
+      "pattern": "Getsafe",
+      "category": "Bill",
+      "bucket": "Main"
+    },
+    {
+      "pattern": "Passport Fee",
+      "category": "Extra",
+      "bucket": "Main"
+    },
+    {
+      "pattern": "Madarasa",
+      "category": "Extra",
+      "bucket": "Main"
+    },
+    {
+      "pattern": "Baby",
+      "category": "Shopping",
+      "bucket": "Main"
+    },
+    {
+      "pattern": "Pull Bear",
+      "category": "Shopping",
+      "bucket": "Main"
+    },
+    {
+      "pattern": "Mark Spandau",
+      "category": "Grocery",
+      "bucket": "Main"
+    },
+    {
+      "pattern": "Kaufland",
+      "category": "Grocery",
+      "bucket": "Main"
+    },
+    {
+      "pattern": "Raza Master",
+      "category": "Bill",
+      "bucket": "Main"
+    },
+    {
+      "pattern": "Meezan Bank Fee",
+      "category": "Extra",
+      "bucket": "Main"
+    },
+    {
+      "pattern": "Saqib Gift",
+      "category": "Extra",
+      "bucket": "Main"
+    },
+    {
+      "pattern": "Trade Republic",
+      "category": "Investment",
+      "bucket": "Savings"
+    },
+    {
+      "pattern": "Letter Of Commitment",
+      "category": "Extra",
+      "bucket": "Main"
+    },
+    {
+      "pattern": "Hamza Sheesha",
+      "category": "Extra",
+      "bucket": "Main"
+    },
+    {
+      "pattern": "Jysk",
+      "category": "Shopping",
+      "bucket": "Main"
+    },
+    {
+      "pattern": "Deichmann",
+      "category": "Shopping",
+      "bucket": "Main"
+    },
+    {
+      "pattern": "Outfitters",
+      "category": "Shopping",
+      "bucket": "Main"
+    },
+    {
+      "pattern": "Spotify",
+      "category": "Bill",
+      "bucket": "Main"
+    },
+    {
+      "pattern": "Taxi.Eu",
+      "category": "Vacation",
+      "bucket": "Main"
+    },
+    {
+      "pattern": "Ansur",
+      "category": "Food & Outing",
+      "bucket": "Main"
+    },
+    {
+      "pattern": "Maestro Card",
+      "category": "Shopping",
+      "bucket": "Main"
+    },
+    {
+      "pattern": "Fifa 23",
+      "category": "Shopping",
+      "bucket": "Main"
+    },
+    {
+      "pattern": "Faysal Bank Fee",
+      "category": "Extra",
+      "bucket": "Main"
+    },
+    {
+      "pattern": "Salary",
+      "category": "Salary",
+      "bucket": "Main"
+    },
+    {
+      "pattern": "Medicine",
+      "category": "Medical",
+      "bucket": "Main"
+    },
+    {
+      "pattern": "C A",
+      "category": "Shopping",
+      "bucket": "Main"
+    },
+    {
+      "pattern": "Tedi",
+      "category": "Grocery",
+      "bucket": "Main"
+    },
+    {
+      "pattern": "Fitra 2X",
+      "category": "Extra",
+      "bucket": "Main"
+    },
+    {
+      "pattern": "Sadqa",
+      "category": "Extra",
+      "bucket": "Main"
+    },
+    {
+      "pattern": "Balance Of Statement",
+      "category": "Extra",
+      "bucket": "Main"
+    },
+    {
+      "pattern": "Taha Bhai Gift",
+      "category": "Extra",
+      "bucket": "Main"
+    },
+    {
+      "pattern": "Thomas Phillips",
+      "category": "Shopping",
+      "bucket": "Main"
+    },
+    {
+      "pattern": "Mytoys",
+      "category": "Shopping",
+      "bucket": "Main"
+    },
+    {
+      "pattern": "Pkr Conversion",
+      "category": "Extra",
+      "bucket": "Main"
+    },
+    {
+      "pattern": "Baraka",
+      "category": "Grocery",
+      "bucket": "Main"
+    },
+    {
+      "pattern": "Euroshop",
+      "category": "Shopping",
+      "bucket": "Main"
+    },
+    {
+      "pattern": "Asnur",
+      "category": "Extra",
+      "bucket": "Main"
+    },
+    {
+      "pattern": "Usman",
+      "category": "Extra",
+      "bucket": "Main"
+    },
+    {
+      "pattern": "Prime Video From Last Month",
+      "category": "Bill",
+      "bucket": "Main"
+    },
+    {
+      "pattern": "Revolut Referral",
+      "category": "Extra",
+      "bucket": "Main"
+    },
+    {
+      "pattern": "Amazon Refund",
+      "category": "Extra",
+      "bucket": "Main"
+    },
+    {
+      "pattern": "Eidi",
+      "category": "Extra",
+      "bucket": "Main"
+    },
+    {
+      "pattern": "Documents Translation",
+      "category": "Extra",
+      "bucket": "Main"
+    },
+    {
+      "pattern": "Bvg Ticket",
+      "category": "Transport",
+      "bucket": "Main"
+    },
+    {
+      "pattern": "Fatima",
+      "category": "Dependant",
+      "bucket": "Main"
+    },
+    {
+      "pattern": "Bvg",
+      "category": "Transport",
+      "bucket": "Main"
+    },
+    {
+      "pattern": "Saad",
+      "category": "Extra",
+      "bucket": "Main"
+    },
+    {
+      "pattern": "Baby Trimmer",
+      "category": "Extra",
+      "bucket": "Main"
+    },
+    {
+      "pattern": "Pkr To Eur",
+      "category": "Extra",
+      "bucket": "Main"
+    },
+    {
+      "pattern": "Temu",
+      "category": "Shopping",
+      "bucket": "Main"
+    },
+    {
+      "pattern": "Nicop",
+      "category": "Extra",
+      "bucket": "Main"
+    },
+    {
+      "pattern": "Baby Crib",
+      "category": "Extra",
+      "bucket": "Main"
+    },
+    {
+      "pattern": "Getsafe Legal",
+      "category": "Bill",
+      "bucket": "Main"
+    },
+    {
+      "pattern": "Getsafe Liability",
+      "category": "Bill",
+      "bucket": "Main"
+    },
+    {
+      "pattern": "Fatima Shopping",
+      "category": "Extra",
+      "bucket": "Main"
+    },
+    {
+      "pattern": "Passport",
+      "category": "Extra",
+      "bucket": "Main"
+    },
+    {
+      "pattern": "Freenow",
+      "category": "Transport",
+      "bucket": "Main"
+    },
+    {
+      "pattern": "City Chicken",
+      "category": "Food & Outing",
+      "bucket": "Main"
+    },
+    {
+      "pattern": "Ammi Makeup",
+      "category": "Shopping",
+      "bucket": "Main"
+    },
+    {
+      "pattern": "Braun",
+      "category": "Extra",
+      "bucket": "Main"
+    },
+    {
+      "pattern": "Lindt",
+      "category": "Vacation",
+      "bucket": "Main"
+    },
+    {
+      "pattern": "Angela Gabert",
+      "category": "Grocery",
+      "bucket": "Main"
+    },
+    {
+      "pattern": "Muhammad Raza",
+      "category": "Extra",
+      "bucket": "Main"
+    },
+    {
+      "pattern": "Deutsche Post",
+      "category": "Bill",
+      "bucket": "Main"
+    },
+    {
+      "pattern": "One Dish",
+      "category": "Extra",
+      "bucket": "Main"
+    },
+    {
+      "pattern": "Misc",
+      "category": "Extra",
+      "bucket": "Main"
+    },
+    {
+      "pattern": "Adjusting Cash",
+      "category": "Extra",
+      "bucket": "Main"
+    },
+    {
+      "pattern": "Rose Supermarkt",
+      "category": "Grocery",
+      "bucket": "Main"
+    },
+    {
+      "pattern": "Anniversary Gift",
+      "category": "Shopping",
+      "bucket": "Main"
+    },
+    {
+      "pattern": "Q2 Deutsche Account Settlement",
+      "category": "Bill",
+      "bucket": "Main"
+    },
+    {
+      "pattern": "Coffee",
+      "category": "Vacation",
+      "bucket": "Main"
+    },
+    {
+      "pattern": "Bi Mola",
+      "category": "Food & Outing",
+      "bucket": "Main"
+    },
+    {
+      "pattern": "Qurbani Javeria",
+      "category": "Extra",
+      "bucket": "Main"
+    },
+    {
+      "pattern": "Cash To Ammi",
+      "category": "Extra",
+      "bucket": "Main"
+    },
+    {
+      "pattern": "Medicines Javeria",
+      "category": "Medical",
+      "bucket": "Main"
+    },
+    {
+      "pattern": "Sanitatshaus",
+      "category": "Medical",
+      "bucket": "Main"
+    },
+    {
+      "pattern": "Fatima S Residence Permit",
+      "category": "Extra",
+      "bucket": "Main"
+    },
+    {
+      "pattern": "Grass Cutter Seat Cushions",
+      "category": "Shopping",
+      "bucket": "Main"
+    },
+    {
+      "pattern": "Mr. Ice Cream",
+      "category": "Food & Outing",
+      "bucket": "Main"
+    },
+    {
+      "pattern": "Waqas",
+      "category": "Extra",
+      "bucket": "Main"
+    },
+    {
+      "pattern": "Tk Maxx",
+      "category": "Shopping",
+      "bucket": "Main"
+    },
+    {
+      "pattern": "Water Bottle",
+      "category": "Extra",
+      "bucket": "Main"
+    },
+    {
+      "pattern": "Javeria Raza Gift Ticket",
+      "category": "Extra",
+      "bucket": "Main"
+    },
+    {
+      "pattern": "First Aid Course",
+      "category": "Extra",
+      "bucket": "Main"
+    },
+    {
+      "pattern": "Loon Mirch Javeria",
+      "category": "Grocery",
+      "bucket": "Main"
+    },
+    {
+      "pattern": "Wall Unit",
+      "category": "Shopping",
+      "bucket": "Main"
+    },
+    {
+      "pattern": "Wall Unit Delivery",
+      "category": "Transport",
+      "bucket": "Main"
+    },
+    {
+      "pattern": "Tax Return",
+      "category": "Extra",
+      "bucket": "Main"
+    },
+    {
+      "pattern": "Taxfix Fee",
+      "category": "Extra",
+      "bucket": "Main"
+    },
+    {
+      "pattern": "Netto",
+      "category": "Grocery",
+      "bucket": "Main"
+    },
+    {
+      "pattern": "Office Dinner",
+      "category": "Food & Outing",
+      "bucket": "Main"
+    },
+    {
+      "pattern": "Zeeman",
+      "category": "Shopping",
+      "bucket": "Main"
+    },
+    {
+      "pattern": "Vodafone",
+      "category": "Bill",
+      "bucket": "Main"
+    },
+    {
+      "pattern": "Adjust",
+      "category": "Extra",
+      "bucket": "Main"
+    },
+    {
+      "pattern": "Javeria Pampers Etc.",
+      "category": "Shopping",
+      "bucket": "Main"
+    },
+    {
+      "pattern": "Obi Gardening Tools",
+      "category": "Shopping",
+      "bucket": "Main"
+    },
+    {
+      "pattern": "Woolworth Gifts",
+      "category": "Extra",
+      "bucket": "Main"
+    },
+    {
+      "pattern": "Cuccis",
+      "category": "Food & Outing",
+      "bucket": "Main"
+    },
+    {
+      "pattern": "Lieferando",
+      "category": "Food & Outing",
+      "bucket": "Main"
+    },
+    {
+      "pattern": "Driving License Conversion",
+      "category": "Transport",
+      "bucket": "Main"
+    },
+    {
+      "pattern": "Beyzade",
+      "category": "Food & Outing",
+      "bucket": "Main"
+    },
+    {
+      "pattern": "Radio Tax",
+      "category": "Bill",
+      "bucket": "Main"
+    },
+    {
+      "pattern": "Ahmed",
+      "category": "Extra",
+      "bucket": "Main"
+    },
+    {
+      "pattern": "Jibran",
+      "category": "Extra",
+      "bucket": "Main"
+    },
+    {
+      "pattern": "Obi",
+      "category": "Extra",
+      "bucket": "Main"
+    },
+    {
+      "pattern": "Uber",
+      "category": "Grocery",
+      "bucket": "Main"
+    },
+    {
+      "pattern": "Javeria - A1 Course",
+      "category": "Extra",
+      "bucket": "Main"
+    },
+    {
+      "pattern": "Javeria - Grocery",
+      "category": "Extra",
+      "bucket": "Main"
+    },
+    {
+      "pattern": "Adjustment",
+      "category": "Extra",
+      "bucket": "Main"
+    },
+    {
+      "pattern": "Deutsche Annual Fee",
+      "category": "Bill",
+      "bucket": "Main"
+    },
+    {
+      "pattern": "Labforward",
+      "category": "Salary",
+      "bucket": "Main"
+    },
+    {
+      "pattern": "Mb.Io",
+      "category": "Salary",
+      "bucket": "Main"
+    },
+    {
+      "pattern": "Elterngeld 5 Months",
+      "category": "Benefit",
+      "bucket": "Main"
+    },
+    {
+      "pattern": "Amazon Prime",
+      "category": "Bill",
+      "bucket": "Main"
+    },
+    {
+      "pattern": "Barclays Dept",
+      "category": "Bill",
+      "bucket": "Main"
+    },
+    {
+      "pattern": "Hvv",
+      "category": "Bill",
+      "bucket": "Main"
+    },
+    {
+      "pattern": "Apple Itunes",
+      "category": "Bill",
+      "bucket": "Main"
+    },
+    {
+      "pattern": "Airticket",
+      "category": "Transport",
+      "bucket": "Main"
+    },
+    {
+      "pattern": "Tripod Amazon",
+      "category": "Shopping",
+      "bucket": "Main"
+    },
+    {
+      "pattern": "Decor Woolworth",
+      "category": "Shopping",
+      "bucket": "Main"
+    },
+    {
+      "pattern": "Carpet Poco",
+      "category": "Extra",
+      "bucket": "Main"
+    },
+    {
+      "pattern": "Squarespace",
+      "category": "Extra",
+      "bucket": "Main"
+    },
+    {
+      "pattern": "Basra Asian Foods",
+      "category": "Grocery",
+      "bucket": "Main"
+    },
+    {
+      "pattern": "Osama Gift",
+      "category": "Extra",
+      "bucket": "Main"
+    },
+    {
+      "pattern": "Eu Travel Plug",
+      "category": "Shopping",
+      "bucket": "Main"
+    },
+    {
+      "pattern": "Elterngeld",
+      "category": "Extra",
+      "bucket": "Main"
+    },
+    {
+      "pattern": "Penny",
+      "category": "Grocery",
+      "bucket": "Main"
+    },
+    {
+      "pattern": "Liefrando",
+      "category": "Food & Outing",
+      "bucket": "Main"
+    },
+    {
+      "pattern": "Deutsche Quarter Fee",
+      "category": "Bill",
+      "bucket": "Main"
+    },
+    {
+      "pattern": "Amazon Shelve",
+      "category": "Shopping",
+      "bucket": "Main"
+    },
+    {
+      "pattern": "Uber Eats",
+      "category": "Food & Outing",
+      "bucket": "Main"
+    },
+    {
+      "pattern": "Apple Icloud",
+      "category": "Bill",
+      "bucket": "Main"
+    },
+    {
+      "pattern": "Uber Eats - Dinner",
+      "category": "Extra",
+      "bucket": "Main"
+    },
+    {
+      "pattern": "Dinner",
+      "category": "Vacation",
+      "bucket": "Main"
+    },
+    {
+      "pattern": "Metro Ticket",
+      "category": "Extra",
+      "bucket": "Main"
+    },
+    {
+      "pattern": "Souvenirs",
+      "category": "Extra",
+      "bucket": "Main"
+    },
+    {
+      "pattern": "Toys",
+      "category": "Extra",
+      "bucket": "Main"
+    },
+    {
+      "pattern": "Sephora",
+      "category": "Extra",
+      "bucket": "Main"
+    },
+    {
+      "pattern": "Fries",
+      "category": "Extra",
+      "bucket": "Main"
+    },
+    {
+      "pattern": "Amazon Kindle",
+      "category": "Bill",
+      "bucket": "Main"
+    },
+    {
+      "pattern": "Bi Mola Kumpir",
+      "category": "Food & Outing",
+      "bucket": "Main"
+    },
+    {
+      "pattern": "Kindergelt",
+      "category": "Benefit",
+      "bucket": "Main"
+    },
+    {
+      "pattern": "Basra Asian Food",
+      "category": "Grocery",
+      "bucket": "Main"
+    },
+    {
+      "pattern": "New Yorker",
+      "category": "Shopping",
+      "bucket": "Main"
+    },
+    {
+      "pattern": "Sophie Brauhaus",
+      "category": "Extra",
+      "bucket": "Main"
+    },
+    {
+      "pattern": "Drink",
+      "category": "Extra",
+      "bucket": "Main"
+    },
+    {
+      "pattern": "Breakfast Motel One",
+      "category": "Extra",
+      "bucket": "Main"
+    },
+    {
+      "pattern": "Toy",
+      "category": "Shopping",
+      "bucket": "Main"
+    },
+    {
+      "pattern": "Douglas",
+      "category": "Shopping",
+      "bucket": "Main"
+    },
+    {
+      "pattern": "Currency Conversion - Lyra",
+      "category": "Dependant",
+      "bucket": "Main"
+    },
+    {
+      "pattern": "Apple Charger",
+      "category": "Shopping",
+      "bucket": "Main"
+    },
+    {
+      "pattern": "Driving App",
+      "category": "Extra",
+      "bucket": "Main"
+    },
+    {
+      "pattern": "Currency Conversion - Pkr",
+      "category": "Dependant",
+      "bucket": "Main"
+    },
+    {
+      "pattern": "Rich Dad Poor Dad Book",
+      "category": "Shopping",
+      "bucket": "Main"
+    },
+    {
+      "pattern": "Sheesha Food",
+      "category": "Food & Outing",
+      "bucket": "Main"
+    },
+    {
+      "pattern": "Stuttgard Dinner - Day 1",
+      "category": "Extra",
+      "bucket": "Main"
+    },
+    {
+      "pattern": "Eurowings - Extra Luggage",
+      "category": "Extra",
+      "bucket": "Main"
+    },
+    {
+      "pattern": "Stuttgard Dinner - Day 2",
+      "category": "Extra",
+      "bucket": "Main"
+    },
+    {
+      "pattern": "Immad - Bbq",
+      "category": "Grocery",
+      "bucket": "Main"
+    },
+    {
+      "pattern": "Loon Mirch - Bbq",
+      "category": "Grocery",
+      "bucket": "Main"
+    },
+    {
+      "pattern": "Baraka - Bbq",
+      "category": "Grocery",
+      "bucket": "Main"
+    },
+    {
+      "pattern": "Bbq",
+      "category": "Grocery",
+      "bucket": "Main"
+    },
+    {
+      "pattern": "Rose",
+      "category": "Grocery",
+      "bucket": "Main"
+    },
+    {
+      "pattern": "Eprime",
+      "category": "Bill",
+      "bucket": "Main"
+    },
+    {
+      "pattern": "Wellensteyn",
+      "category": "Shopping",
+      "bucket": "Main"
+    },
+    {
+      "pattern": "Chicken Broast",
+      "category": "Food & Outing",
+      "bucket": "Main"
+    },
+    {
+      "pattern": "Pkr",
+      "category": "Conversion",
+      "bucket": "Main"
+    },
+    {
+      "pattern": "Decathlon",
+      "category": "Shopping",
+      "bucket": "Main"
+    },
+    {
+      "pattern": "Okaidi",
+      "category": "Shopping",
+      "bucket": "Main"
+    },
+    {
+      "pattern": "Deitchmann",
+      "category": "Shopping",
+      "bucket": "Main"
+    },
+    {
+      "pattern": "Grill Chicken",
+      "category": "Food & Outing",
+      "bucket": "Main"
+    },
+    {
+      "pattern": "Fatima Toy",
+      "category": "Shopping",
+      "bucket": "Main"
+    },
+    {
+      "pattern": "Strabag Extra Warn Rent 2022",
+      "category": "Bill",
+      "bucket": "Main"
+    },
+    {
+      "pattern": "Fatima Toys",
+      "category": "Shopping",
+      "bucket": "Main"
+    },
+    {
+      "pattern": "Maria Gift",
+      "category": "Shopping",
+      "bucket": "Main"
+    },
+    {
+      "pattern": "Shawarma",
+      "category": "Food & Outing",
+      "bucket": "Main"
+    },
+    {
+      "pattern": "Cricket Fee",
+      "category": "Extra",
+      "bucket": "Main"
+    },
+    {
+      "pattern": "Zalando",
+      "category": "Vacation",
+      "bucket": "Main"
+    },
+    {
+      "pattern": "Cricket Kit",
+      "category": "Extra",
+      "bucket": "Main"
+    },
+    {
+      "pattern": "Ernsting S Family",
+      "category": "Shopping",
+      "bucket": "Main"
+    },
+    {
+      "pattern": "Embassy Letter",
+      "category": "Extra",
+      "bucket": "Main"
+    },
+    {
+      "pattern": "Tk Max Gift",
+      "category": "Extra",
+      "bucket": "Main"
+    },
+    {
+      "pattern": "Hvv Javeria",
+      "category": "Bill",
+      "bucket": "Main"
+    },
+    {
+      "pattern": "Deutsche Bank Fee",
+      "category": "Bill",
+      "bucket": "Main"
+    },
+    {
+      "pattern": "Coffee Croissant",
+      "category": "Food & Outing",
+      "bucket": "Main"
+    },
+    {
+      "pattern": "C A Gift",
+      "category": "Extra",
+      "bucket": "Main"
+    },
+    {
+      "pattern": "Urban Sports Club",
+      "category": "Bill",
+      "bucket": "Main"
+    },
+    {
+      "pattern": "Ez Chicken",
+      "category": "Food & Outing",
+      "bucket": "Main"
+    },
+    {
+      "pattern": "Ez Supermark",
+      "category": "Grocery",
+      "bucket": "Main"
+    },
+    {
+      "pattern": "Highchair",
+      "category": "Shopping",
+      "bucket": "Main"
+    },
+    {
+      "pattern": "Microsoft - Fc24",
+      "category": "Shopping",
+      "bucket": "Main"
+    },
+    {
+      "pattern": "Zam Zam",
+      "category": "Food & Outing",
+      "bucket": "Main"
+    },
+    {
+      "pattern": "Toysino",
+      "category": "Dependant",
+      "bucket": "Main"
+    },
+    {
+      "pattern": "Dunkin",
+      "category": "Food & Outing",
+      "bucket": "Main"
+    },
+    {
+      "pattern": "Ryanair",
+      "category": "Extra",
+      "bucket": "Main"
+    },
+    {
+      "pattern": "Airbnb",
+      "category": "Vacation",
+      "bucket": "Main"
+    },
+    {
+      "pattern": "Booking.Com",
+      "category": "Extra",
+      "bucket": "Main"
+    },
+    {
+      "pattern": "Trainline",
+      "category": "Extra",
+      "bucket": "Main"
+    },
+    {
+      "pattern": "Euro",
+      "category": "Conversion",
+      "bucket": "Main"
+    },
+    {
+      "pattern": "Tk Ambulance",
+      "category": "Medical",
+      "bucket": "Main"
+    },
+    {
+      "pattern": "Sketchers",
+      "category": "Shopping",
+      "bucket": "Main"
+    },
+    {
+      "pattern": "Amazon Weight Scale Powerbank",
+      "category": "Shopping",
+      "bucket": "Main"
+    },
+    {
+      "pattern": "Baklava",
+      "category": "Food & Outing",
+      "bucket": "Main"
+    },
+    {
+      "pattern": "Colosseum Ticket",
+      "category": "Extra",
+      "bucket": "Main"
+    },
+    {
+      "pattern": "Amazon Waqas",
+      "category": "Extra",
+      "bucket": "Main"
+    },
+    {
+      "pattern": "Amazon Fatima",
+      "category": "Dependant",
+      "bucket": "Main"
+    },
+    {
+      "pattern": "Easy Chicken",
+      "category": "Food & Outing",
+      "bucket": "Main"
+    },
+    {
+      "pattern": "Gardens Of The World",
+      "category": "Food & Outing",
+      "bucket": "Main"
+    },
+    {
+      "pattern": "Taha",
+      "category": "Food & Outing",
+      "bucket": "Main"
+    },
+    {
+      "pattern": "Rome - Bus Ticket",
+      "category": "Extra",
+      "bucket": "Main"
+    },
+    {
+      "pattern": "Rome - Coffee",
+      "category": "Extra",
+      "bucket": "Main"
+    },
+    {
+      "pattern": "Rome - Water",
+      "category": "Extra",
+      "bucket": "Main"
+    },
+    {
+      "pattern": "Rome - Dinner",
+      "category": "Extra",
+      "bucket": "Main"
+    },
+    {
+      "pattern": "Rome - Lunch",
+      "category": "Extra",
+      "bucket": "Main"
+    },
+    {
+      "pattern": "Florence - Hotel Tax",
+      "category": "Extra",
+      "bucket": "Main"
+    },
+    {
+      "pattern": "Florence - Lunch",
+      "category": "Extra",
+      "bucket": "Main"
+    },
+    {
+      "pattern": "Pisa - Train Ticket",
+      "category": "Extra",
+      "bucket": "Main"
+    },
+    {
+      "pattern": "Pisa - Bus Ticket",
+      "category": "Extra",
+      "bucket": "Main"
+    },
+    {
+      "pattern": "Florence - Grocery",
+      "category": "Extra",
+      "bucket": "Main"
+    },
+    {
+      "pattern": "Florence - Dinner",
+      "category": "Extra",
+      "bucket": "Main"
+    },
+    {
+      "pattern": "Florence - Icecream",
+      "category": "Extra",
+      "bucket": "Main"
+    },
+    {
+      "pattern": "Venice - Bus Ticket",
+      "category": "Extra",
+      "bucket": "Main"
+    },
+    {
+      "pattern": "Venice - Dinner",
+      "category": "Extra",
+      "bucket": "Main"
+    },
+    {
+      "pattern": "Venice -",
+      "category": "Extra",
+      "bucket": "Main"
+    },
+    {
+      "pattern": "Venice - Alilaguna Ticket",
+      "category": "Extra",
+      "bucket": "Main"
+    },
+    {
+      "pattern": "Venice - Biscuits",
+      "category": "Extra",
+      "bucket": "Main"
+    },
+    {
+      "pattern": "Italy - Cash",
+      "category": "Extra",
+      "bucket": "Main"
+    },
+    {
+      "pattern": "Basra",
+      "category": "Grocery",
+      "bucket": "Main"
+    },
+    {
+      "pattern": "Water",
+      "category": "Food & Outing",
+      "bucket": "Main"
+    },
+    {
+      "pattern": "Ditsch",
+      "category": "Food & Outing",
+      "bucket": "Main"
+    },
+    {
+      "pattern": "Saturn",
+      "category": "Shopping",
+      "bucket": "Main"
+    },
+    {
+      "pattern": "Tuv",
+      "category": "Bill",
+      "bucket": "Main"
+    },
+    {
+      "pattern": "Bicyle",
+      "category": "Shopping",
+      "bucket": "Main"
+    },
+    {
+      "pattern": "Abbas Bek",
+      "category": "Food & Outing",
+      "bucket": "Main"
+    },
+    {
+      "pattern": "Javeria Test",
+      "category": "Medical",
+      "bucket": "Main"
+    },
+    {
+      "pattern": "Eidi Fatima",
+      "category": "Extra",
+      "bucket": "Main"
+    },
+    {
+      "pattern": "Eidi Javeria",
+      "category": "Extra",
+      "bucket": "Main"
+    },
+    {
+      "pattern": "Eidi Others",
+      "category": "Extra",
+      "bucket": "Main"
+    },
+    {
+      "pattern": "Funda",
+      "category": "Extra",
+      "bucket": "Main"
+    },
+    {
+      "pattern": "Schafer S",
+      "category": "Food & Outing",
+      "bucket": "Main"
+    },
+    {
+      "pattern": "Sana Zafar Aqeeqa",
+      "category": "Extra",
+      "bucket": "Main"
+    },
+    {
+      "pattern": "Arham Ebad",
+      "category": "Extra",
+      "bucket": "Main"
+    },
+    {
+      "pattern": "Shaefer S",
+      "category": "Food & Outing",
+      "bucket": "Main"
+    },
+    {
+      "pattern": "Cash Adjust",
+      "category": "Extra",
+      "bucket": "Main"
+    },
+    {
+      "pattern": "Nespresso",
+      "category": "Grocery",
+      "bucket": "Main"
+    },
+    {
+      "pattern": "Croissant",
+      "category": "Food & Outing",
+      "bucket": "Main"
+    },
+    {
+      "pattern": "Amazon Pime",
+      "category": "Shopping",
+      "bucket": "Main"
+    },
+    {
+      "pattern": "Vitamin Tests",
+      "category": "Medical",
+      "bucket": "Main"
+    },
+    {
+      "pattern": "Barclays Dishwasher",
+      "category": "Shopping",
+      "bucket": "Main"
+    },
+    {
+      "pattern": "Chatgpt",
+      "category": "Bill",
+      "bucket": "Main"
+    },
+    {
+      "pattern": "Co-Tasker",
+      "category": "Extra",
+      "bucket": "Main"
+    },
+    {
+      "pattern": "Nas.Io",
+      "category": "Extra",
+      "bucket": "Main"
+    },
+    {
+      "pattern": "Ansur Sheesha",
+      "category": "Food & Outing",
+      "bucket": "Main"
+    },
+    {
+      "pattern": "Ansur Basra",
+      "category": "Grocery",
+      "bucket": "Main"
+    },
+    {
+      "pattern": "Zaddys",
+      "category": "Food & Outing",
+      "bucket": "Main"
+    },
+    {
+      "pattern": "Sanifair",
+      "category": "Extra",
+      "bucket": "Main"
+    },
+    {
+      "pattern": "Croissant Coffee",
+      "category": "Food & Outing",
+      "bucket": "Main"
+    },
+    {
+      "pattern": "Meyman",
+      "category": "Food & Outing",
+      "bucket": "Main"
+    },
+    {
+      "pattern": "Ansur Golf",
+      "category": "Food & Outing",
+      "bucket": "Main"
+    },
+    {
+      "pattern": "Rash Cream",
+      "category": "Medical",
+      "bucket": "Main"
+    },
+    {
+      "pattern": "Class",
+      "category": "Extra",
+      "bucket": "Main"
+    },
+    {
+      "pattern": "Osama",
+      "category": "Food & Outing",
+      "bucket": "Main"
+    },
+    {
+      "pattern": "Taptap",
+      "category": "Dependant",
+      "bucket": "Main"
+    },
+    {
+      "pattern": "Tk Max",
+      "category": "Shopping",
+      "bucket": "Main"
+    },
+    {
+      "pattern": "Nespresso Capsules",
+      "category": "Shopping",
+      "bucket": "Main"
+    },
+    {
+      "pattern": "Pommes",
+      "category": "Food & Outing",
+      "bucket": "Main"
+    },
+    {
+      "pattern": "Kaffee",
+      "category": "Food & Outing",
+      "bucket": "Main"
+    },
+    {
+      "pattern": "Land Belrin",
+      "category": "Extra",
+      "bucket": "Main"
+    },
+    {
+      "pattern": "Javeria Bike",
+      "category": "Shopping",
+      "bucket": "Main"
+    },
+    {
+      "pattern": "Javeria Bike Tuning",
+      "category": "Shopping",
+      "bucket": "Main"
+    },
+    {
+      "pattern": "Pizza",
+      "category": "Food & Outing",
+      "bucket": "Main"
+    },
+    {
+      "pattern": "Milk Frother",
+      "category": "Shopping",
+      "bucket": "Main"
+    },
+    {
+      "pattern": "Barclays",
+      "category": "Bill",
+      "bucket": "Main"
+    },
+    {
+      "pattern": "Hackthon Dinner",
+      "category": "Food & Outing",
+      "bucket": "Main"
+    },
+    {
+      "pattern": "Gift Javeria",
+      "category": "Shopping",
+      "bucket": "Main"
+    },
+    {
+      "pattern": "Hackthon Uber",
+      "category": "Bill",
+      "bucket": "Main"
+    },
+    {
+      "pattern": "Driving Class",
+      "category": "Extra",
+      "bucket": "Main"
+    },
+    {
+      "pattern": "Shake",
+      "category": "Food & Outing",
+      "bucket": "Main"
+    },
+    {
+      "pattern": "P Test",
+      "category": "Medical",
+      "bucket": "Main"
+    },
+    {
+      "pattern": "Nespreso",
+      "category": "Shopping",
+      "bucket": "Main"
+    },
+    {
+      "pattern": "Driving Class 2X Exam Fee",
+      "category": "Extra",
+      "bucket": "Main"
+    },
+    {
+      "pattern": "Birth Certifictae",
+      "category": "Extra",
+      "bucket": "Main"
+    },
+    {
+      "pattern": "Euro 2024 Final",
+      "category": "Food & Outing",
+      "bucket": "Main"
+    },
+    {
+      "pattern": "Sonmez",
+      "category": "Food & Outing",
+      "bucket": "Main"
+    },
+    {
+      "pattern": "Samsung",
+      "category": "Bill",
+      "bucket": "Main"
+    },
+    {
+      "pattern": "Deadpool",
+      "category": "Food & Outing",
+      "bucket": "Main"
+    },
+    {
+      "pattern": "Pvs Vitamin Test",
+      "category": "Medical",
+      "bucket": "Main"
+    },
+    {
+      "pattern": "Medicine Skin",
+      "category": "Medical",
+      "bucket": "Main"
+    },
+    {
+      "pattern": "Baskets",
+      "category": "Shopping",
+      "bucket": "Main"
+    },
+    {
+      "pattern": "Arsalan",
+      "category": "Grocery",
+      "bucket": "Main"
+    },
+    {
+      "pattern": "Hier Damas",
+      "category": "Food & Outing",
+      "bucket": "Main"
+    },
+    {
+      "pattern": "Biomarkt",
+      "category": "Grocery",
+      "bucket": "Main"
+    },
+    {
+      "pattern": "Rose Spermarkt",
+      "category": "Grocery",
+      "bucket": "Main"
+    },
+    {
+      "pattern": "Shisha",
+      "category": "Food & Outing",
+      "bucket": "Main"
+    },
+    {
+      "pattern": "Bike Light Tubes",
+      "category": "Shopping",
+      "bucket": "Main"
+    },
+    {
+      "pattern": "Table Tennis Balls",
+      "category": "Shopping",
+      "bucket": "Main"
+    },
+    {
+      "pattern": "Kitchen Boxes",
+      "category": "Shopping",
+      "bucket": "Main"
+    },
+    {
+      "pattern": "Pakistan Trip",
+      "category": "Vacation",
+      "bucket": "Main"
+    },
+    {
+      "pattern": "Ejaz Tahir Bhai Jacket",
+      "category": "Vacation",
+      "bucket": "Main"
+    },
+    {
+      "pattern": "Boxers",
+      "category": "Shopping",
+      "bucket": "Main"
+    },
+    {
+      "pattern": "Gift For Sarim",
+      "category": "Extra",
+      "bucket": "Main"
+    },
+    {
+      "pattern": "Myprotein",
+      "category": "Shopping",
+      "bucket": "Main"
+    },
+    {
+      "pattern": "House Items",
+      "category": "Grocery",
+      "bucket": "Main"
+    },
+    {
+      "pattern": "Amazon Bike Light",
+      "category": "Shopping",
+      "bucket": "Main"
+    },
+    {
+      "pattern": "Playland",
+      "category": "Food & Outing",
+      "bucket": "Main"
+    },
+    {
+      "pattern": "Wild Deodrand",
+      "category": "Shopping",
+      "bucket": "Main"
+    },
+    {
+      "pattern": "Driving Class 14",
+      "category": "Extra",
+      "bucket": "Main"
+    },
+    {
+      "pattern": "Squarespace Domain",
+      "category": "Bill",
+      "bucket": "Main"
+    },
+    {
+      "pattern": "Amazon Sunblock",
+      "category": "Shopping",
+      "bucket": "Main"
+    },
+    {
+      "pattern": "Javeria Immad Gift",
+      "category": "Grocery",
+      "bucket": "Main"
+    },
+    {
+      "pattern": "Tk Max Gift0",
+      "category": "Extra",
+      "bucket": "Main"
+    },
+    {
+      "pattern": "Espresso House",
+      "category": "Food & Outing",
+      "bucket": "Main"
+    },
+    {
+      "pattern": "Driving Class 15",
+      "category": "Extra",
+      "bucket": "Main"
+    },
+    {
+      "pattern": "Balance Of Settlement",
+      "category": "Bill",
+      "bucket": "Main"
+    },
+    {
+      "pattern": "Backwerk",
+      "category": "Food & Outing",
+      "bucket": "Main"
+    },
+    {
+      "pattern": "Javeria Rewe",
+      "category": "Grocery",
+      "bucket": "Main"
+    },
+    {
+      "pattern": "Baraka Supermarkt",
+      "category": "Grocery",
+      "bucket": "Main"
+    },
+    {
+      "pattern": "Spatkauf Drinks",
+      "category": "Grocery",
+      "bucket": "Main"
+    },
+    {
+      "pattern": "Deutsch Akademie",
+      "category": "Bill",
+      "bucket": "Main"
+    },
+    {
+      "pattern": "Casalot",
+      "category": "Food & Outing",
+      "bucket": "Main"
+    },
+    {
+      "pattern": "C A Personal",
+      "category": "Shopping",
+      "bucket": "Main"
+    },
+    {
+      "pattern": "Mb.Io Amazon Gift Personal",
+      "category": "Extra",
+      "bucket": "Main"
+    },
+    {
+      "pattern": "Javeria Pakistan Gifts",
+      "category": "Vacation",
+      "bucket": "Main"
+    },
+    {
+      "pattern": "Driving Class 16",
+      "category": "Extra",
+      "bucket": "Main"
+    },
+    {
+      "pattern": "Amazon Paras Gift",
+      "category": "Shopping",
+      "bucket": "Main"
+    },
+    {
+      "pattern": "Deutsch Post",
+      "category": "Extra",
+      "bucket": "Main"
+    },
+    {
+      "pattern": "H M Personal",
+      "category": "Shopping",
+      "bucket": "Main"
+    },
+    {
+      "pattern": "Haircut",
+      "category": "Bill",
+      "bucket": "Main"
+    },
+    {
+      "pattern": "Kebeb",
+      "category": "Food & Outing",
+      "bucket": "Main"
+    },
+    {
+      "pattern": "Rewe Pitstop",
+      "category": "Food & Outing",
+      "bucket": "Main"
+    },
+    {
+      "pattern": "Ditsch Pitstop",
+      "category": "Food & Outing",
+      "bucket": "Main"
+    },
+    {
+      "pattern": "Kampa Pitstop",
+      "category": "Food & Outing",
+      "bucket": "Main"
+    },
+    {
+      "pattern": "Javeria Return Borrowed",
+      "category": "Extra",
+      "bucket": "Main"
+    },
+    {
+      "pattern": "Offsite Train Ticket",
+      "category": "Extra",
+      "bucket": "Main"
+    },
+    {
+      "pattern": "Coldrink",
+      "category": "Food & Outing",
+      "bucket": "Main"
+    },
+    {
+      "pattern": "Fahrschule Exam 5 Classes",
+      "category": "Extra",
+      "bucket": "Main"
+    },
+    {
+      "pattern": "Saturn Jazib Toy",
+      "category": "Vacation",
+      "bucket": "Main"
+    },
+    {
+      "pattern": "Amazon Luggage",
+      "category": "Shopping",
+      "bucket": "Main"
+    },
+    {
+      "pattern": "Adidas 5X Shoes",
+      "category": "Vacation",
+      "bucket": "Main"
+    },
+    {
+      "pattern": "Ikea Kita",
+      "category": "Dependant",
+      "bucket": "Main"
+    },
+    {
+      "pattern": "Ikea Home",
+      "category": "Shopping",
+      "bucket": "Main"
+    },
+    {
+      "pattern": "Ikea Bakery",
+      "category": "Grocery",
+      "bucket": "Main"
+    },
+    {
+      "pattern": "Storck",
+      "category": "Shopping",
+      "bucket": "Main"
+    },
+    {
+      "pattern": "Waqas Gift",
+      "category": "Vacation",
+      "bucket": "Main"
+    },
+    {
+      "pattern": "Irtaza Gift",
+      "category": "Vacation",
+      "bucket": "Main"
+    },
+    {
+      "pattern": "Uber One",
+      "category": "Food & Outing",
+      "bucket": "Main"
+    },
+    {
+      "pattern": "Train Tickets",
+      "category": "Office",
+      "bucket": "Main"
+    },
+    {
+      "pattern": "Swimming Cap",
+      "category": "Office",
+      "bucket": "Main"
+    },
+    {
+      "pattern": "Javeria Gift",
+      "category": "Shopping",
+      "bucket": "Main"
+    },
+    {
+      "pattern": "Lunch Airport",
+      "category": "Office",
+      "bucket": "Main"
+    },
+    {
+      "pattern": "Hie Damas",
+      "category": "Food & Outing",
+      "bucket": "Main"
+    },
+    {
+      "pattern": "Kale",
+      "category": "Grocery",
+      "bucket": "Main"
+    },
+    {
+      "pattern": "Robot Vacuum",
+      "category": "Shopping",
+      "bucket": "Main"
+    },
+    {
+      "pattern": "Mercedes Hackathon Alllowance",
+      "category": "Extra",
+      "bucket": "Main"
+    },
+    {
+      "pattern": "Under Armor",
+      "category": "Shopping",
+      "bucket": "Main"
+    },
+    {
+      "pattern": "Fan",
+      "category": "Shopping",
+      "bucket": "Main"
+    },
+    {
+      "pattern": "Thermal",
+      "category": "Shopping",
+      "bucket": "Main"
+    },
+    {
+      "pattern": "Mittens",
+      "category": "Shopping",
+      "bucket": "Main"
+    },
+    {
+      "pattern": "Kfc",
+      "category": "Food & Outing",
+      "bucket": "Main"
+    },
+    {
+      "pattern": "Remitly",
+      "category": "Conversion",
+      "bucket": "Main"
+    },
+    {
+      "pattern": "Airport Taxi",
+      "category": "Vacation",
+      "bucket": "Main"
+    },
+    {
+      "pattern": "Miles",
+      "category": "Transport",
+      "bucket": "Main"
+    },
+    {
+      "pattern": "Strabag Nebenkosten",
+      "category": "Bill",
+      "bucket": "Main"
+    },
+    {
+      "pattern": "Farhschule",
+      "category": "Extra",
+      "bucket": "Main"
+    },
+    {
+      "pattern": "Aldi",
+      "category": "Grocery",
+      "bucket": "Main"
+    },
+    {
+      "pattern": "Amazon Fifine Mic",
+      "category": "Shopping",
+      "bucket": "Main"
+    },
+    {
+      "pattern": "Amazon Drill And Bids Return",
+      "category": "Shopping",
+      "bucket": "Main"
+    },
+    {
+      "pattern": "Strabag Monthly Remaining",
+      "category": "Bill",
+      "bucket": "Main"
+    },
+    {
+      "pattern": "Gift Felix",
+      "category": "Extra",
+      "bucket": "Main"
+    },
+    {
+      "pattern": "Amazon Fan",
+      "category": "Shopping",
+      "bucket": "Main"
+    },
+    {
+      "pattern": "Rossman Kitchen",
+      "category": "Shopping",
+      "bucket": "Main"
+    },
+    {
+      "pattern": "Mateen S Gift",
+      "category": "Extra",
+      "bucket": "Main"
+    },
+    {
+      "pattern": "Deepseek",
+      "category": "Bill",
+      "bucket": "Main"
+    },
+    {
+      "pattern": "Bowling Shisha",
+      "category": "Food & Outing",
+      "bucket": "Main"
+    },
+    {
+      "pattern": "Deep Seek",
+      "category": "Shopping",
+      "bucket": "Main"
+    },
+    {
+      "pattern": "Amazon Xbox Controller",
+      "category": "Shopping",
+      "bucket": "Main"
+    },
+    {
+      "pattern": "Trade Republic Via Revolut",
+      "category": "Investment",
+      "bucket": "Savings"
+    },
+    {
+      "pattern": "Javeria Temu",
+      "category": "Shopping",
+      "bucket": "Main"
+    },
+    {
+      "pattern": "Bi-Mola",
+      "category": "Food & Outing",
+      "bucket": "Main"
+    },
+    {
+      "pattern": "Kumpir Club",
+      "category": "Food & Outing",
+      "bucket": "Main"
+    },
+    {
+      "pattern": "Mykal S Gift",
+      "category": "Shopping",
+      "bucket": "Main"
+    },
+    {
+      "pattern": "Shesha",
+      "category": "Food & Outing",
+      "bucket": "Main"
+    },
+    {
+      "pattern": "Amazon Car Seat",
+      "category": "Shopping",
+      "bucket": "Main"
+    },
+    {
+      "pattern": "Miles Gold Pass",
+      "category": "Transport",
+      "bucket": "Main"
+    },
+    {
+      "pattern": "Einstein Coffee",
+      "category": "Food & Outing",
+      "bucket": "Main"
+    },
+    {
+      "pattern": "Dolt",
+      "category": "Transport",
+      "bucket": "Main"
+    },
+    {
+      "pattern": "Mikael S Bday",
+      "category": "Shopping",
+      "bucket": "Main"
+    },
+    {
+      "pattern": "Javeria Gifts",
+      "category": "Shopping",
+      "bucket": "Main"
+    },
+    {
+      "pattern": "Kunafe",
+      "category": "Food & Outing",
+      "bucket": "Main"
+    },
+    {
+      "pattern": "Kitchen Stuff",
+      "category": "Shopping",
+      "bucket": "Main"
+    },
+    {
+      "pattern": "Ez Supemarkt",
+      "category": "Bill",
+      "bucket": "Main"
+    },
+    {
+      "pattern": "Javeria Extra",
+      "category": "Dependant",
+      "bucket": "Main"
+    },
+    {
+      "pattern": "Anniversary Gift Javeria",
+      "category": "Shopping",
+      "bucket": "Main"
+    },
+    {
+      "pattern": "Einburgerung Fee Javeria",
+      "category": "Bill",
+      "bucket": "Main"
+    },
+    {
+      "pattern": "Kita Fee",
+      "category": "Bill",
+      "bucket": "Main"
+    },
+    {
+      "pattern": "Scalable Capital",
+      "category": "Investment",
+      "bucket": "Savings"
+    },
+    {
+      "pattern": "Ford Fiesta Visit",
+      "category": "Transport",
+      "bucket": "Main"
+    },
+    {
+      "pattern": "Panjab Store",
+      "category": "Grocery",
+      "bucket": "Main"
+    },
+    {
+      "pattern": "Eid Suits 2X",
+      "category": "Shopping",
+      "bucket": "Main"
+    },
+    {
+      "pattern": "Yousra Gift",
+      "category": "Extra",
+      "bucket": "Main"
+    },
+    {
+      "pattern": "Fatima S Toy",
+      "category": "Shopping",
+      "bucket": "Main"
+    },
+    {
+      "pattern": "Dott",
+      "category": "Transport",
+      "bucket": "Main"
+    },
+    {
+      "pattern": "Taptap Zakat 2024",
+      "category": "Conversion",
+      "bucket": "Main"
+    },
+    {
+      "pattern": "Taptap Zakat 2023",
+      "category": "Conversion",
+      "bucket": "Main"
+    },
+    {
+      "pattern": "Javeria Eid Gifts",
+      "category": "Shopping",
+      "bucket": "Main"
+    },
+    {
+      "pattern": "Taptap Eidi",
+      "category": "Conversion",
+      "bucket": "Main"
+    },
+    {
+      "pattern": "Javeria Watch",
+      "category": "Dependant",
+      "bucket": "Main"
+    },
+    {
+      "pattern": "Fitra",
+      "category": "Extra",
+      "bucket": "Main"
+    },
+    {
+      "pattern": "Toilet",
+      "category": "Vacation",
+      "bucket": "Main"
+    },
+    {
+      "pattern": "Eidi Zafar House",
+      "category": "Extra",
+      "bucket": "Main"
+    },
+    {
+      "pattern": "Team Event Miles",
+      "category": "Office",
+      "bucket": "Main"
+    },
+    {
+      "pattern": "Team Event Grocery",
+      "category": "Grocery",
+      "bucket": "Main"
+    },
+    {
+      "pattern": "Team Event Metro Lisboa",
+      "category": "Office",
+      "bucket": "Main"
+    },
+    {
+      "pattern": "Team Event Dinner Day 1",
+      "category": "Food & Outing",
+      "bucket": "Main"
+    },
+    {
+      "pattern": "Team Event Dinner Day 3",
+      "category": "Food & Outing",
+      "bucket": "Main"
+    },
+    {
+      "pattern": "Team Event Fatima Toy",
+      "category": "Shopping",
+      "bucket": "Main"
+    },
+    {
+      "pattern": "Team Event Lunch Day 4",
+      "category": "Food & Outing",
+      "bucket": "Main"
+    },
+    {
+      "pattern": "Osama Eid Party Miles",
+      "category": "Transport",
+      "bucket": "Main"
+    },
+    {
+      "pattern": "Osama S Eid Party",
+      "category": "Gifts",
+      "bucket": "Main"
+    },
+    {
+      "pattern": "Car Accessories",
+      "category": "Shopping",
+      "bucket": "Main"
+    },
+    {
+      "pattern": "Kita",
+      "category": "Bill",
+      "bucket": "Main"
+    },
+    {
+      "pattern": "Bauhaus Light",
+      "category": "Shopping",
+      "bucket": "Main"
+    },
+    {
+      "pattern": "Wall Paintaings",
+      "category": "Shopping",
+      "bucket": "Main"
+    },
+    {
+      "pattern": "Afghan Markt",
+      "category": "Grocery",
+      "bucket": "Main"
+    },
+    {
+      "pattern": "Sonmez Baklava",
+      "category": "Food & Outing",
+      "bucket": "Main"
+    },
+    {
+      "pattern": "Ez Backshop",
+      "category": "Food & Outing",
+      "bucket": "Main"
+    },
+    {
+      "pattern": "Laila",
+      "category": "Food & Outing",
+      "bucket": "Main"
+    },
+    {
+      "pattern": "Birthday",
+      "category": "Extra",
+      "bucket": "Main"
+    },
+    {
+      "pattern": "Sakina S Gift",
+      "category": "Gifts",
+      "bucket": "Main"
+    },
+    {
+      "pattern": "Telekom",
+      "category": "Bill",
+      "bucket": "Main"
+    },
+    {
+      "pattern": "Wall Coffee",
+      "category": "Food & Outing",
+      "bucket": "Main"
+    },
+    {
+      "pattern": "Ansur Order",
+      "category": "Extra",
+      "bucket": "Main"
+    },
+    {
+      "pattern": "Miles Pass",
+      "category": "Transport",
+      "bucket": "Main"
+    },
+    {
+      "pattern": "Ronald",
+      "category": "Bill",
+      "bucket": "Main"
+    },
+    {
+      "pattern": "Obi Garden",
+      "category": "Shopping",
+      "bucket": "Main"
+    },
+    {
+      "pattern": "Taptap Monthly",
+      "category": "Conversion",
+      "bucket": "Main"
+    },
+    {
+      "pattern": "Edlib Konditorei",
+      "category": "Food & Outing",
+      "bucket": "Main"
+    },
+    {
+      "pattern": "Al Amana Supermark",
+      "category": "Grocery",
+      "bucket": "Main"
+    },
+    {
+      "pattern": "Javeria Sakina S Gift",
+      "category": "Shopping",
+      "bucket": "Main"
+    },
+    {
+      "pattern": "Adjustmenrt",
+      "category": "Extra",
+      "bucket": "Main"
+    },
+    {
+      "pattern": "Miles Karls",
+      "category": "Transport",
+      "bucket": "Main"
+    },
+    {
+      "pattern": "Kals",
+      "category": "Food & Outing",
+      "bucket": "Main"
+    },
+    {
+      "pattern": "Openai",
+      "category": "Bill",
+      "bucket": "Main"
+    },
+    {
+      "pattern": "Javera",
+      "category": "Grocery",
+      "bucket": "Main"
+    },
+    {
+      "pattern": "Tariq Panjab",
+      "category": "Grocery",
+      "bucket": "Main"
+    },
+    {
+      "pattern": "Hakiki",
+      "category": "Food & Outing",
+      "bucket": "Main"
+    },
+    {
+      "pattern": "Veg Cutter",
+      "category": "Shopping",
+      "bucket": "Main"
+    },
+    {
+      "pattern": "Eprimo 2024 Adjustment",
+      "category": "Bill",
+      "bucket": "Main"
+    },
+    {
+      "pattern": "Bambooland",
+      "category": "Food & Outing",
+      "bucket": "Main"
+    },
+    {
+      "pattern": "Legal Insurance",
+      "category": "Bill",
+      "bucket": "Main"
+    },
+    {
+      "pattern": "Taptap Qurbani Monthly",
+      "category": "Conversion",
+      "bucket": "Main"
+    },
+    {
+      "pattern": "Laila Breakfast",
+      "category": "Food & Outing",
+      "bucket": "Main"
+    },
+    {
+      "pattern": "Diesel Cap",
+      "category": "Shopping",
+      "bucket": "Main"
+    },
+    {
+      "pattern": "Netto Donuts",
+      "category": "Food & Outing",
+      "bucket": "Main"
+    },
+    {
+      "pattern": "Potty Seat Amazon",
+      "category": "Shopping",
+      "bucket": "Main"
+    },
+    {
+      "pattern": "Flixbux",
+      "category": "Car",
+      "bucket": "Main"
+    },
+    {
+      "pattern": "Auto Motorrad Pietzsch Gmbh",
+      "category": "Car",
+      "bucket": "Main"
+    },
+    {
+      "pattern": "Washroom",
+      "category": "Extra",
+      "bucket": "Main"
+    },
+    {
+      "pattern": "Apple",
+      "category": "Bill",
+      "bucket": "Main"
+    },
+    {
+      "pattern": "Wunschkennzeichen",
+      "category": "Car",
+      "bucket": "Main"
+    },
+    {
+      "pattern": "Roti",
+      "category": "Food & Outing",
+      "bucket": "Main"
+    },
+    {
+      "pattern": "Car Registration Labo",
+      "category": "Car",
+      "bucket": "Main"
+    },
+    {
+      "pattern": "Flixbus",
+      "category": "Car",
+      "bucket": "Main"
+    },
+    {
+      "pattern": "Petrol",
+      "category": "Car",
+      "bucket": "Main"
+    },
+    {
+      "pattern": "Parking",
+      "category": "Vacation",
+      "bucket": "Main"
+    },
+    {
+      "pattern": "Hookah",
+      "category": "Food & Outing",
+      "bucket": "Main"
+    },
+    {
+      "pattern": "Javeria Fatima",
+      "category": "Dependant",
+      "bucket": "Main"
+    },
+    {
+      "pattern": "Shell 168.9",
+      "category": "Car",
+      "bucket": "Main"
+    },
+    {
+      "pattern": "Carplay Screen",
+      "category": "Car",
+      "bucket": "Main"
+    },
+    {
+      "pattern": "Parking - Thale",
+      "category": "Vacation",
+      "bucket": "Main"
+    },
+    {
+      "pattern": "Lunch - Thale",
+      "category": "Vacation",
+      "bucket": "Main"
+    },
+    {
+      "pattern": "Fuel - Thale",
+      "category": "Vacation",
+      "bucket": "Main"
+    },
+    {
+      "pattern": "Osama - Thale",
+      "category": "Vacation",
+      "bucket": "Main"
+    },
+    {
+      "pattern": "Javeria Pkr",
+      "category": "Conversion",
+      "bucket": "Main"
+    },
+    {
+      "pattern": "Faizan - Thale",
+      "category": "Vacation",
+      "bucket": "Main"
+    },
+    {
+      "pattern": "Siddiqui - Thale",
+      "category": "Vacation",
+      "bucket": "Main"
+    },
+    {
+      "pattern": "Strandbad Entry - Wannsee",
+      "category": "Vacation",
+      "bucket": "Main"
+    },
+    {
+      "pattern": "Lunch - Wannsee",
+      "category": "Vacation",
+      "bucket": "Main"
+    },
+    {
+      "pattern": "Parking - Wannsee",
+      "category": "Vacation",
+      "bucket": "Main"
+    },
+    {
+      "pattern": "Icecream - Thale",
+      "category": "Vacation",
+      "bucket": "Main"
+    },
+    {
+      "pattern": "Hut - Wannsee",
+      "category": "Vacation",
+      "bucket": "Main"
+    },
+    {
+      "pattern": "Pr",
+      "category": "Bill",
+      "bucket": "Main"
+    },
+    {
+      "pattern": "Easypark",
+      "category": "Car",
+      "bucket": "Main"
+    },
+    {
+      "pattern": "Under Armour",
+      "category": "Shopping",
+      "bucket": "Main"
+    },
+    {
+      "pattern": "Mb.Io Connect Fe Event",
+      "category": "Salary",
+      "bucket": "Main"
+    },
+    {
+      "pattern": "Javeria Thermos",
+      "category": "Shopping",
+      "bucket": "Main"
+    },
+    {
+      "pattern": "Javeria Rossman",
+      "category": "Grocery",
+      "bucket": "Main"
+    },
+    {
+      "pattern": "Totalenergies - Rostock",
+      "category": "Vacation",
+      "bucket": "Main"
+    },
+    {
+      "pattern": "Parking - Rostock",
+      "category": "Vacation",
+      "bucket": "Main"
+    },
+    {
+      "pattern": "Mcdonald S - Rostock",
+      "category": "Vacation",
+      "bucket": "Main"
+    },
+    {
+      "pattern": "Coffee Icecream - Rostock",
+      "category": "Vacation",
+      "bucket": "Main"
+    },
+    {
+      "pattern": "Asher Wellness",
+      "category": "Conversion",
+      "bucket": "Main"
+    },
+    {
+      "pattern": "Huk24",
+      "category": "Car",
+      "bucket": "Main"
+    },
+    {
+      "pattern": "Mr Wash",
+      "category": "Car",
+      "bucket": "Main"
+    },
+    {
+      "pattern": "Agip Fuel",
+      "category": "Car",
+      "bucket": "Main"
+    },
+    {
+      "pattern": "Naveed Bhai",
+      "category": "Gifts",
+      "bucket": "Main"
+    },
+    {
+      "pattern": "Amazon Swim Cap",
+      "category": "Shopping",
+      "bucket": "Main"
+    },
+    {
+      "pattern": "Vehicle Road Tax",
+      "category": "Car",
+      "bucket": "Main"
+    },
+    {
+      "pattern": "Frittenwerk",
+      "category": "Food & Outing",
+      "bucket": "Main"
+    },
+    {
+      "pattern": "Games Fatima",
+      "category": "Extra",
+      "bucket": "Main"
+    },
+    {
+      "pattern": "Accident Fine",
+      "category": "Car",
+      "bucket": "Main"
+    },
+    {
+      "pattern": "Rewe Online",
+      "category": "Grocery",
+      "bucket": "Main"
+    },
+    {
+      "pattern": "Immad",
+      "category": "Food & Outing",
+      "bucket": "Main"
+    },
+    {
+      "pattern": "Kleiderschrank",
+      "category": "Shopping",
+      "bucket": "Main"
+    },
+    {
+      "pattern": "Marlene",
+      "category": "Gifts",
+      "bucket": "Main"
+    },
+    {
+      "pattern": "Diapers",
+      "category": "Grocery",
+      "bucket": "Main"
+    },
+    {
+      "pattern": "Alizah",
+      "category": "Gifts",
+      "bucket": "Main"
+    },
+    {
+      "pattern": "Aslan",
+      "category": "Gifts",
+      "bucket": "Main"
+    },
+    {
+      "pattern": "Domain",
+      "category": "Bill",
+      "bucket": "Main"
+    },
+    {
+      "pattern": "Shell",
+      "category": "Food & Outing",
+      "bucket": "Main"
+    },
+    {
+      "pattern": "Internet",
+      "category": "Bill",
+      "bucket": "Main"
+    },
+    {
+      "pattern": "Atu",
+      "category": "Car",
+      "bucket": "Main"
+    },
+    {
+      "pattern": "Toilette",
+      "category": "Vacation",
+      "bucket": "Main"
+    },
+    {
+      "pattern": "Parking Bastei",
+      "category": "Vacation",
+      "bucket": "Main"
+    },
+    {
+      "pattern": "Bus To Bastei",
+      "category": "Vacation",
+      "bucket": "Main"
+    },
+    {
+      "pattern": "Train To Fortress",
+      "category": "Vacation",
+      "bucket": "Main"
+    },
+    {
+      "pattern": "Train From Fortress",
+      "category": "Vacation",
+      "bucket": "Main"
+    },
+    {
+      "pattern": "Entry Fortress",
+      "category": "Vacation",
+      "bucket": "Main"
+    },
+    {
+      "pattern": "Parking Fortress",
+      "category": "Vacation",
+      "bucket": "Main"
+    },
+    {
+      "pattern": "Breakfast Snacks",
+      "category": "Vacation",
+      "bucket": "Main"
+    },
+    {
+      "pattern": "Coffee Cookie",
+      "category": "Vacation",
+      "bucket": "Main"
+    },
+    {
+      "pattern": "Parking Dresden",
+      "category": "Vacation",
+      "bucket": "Main"
+    },
+    {
+      "pattern": "Sovenier",
+      "category": "Vacation",
+      "bucket": "Main"
+    },
+    {
+      "pattern": "Karls",
+      "category": "Food & Outing",
+      "bucket": "Main"
+    },
+    {
+      "pattern": "Azlan S Birthday",
+      "category": "Grocery",
+      "bucket": "Main"
+    },
+    {
+      "pattern": "Sheesha Old",
+      "category": "Extra",
+      "bucket": "Main"
+    },
+    {
+      "pattern": "Waqas Lent",
+      "category": "Extra",
+      "bucket": "Main"
+    },
+    {
+      "pattern": "Uniqlo",
+      "category": "Shopping",
+      "bucket": "Main"
+    },
+    {
+      "pattern": "Sona Foods",
+      "category": "Grocery",
+      "bucket": "Main"
+    },
+    {
+      "pattern": "Eva Apotheke",
+      "category": "Medical",
+      "bucket": "Main"
+    },
+    {
+      "pattern": "Sadqa Ammi",
+      "category": "Conversion",
+      "bucket": "Main"
+    },
+    {
+      "pattern": "Immad Patti",
+      "category": "Food & Outing",
+      "bucket": "Main"
+    },
+    {
+      "pattern": "Puma Sneakers",
+      "category": "Shopping",
+      "bucket": "Main"
+    },
+    {
+      "pattern": "Tafel Pans",
+      "category": "Shopping",
+      "bucket": "Main"
+    },
+    {
+      "pattern": "Airfrayer Insurance",
+      "category": "Shopping",
+      "bucket": "Main"
+    },
+    {
+      "pattern": "Airfrayer",
+      "category": "Shopping",
+      "bucket": "Main"
+    },
+    {
+      "pattern": "Coins",
+      "category": "Extra",
+      "bucket": "Main"
+    },
+    {
+      "pattern": "Fossil",
+      "category": "Shopping",
+      "bucket": "Main"
+    },
+    {
+      "pattern": "Frtterwek",
+      "category": "Food & Outing",
+      "bucket": "Main"
+    },
+    {
+      "pattern": "Tafel Steamer",
+      "category": "Shopping",
+      "bucket": "Main"
+    },
+    {
+      "pattern": "Only Jacket",
+      "category": "Shopping",
+      "bucket": "Main"
+    },
+    {
+      "pattern": "Adidas Running Shoes",
+      "category": "Shopping",
+      "bucket": "Main"
+    },
+    {
+      "pattern": "Day 3 Lunch",
+      "category": "Office",
+      "bucket": "Main"
+    },
+    {
+      "pattern": "Tauseef S Son Gift",
+      "category": "Shopping",
+      "bucket": "Main"
+    },
+    {
+      "pattern": "Javeria Loon Mirch",
+      "category": "Grocery",
+      "bucket": "Main"
+    },
+    {
+      "pattern": "Day 1 Lunch",
+      "category": "Office",
+      "bucket": "Main"
+    },
+    {
+      "pattern": "Amazon Prime Video",
+      "category": "Bill",
+      "bucket": "Main"
+    },
+    {
+      "pattern": "Fuel",
+      "category": "Car",
+      "bucket": "Main"
+    },
+    {
+      "pattern": "Schwerin Schloss",
+      "category": "Vacation",
+      "bucket": "Main"
+    },
+    {
+      "pattern": "Lunch Snacks",
+      "category": "Vacation",
+      "bucket": "Main"
+    },
+    {
+      "pattern": "Woolsworth",
+      "category": "Shopping",
+      "bucket": "Main"
+    },
+    {
+      "pattern": "Azlan S Gift",
+      "category": "Gifts",
+      "bucket": "Main"
+    },
+    {
+      "pattern": "It S Mo",
+      "category": "Food & Outing",
+      "bucket": "Main"
+    },
+    {
+      "pattern": "Sheesha Yasir",
+      "category": "Food & Outing",
+      "bucket": "Main"
+    },
+    {
+      "pattern": "Sheesha Osama",
+      "category": "Food & Outing",
+      "bucket": "Main"
+    },
+    {
+      "pattern": "Patti",
+      "category": "Food & Outing",
+      "bucket": "Main"
+    },
+    {
+      "pattern": "Sheesha Faizan",
+      "category": "Food & Outing",
+      "bucket": "Main"
+    },
+    {
+      "pattern": "Holland Park",
+      "category": "Food & Outing",
+      "bucket": "Main"
+    },
+    {
+      "pattern": "Harzdrenalin",
+      "category": "Food & Outing",
+      "bucket": "Main"
+    },
+    {
+      "pattern": "Prs Parkraum Service",
+      "category": "Food & Outing",
+      "bucket": "Main"
+    },
+    {
+      "pattern": "Aral",
+      "category": "Food & Outing",
+      "bucket": "Main"
+    },
+    {
+      "pattern": "Yasir",
+      "category": "Extra",
+      "bucket": "Main"
+    },
+    {
+      "pattern": "Osama K",
+      "category": "Food & Outing",
+      "bucket": "Main"
+    },
+    {
+      "pattern": "Easy Park",
+      "category": "Car",
+      "bucket": "Main"
+    },
+    {
+      "pattern": "Javeria A2",
+      "category": "Extra",
+      "bucket": "Main"
+    },
+    {
+      "pattern": "Shop Alex A",
+      "category": "Medical",
+      "bucket": "Main"
+    },
+    {
+      "pattern": "Voi Scooters",
+      "category": "Transport",
+      "bucket": "Main"
+    },
+    {
+      "pattern": "Ahsan",
+      "category": "Extra",
+      "bucket": "Main"
+    },
+    {
+      "pattern": "Plentz",
+      "category": "Extra",
+      "bucket": "Main"
+    },
+    {
+      "pattern": "Contipark",
+      "category": "Car",
+      "bucket": "Main"
+    },
+    {
+      "pattern": "Yormas",
+      "category": "Extra",
+      "bucket": "Main"
+    },
+    {
+      "pattern": "Mr. Icecream",
+      "category": "Food & Outing",
+      "bucket": "Main"
+    },
+    {
+      "pattern": "Amazom",
+      "category": "Shopping",
+      "bucket": "Main"
+    },
+    {
+      "pattern": "Addidas",
+      "category": "Shopping",
+      "bucket": "Main"
+    },
+    {
+      "pattern": "Taptap Send Bruxelles",
+      "category": "Dependant",
+      "bucket": "Main"
+    },
+    {
+      "pattern": "Received Money From Asad Ullah Khalid With Reference",
+      "category": "Investment",
+      "bucket": "Savings"
+    },
+    {
+      "pattern": "Baraka Supermarkt Berlin",
+      "category": "Grocery",
+      "bucket": "Main"
+    },
+    {
+      "pattern": "Baraka Markt Berlin",
+      "category": "Grocery",
+      "bucket": "Main"
+    },
+    {
+      "pattern": "Rewe Markt Gmbh-Zw Berlin",
+      "category": "Grocery",
+      "bucket": "Main"
+    },
+    {
+      "pattern": "Bolt.Eu R Tallinn",
+      "category": "Office",
+      "bucket": "Main"
+    },
+    {
+      "pattern": "Lieferando.De Lieferservi Amsterdam",
+      "category": "Food & Outing",
+      "bucket": "Main"
+    },
+    {
+      "pattern": "Received Money From Osama Khalid With Reference Sheesha Scene",
+      "category": "Food & Outing",
+      "bucket": "Main"
+    },
+    {
+      "pattern": "Received Money From Muhammad Ahsan Iqbal With Reference Black Smoke Lounge",
+      "category": "Extra",
+      "bucket": "Main"
+    },
+    {
+      "pattern": "Shell 0376 Berlin",
+      "category": "Food & Outing",
+      "bucket": "Main"
+    },
+    {
+      "pattern": "Received Money From Javeria Riaz With Reference",
+      "category": "Extra",
+      "bucket": "Main"
+    },
+    {
+      "pattern": "Javeria Riaz",
+      "category": "Extra",
+      "bucket": "Main"
+    },
+    {
+      "pattern": "Nespresso Duesseldorf",
+      "category": "Grocery",
+      "bucket": "Main"
+    },
+    {
+      "pattern": "Paypal Easypark",
+      "category": "Car",
+      "bucket": "Main"
+    },
+    {
+      "pattern": "Ye-Mc Berlin",
+      "category": "Food & Outing",
+      "bucket": "Main"
+    },
+    {
+      "pattern": "Lidl Sagt Danke Berlin",
+      "category": "Grocery",
+      "bucket": "Main"
+    },
+    {
+      "pattern": "Espresso House 21019 Berlin",
+      "category": "Food & Outing",
+      "bucket": "Main"
+    },
+    {
+      "pattern": "Apple.Com Bill Itunes.Com",
+      "category": "Bill",
+      "bucket": "Main"
+    },
+    {
+      "pattern": "Zafar Saeed Khan",
+      "category": "Bill",
+      "bucket": "Main"
+    },
+    {
+      "pattern": "Loon Mirch Grocery Store Berlin",
+      "category": "Grocery",
+      "bucket": "Main"
+    },
+    {
+      "pattern": "Paypal Basraasianf Basra",
+      "category": "Grocery",
+      "bucket": "Main"
+    },
+    {
+      "pattern": "Paypal Dott Dott Scooter",
+      "category": "Transport",
+      "bucket": "Main"
+    },
+    {
+      "pattern": "Osama Khalid",
+      "category": "Food & Outing",
+      "bucket": "Main"
+    },
+    {
+      "pattern": "Backwerk Spandau Berlin",
+      "category": "Food & Outing",
+      "bucket": "Main"
+    },
+    {
+      "pattern": "Netto Marken-Discount Berlin",
+      "category": "Grocery",
+      "bucket": "Main"
+    },
+    {
+      "pattern": "Edeka 5480 Berlin",
+      "category": "Grocery",
+      "bucket": "Main"
+    },
+    {
+      "pattern": "Ditsch Berlin Spandau Ar Berlin",
+      "category": "Food & Outing",
+      "bucket": "Main"
+    },
+    {
+      "pattern": "Woolworth Gmbh Fil. 1062 Berlin",
+      "category": "Car",
+      "bucket": "Main"
+    },
+    {
+      "pattern": "Tk Maxx Berlin Spanda",
+      "category": "Shopping",
+      "bucket": "Main"
+    },
+    {
+      "pattern": "Deichmann Berlin 0490 Berlin",
+      "category": "Shopping",
+      "bucket": "Main"
+    },
+    {
+      "pattern": "Dm-Drogerie Markt Berlin",
+      "category": "Grocery",
+      "bucket": "Main"
+    },
+    {
+      "pattern": "Paypal Bolt.Eu O",
+      "category": "Office",
+      "bucket": "Main"
+    },
+    {
+      "pattern": "Storck Outlet Wustermark Wustermark",
+      "category": "Shopping",
+      "bucket": "Main"
+    },
+    {
+      "pattern": "Zaddys Zoom Berlin",
+      "category": "Food & Outing",
+      "bucket": "Main"
+    },
+    {
+      "pattern": "Aldi Nord Berlin",
+      "category": "Grocery",
+      "bucket": "Main"
+    },
+    {
+      "pattern": "Shell 0372 Berlin",
+      "category": "Food & Outing",
+      "bucket": "Main"
+    },
+    {
+      "pattern": "Yasir Anis",
+      "category": "Extra",
+      "bucket": "Main"
+    },
+    {
+      "pattern": "Paypal Openai Chatgpt S",
+      "category": "Bill",
+      "bucket": "Main"
+    },
+    {
+      "pattern": "Paypal Dott",
+      "category": "Transport",
+      "bucket": "Main"
+    },
+    {
+      "pattern": "Openai Openai.Com",
+      "category": "Bill",
+      "bucket": "Main"
+    },
+    {
+      "pattern": "Rolandrechtsschutzag",
+      "category": "Bill",
+      "bucket": "Main"
+    },
+    {
+      "pattern": "Stuttgarterstrassenbahnenag",
+      "category": "Transport",
+      "bucket": "Main"
+    },
+    {
+      "pattern": "Kindervision",
+      "category": "Bill",
+      "bucket": "Kindergeld"
+    },
+    {
+      "pattern": "Amazoneus.Ar.L.",
+      "category": "Shopping",
+      "bucket": "Main"
+    },
+    {
+      "pattern": "Strabagresidentialproperty",
+      "category": "Bill",
+      "bucket": "Main"
+    },
+    {
+      "pattern": "Bundesagenturf\u00fcrarbeit-Familienkasse",
+      "category": "Benefit",
+      "bucket": "Kindergeld"
+    },
+    {
+      "pattern": "Telefonicagermanygmbh Co.Ohg",
+      "category": "Bill",
+      "bucket": "Main"
+    },
+    {
+      "pattern": "Kartenzahlung Mevlanamarket Berlin De23-01-2026...",
+      "category": "Grocery",
+      "bucket": "Main"
+    },
+    {
+      "pattern": "Telekomdeutschlandgmbh",
+      "category": "Bill",
+      "bucket": "Main"
+    },
+    {
+      "pattern": "Eprimogmbh",
+      "category": "Bill",
+      "bucket": "Main"
+    },
+    {
+      "pattern": "Asadullahkhalid",
+      "category": "Investment",
+      "bucket": "Main"
+    },
+    {
+      "pattern": "Mercedes-Benzgroupag",
+      "category": "Salary",
+      "bucket": "Main"
+    }
+  ]
+}

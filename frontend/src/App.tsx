@@ -9,6 +9,7 @@ import { MasterStatement } from './features/master/MasterStatement';
 import { MappingKnowledgeBase } from './features/mappings/MappingKnowledgeBase';
 import { DashboardView } from './features/dashboard/DashboardView';
 import { SettingsView } from './features/settings/SettingsView';
+import { BucketsManager } from './features/buckets/BucketsManager';
 import { Button } from './components/ui/Button';
 import { Card, CardHeader, CardTitle, CardDescription, CardContent } from "@/components/ui/Card";
 import { Loader2, AlertCircle } from 'lucide-react';
@@ -20,6 +21,8 @@ import { useBackups } from './hooks/useBackups';
 import { useAccounts } from './hooks/useAccounts';
 import { useMasterData } from './hooks/useMasterData';
 import { useMappings } from './hooks/useMappings';
+import { useCategories } from './hooks/useCategories';
+import { useBuckets } from './hooks/useBuckets';
 
 function App() {
   const location = useLocation();
@@ -30,11 +33,15 @@ function App() {
   const accounts = useAccounts();
   const master = useMasterData();
   const mappings = useMappings();
+  const categories = useCategories();
+  const buckets = useBuckets();
 
   // Load initial data
   useEffect(() => {
     accounts.fetchAccounts();
-  }, [accounts.fetchAccounts]);
+    categories.fetchCategories();
+    buckets.fetchBuckets();
+  }, [accounts.fetchAccounts, categories.fetchCategories, buckets.fetchBuckets]);
 
   // Load view-specific data based on URL
   useEffect(() => {
@@ -42,14 +49,8 @@ function App() {
     if (path.startsWith('/mappings')) mappings.fetchMappings();
     if (path.startsWith('/backups')) backups.fetchBackups();
     if (path.startsWith('/accounts')) accounts.fetchAccounts();
-  }, [path, master.fetchMasterData, mappings.fetchMappings, backups.fetchBackups, accounts.fetchAccounts]);
-
-  // Sync upload status to navigation (optional, or handle via protected route logic)
-  /* 
-     NOTE: We might want to redirect to /import if upload is active, 
-     but standard routing usually dictates the URL drives the view.
-     For now, we'll let the user navigate manually or use the router.
-  */
+    if (path.startsWith('/buckets')) buckets.fetchBuckets();
+  }, [path, master.fetchMasterData, mappings.fetchMappings, backups.fetchBackups, accounts.fetchAccounts, buckets.fetchBuckets]);
 
   return (
     <ThemeProvider defaultTheme="dark" storageKey="vite-ui-theme">
@@ -64,6 +65,8 @@ function App() {
           <Route path="/mappings" element={
             <MappingKnowledgeBase 
               mappings={mappings.getSortedMappings()}
+              categories={categories.categories}
+              buckets={buckets.buckets.map(b => b.name)}
               search={mappings.search}
               onSearchChange={mappings.setSearch}
               categoryFilter={mappings.categoryFilter}
@@ -72,7 +75,7 @@ function App() {
               onSort={mappings.toggleSort}
               selectedRows={mappings.selectedRows}
               onToggleRow={mappings.toggleSelection}
-              onToggleAll={() => mappings.toggleAllSelection(mappings.getSortedMappings().map(m => m[0]))}
+              onToggleAll={() => mappings.toggleAllSelection(mappings.getSortedMappings().map(m => m.pattern))}
               onDelete={mappings.deleteMappings}
               onUpdate={mappings.updateMapping}
               onAdd={mappings.addMapping}
@@ -83,18 +86,22 @@ function App() {
             <MasterStatement 
               data={master.getFilteredData()}
               totalCount={master.data.length}
+              categories={categories.categories}
+              buckets={buckets.buckets.map(b => b.name)}
               paymentTypes={accounts.accounts.map(a => a.name)}
               search={master.search}
               onSearchChange={master.setSearch}
               categoryFilter={master.categoryFilter}
               onCategoryFilterChange={master.setCategoryFilter}
-              paymentFilter={master.paymentFilter}
-              onPaymentFilterChange={master.setPaymentFilter}
+              accountFilter={master.accountFilter}
+              onAccountFilterChange={master.setAccountFilter}
+              bucketFilter={master.bucketFilter}
+              onBucketFilterChange={master.setBucketFilter}
               sortConfig={master.sortConfig}
               onSort={master.toggleSort}
               selectedRows={master.selectedRows}
               onToggleRow={master.toggleSelection}
-              onToggleAll={() => master.toggleAllSelection(master.getFilteredData().map(r => r.originalIndex!))}
+              onToggleAll={() => master.toggleAllSelection(master.getFilteredData().map(r => r.id!))}
               onDelete={master.deleteRows}
               onUpdate={master.updateRow}
               onAdd={master.addRow}
@@ -107,6 +114,13 @@ function App() {
               onAdd={accounts.addAccount}
               onUpdate={accounts.updateAccount}
               onDelete={accounts.deleteAccount}
+            />
+          } />
+
+          <Route path="/buckets" element={
+            <BucketsManager 
+              buckets={buckets.buckets}
+              onSave={buckets.saveBuckets}
             />
           } />
 
@@ -148,9 +162,13 @@ function App() {
                 <ReviewSection 
                   stagedData={upload.stagedData}
                   selectedTransactions={upload.selectedTransactions}
+                  categories={categories.categories}
+                  buckets={buckets.buckets.map(b => b.name)}
                   onCancel={() => { upload.resetStatus(); }}
                   onMerge={upload.mergeTransactions}
                   onCategoryChange={upload.updateCategory}
+                  onBucketChange={upload.updateBucket}
+                  onTypeChange={upload.updateType}
                   onToggleSelect={upload.toggleTransactionSelection}
                   onToggleAll={upload.toggleAllTransactions}
                 />

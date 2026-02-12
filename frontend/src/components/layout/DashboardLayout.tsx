@@ -1,12 +1,12 @@
 import React, { useState } from 'react';
 import { useNavigate, useLocation } from 'react-router-dom';
-import { 
-  LayoutDashboard, 
-  Receipt, 
-  UploadCloud, 
-  Brain, 
-  Settings, 
-  FileStack, 
+import {
+  LayoutDashboard,
+  Receipt,
+  UploadCloud,
+  Brain,
+  Settings,
+  FileStack,
   Landmark,
   ChevronLeft,
   ChevronRight
@@ -26,8 +26,8 @@ const NavItem = ({ icon: Icon, label, active, onClick, collapsed }: NavItemProps
     onClick={onClick}
     className={cn(
       "flex items-center w-full px-3 py-2 text-sm font-medium transition-colors rounded-lg group",
-      active 
-        ? "bg-primary text-primary-foreground" 
+      active
+        ? "bg-primary text-primary-foreground"
         : "text-muted-foreground hover:bg-accent hover:text-accent-foreground"
     )}
   >
@@ -69,7 +69,7 @@ export const DashboardLayout = ({ children }: DashboardLayoutProps) => {
   return (
     <div className="flex h-screen overflow-hidden bg-background">
       {/* Sidebar */}
-      <aside 
+      <aside
         className={cn(
           "relative flex flex-col border-r bg-card transition-all duration-300 ease-in-out",
           collapsed ? "w-16" : "w-64"
@@ -81,7 +81,7 @@ export const DashboardLayout = ({ children }: DashboardLayoutProps) => {
               🏦 BankPro
             </span>
           )}
-          <button 
+          <button
             onClick={() => setCollapsed(!collapsed)}
             className="p-1.5 ml-auto rounded-md hover:bg-accent text-muted-foreground"
           >
@@ -90,60 +90,62 @@ export const DashboardLayout = ({ children }: DashboardLayoutProps) => {
         </div>
 
         <nav className="flex-1 px-3 space-y-1">
-          <NavItem 
-            icon={LayoutDashboard} 
-            label="Dashboard" 
-            active={isActive('/')} 
+          <NavItem
+            icon={LayoutDashboard}
+            label="Dashboard"
+            active={isActive('/')}
             onClick={() => navigate('/')}
             collapsed={collapsed}
           />
-          <NavItem 
-            icon={Receipt} 
-            label="Transactions" 
-            active={isActive('/transactions')} 
+          <NavItem
+            icon={Receipt}
+            label="Transactions"
+            active={isActive('/transactions')}
             onClick={() => navigate('/transactions')}
             collapsed={collapsed}
           />
-          <NavItem 
-            icon={UploadCloud} 
-            label="Import" 
-            active={isActive('/import')} 
+          <NavItem
+            icon={Landmark}
+            label="Accounts"
+            active={isActive('/accounts')}
+            onClick={() => navigate('/accounts')}
+            collapsed={collapsed}
+          />
+          <NavItem
+            icon={FileStack}
+            label="Buckets"
+            active={isActive('/buckets')}
+            onClick={() => navigate('/buckets')}
+            collapsed={collapsed}
+          />
+          <NavItem
+            icon={UploadCloud}
+            label="Import"
+            active={isActive('/import')}
             onClick={() => navigate('/import')}
             collapsed={collapsed}
           />
-          <NavItem 
-            icon={Brain} 
-            label="Mappings" 
-            active={isActive('/mappings')} 
+          <NavItem
+            icon={Brain}
+            label="Mappings"
+            active={isActive('/mappings')}
             onClick={() => navigate('/mappings')}
             collapsed={collapsed}
           />
-          
-          <div className="pt-4 pb-2">
-            {!collapsed && <p className="px-3 text-xs font-semibold tracking-wider uppercase text-muted-foreground/60">System</p>}
-          </div>
-
-          <NavItem 
-            icon={FileStack} 
-            label="Backups" 
-            active={isActive('/backups')} 
+          <NavItem
+            icon={FileStack}
+            label="Backups"
+            active={isActive('/backups')}
             onClick={() => navigate('/backups')}
-            collapsed={collapsed}
-          />
-          <NavItem 
-            icon={Landmark} 
-            label="Accounts" 
-            active={isActive('/accounts')} 
-            onClick={() => navigate('/accounts')}
             collapsed={collapsed}
           />
         </nav>
 
         <div className="p-3 border-t">
-          <NavItem 
-            icon={Settings} 
-            label="Settings" 
-            active={isActive('/settings')} 
+          <NavItem
+            icon={Settings}
+            label="Settings"
+            active={isActive('/settings')}
             onClick={() => navigate('/settings')}
             collapsed={collapsed}
           />
@@ -154,7 +156,7 @@ export const DashboardLayout = ({ children }: DashboardLayoutProps) => {
       <main className="flex flex-col flex-1 min-w-0 overflow-hidden">
         {/* Mobile Header (Placeholder if needed) */}
         <div className="md:hidden flex items-center h-14 px-4 border-b bg-card">
-           <span className="font-semibold">{getPageTitle()}</span>
+          <span className="font-semibold">{getPageTitle()}</span>
         </div>
 
         {/* Scrollable Area */}

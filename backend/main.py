@@ -9,6 +9,9 @@ import pandas as pd
 from datetime import datetime
 from pydantic import BaseModel
 from typing import List, Optional
+import sqlite3
+import database
+import config_manager
 
 app = FastAPI()
 
@@ -25,73 +28,27 @@ UPLOAD_DIR = "files"
 UPLOADS_DIR = os.path.join(UPLOAD_DIR, "uploads")
 STATEMENTS_DIR = os.path.join(UPLOAD_DIR, "statements")
 BACKUP_DIR = os.path.join(UPLOAD_DIR, "backups")
-OUTPUT_FILE = os.path.join(UPLOAD_DIR, "Final_Statement.xlsx")
+BASE_DIR = os.path.dirname(os.path.abspath(__file__))
+DB_PATH = os.path.join(BASE_DIR, "processor.db")
 
 os.makedirs(UPLOADS_DIR, exist_ok=True)
 os.makedirs(STATEMENTS_DIR, exist_ok=True)
 os.makedirs(BACKUP_DIR, exist_ok=True)
 
-CATEGORIES = ['Benefit', 'Bill', 'Conversion', 'Dependant', 'Extra', 'Food & Outing', 'Gifts', 'Grocery', 'Investment', 'Medical', 'Office', 'Salary', 'Shopping', 'Transport', 'Vacation', 'Car', 'Unknown']
-ACCOUNTS_FILE = os.path.join(UPLOAD_DIR, 'accounts.json')
-PAYMENT_TYPES_FILE = os.path.join(os.path.dirname(__file__), 'payment_types.json')
+class ManualTransaction(BaseModel):
+    date: str
+    merchant: str
+    details: Optional[str] = ""
+    amount: float
+    account: str
+    category: str
+    bucket: str = "Main"
+    transaction_type: str = "EXPENSE"
 
-class Account(BaseModel):
+class AccountModel(BaseModel):
     name: str
     initial_balance: float = 0.0
     currency: str = "EUR"
-
-# Initialize ACCOUNTS from file or migrate from payment_types
-ACCOUNTS: List[Account] = []
-
-def load_accounts():
-    global ACCOUNTS
-    if os.path.exists(ACCOUNTS_FILE):
-        try:
-            with open(ACCOUNTS_FILE, 'r') as f:
-                data = json.load(f)
-                ACCOUNTS = [Account(**item) for item in data]
-        except json.JSONDecodeError:
-            ACCOUNTS = []
-    elif os.path.exists(PAYMENT_TYPES_FILE):
-        # Migration logic
-        print("Migrating payment types to accounts...")
-        try:
-            with open(PAYMENT_TYPES_FILE, 'r') as f:
-                payment_types = json.load(f)
-                ACCOUNTS = [Account(name=pt, initial_balance=0.0) for pt in payment_types]
-            save_accounts()
-            # Optional: Rename/Delete old file after successful migration? Keeping it for safety now.
-            # os.rename(PAYMENT_TYPES_FILE, PAYMENT_TYPES_FILE + ".bak") 
-        except Exception as e:
-            print(f"Error migrating payment types: {e}")
-            ACCOUNTS = []
-    else:
-        # Default accounts if nothing exists
-        defaults = ['Deutsche Bank', 'Wise', 'Paypal', 'Cash', 'Revolut']
-        ACCOUNTS = [Account(name=name, initial_balance=0.0) for name in defaults]
-        save_accounts()
-
-def save_accounts():
-    with open(ACCOUNTS_FILE, 'w') as f:
-        json.dump([acc.dict() for acc in ACCOUNTS], f, indent=2)
-
-# Load accounts on startup
-load_accounts()
-
-class Transaction(BaseModel):
-    DATE: str
-    MERCHANT: str
-    CATEGORY: str
-    PAYMENT: str
-    PRICE: float
-
-class MergeRequest(BaseModel):
-    transactions: List[Transaction]
-
-class MappingUpdate(BaseModel):
-    merchant: str
-    category: str
-    old_merchant: str | None = None
 
 class AccountUpdate(BaseModel):
     old_name: Optional[str] = None
@@ -99,243 +56,276 @@ class AccountUpdate(BaseModel):
     initial_balance: float
     currency: str = "EUR"
 
-class MasterUpdate(BaseModel):
-    index: int
-    DATE: str
-    MERCHANT: str
-    CATEGORY: str
-    PRICE: float
-    PAYMENT: str
+class BucketModel(BaseModel):
+    name: str
+    description: Optional[str] = None
 
-class MasterAdd(BaseModel):
-    DATE: str
-    MERCHANT: str
-    CATEGORY: str
-    PRICE: float
-    PAYMENT: str
+class TransactionUpdate(BaseModel):
+    id: int
+    date: Optional[str] = None
+    merchant: Optional[str] = None
+    details: Optional[str] = None
+    category: Optional[str] = None
+    amount: Optional[float] = None
+    account: Optional[str] = None
+    bucket: Optional[str] = None
+    transaction_type: Optional[str] = None
+    class Config:
+        extra = "ignore"
 
-class DeleteRequest(BaseModel):
-    indices: List[int]
+class MappingRequest(BaseModel):
+    merchant: str
+    category: str
+    bucket: Optional[str] = "Main"
+    old_merchant: Optional[str] = None
 
-class MappingBulkDeleteRequest(BaseModel):
+class BulkDeleteMappings(BaseModel):
     merchants: List[str]
 
-@app.get("/mappings")
-async def get_mappings():
-    return processor.load_mappings()
+def get_db():
+    conn = sqlite3.connect(DB_PATH)
+    conn.row_factory = sqlite3.Row
+    return conn
 
-def get_account_balance(account_name: str, initial_balance: float) -> float:
-    if not os.path.exists(OUTPUT_FILE):
-        return initial_balance
-    
-    try:
-        df = pd.read_excel(OUTPUT_FILE)
-        # Filter transactions for this account
-        account_txns = df[df['PAYMENT'] == account_name]
-        
-        # Calculate sum of PRICE (assuming PRICE is signed float)
-        # Need to ensure PRICE is numeric
-        total_transaction_value = pd.to_numeric(account_txns['PRICE'], errors='coerce').sum()
-        
-        return initial_balance + total_transaction_value
-    except Exception as e:
-        print(f"Error calculating balance for {account_name}: {e}")
-        return initial_balance
+@app.on_event("startup")
+def startup():
+    database.init_db()
+    config_manager.load_config_from_seed()
 
-@app.get("/accounts")
+# --- ACCOUNTS ---
+@app.get("/accounts/")
 async def get_accounts():
-    # Return accounts with current calculated balance
-    response_data = []
-    for acc in ACCOUNTS:
-        current_bal = get_account_balance(acc.name, acc.initial_balance)
-        acc_dict = acc.dict()
-        acc_dict['current_balance'] = current_bal
-        response_data.append(acc_dict)
-    return response_data
+    conn = get_db()
+    # Calculate current balance: initial_balance + sum(transactions)
+    cursor = conn.execute('''
+        SELECT a.name, a.initial_balance, a.currency,
+               a.initial_balance + TOTAL(t.amount) as current_balance
+        FROM accounts a
+        LEFT JOIN transactions t ON a.name = t.account
+        GROUP BY a.name
+    ''')
+    rows = cursor.fetchall()
+    conn.close()
+    return [dict(row) for row in rows]
 
-@app.post("/accounts")
-async def add_or_update_account(update: AccountUpdate):
-    global ACCOUNTS
-    
-    # Check if duplicate name (exclude self if updating)
-    if any(acc.name == update.new_name and acc.name != update.old_name for acc in ACCOUNTS):
-        raise HTTPException(status_code=400, detail=f"Account '{update.new_name}' already exists.")
-
-    if update.old_name:
-        # Update existing
-        account = next((acc for acc in ACCOUNTS if acc.name == update.old_name), None)
-        if not account:
-            raise HTTPException(status_code=404, detail=f"Account '{update.old_name}' not found.")
-        
-        # If name changed, we need to update transactions and mappings? 
-        # For now, let's just update the Account definition. 
-        # Ideally, we should update the Master File (Final_Statement.xlsx) to reflect the new Payment method name.
-        if update.old_name != update.new_name:
-             if os.path.exists(OUTPUT_FILE):
-                try:
-                    df = pd.read_excel(OUTPUT_FILE)
-                    df.loc[df['PAYMENT'] == update.old_name, 'PAYMENT'] = update.new_name
-                    df.to_excel(OUTPUT_FILE, index=False)
-                except Exception as e:
-                    print(f"Error updating payment name in master file: {e}")
-        
-        account.name = update.new_name
-        account.initial_balance = update.initial_balance
-        account.currency = update.currency
-    else:
-        # Add new
-        new_acc = Account(
-            name=update.new_name, 
-            initial_balance=update.initial_balance,
-            currency=update.currency
-        )
-        ACCOUNTS.append(new_acc)
-    
-    save_accounts()
-    return {"status": "success", "accounts": await get_accounts()}
-
-@app.delete("/accounts/{account_name}")
-async def delete_account(account_name: str):
-    global ACCOUNTS
-    account = next((acc for acc in ACCOUNTS if acc.name == account_name), None)
-    if not account:
-        raise HTTPException(status_code=404, detail=f"Account '{account_name}' not found.")
-    
-    ACCOUNTS.remove(account)
-    save_accounts()
-    return {"status": "success", "accounts": await get_accounts()}
-
-@app.post("/mappings")
-async def update_mapping(update: MappingUpdate):
+@app.post("/accounts/")
+async def update_or_add_account(acc: AccountUpdate):
+    conn = get_db()
     try:
-        mappings = processor.load_mappings()
+        if acc.old_name:
+            # Update existing account
+            conn.execute('''
+                UPDATE accounts 
+                SET name = ?, initial_balance = ?, currency = ? 
+                WHERE name = ?
+            ''', (acc.new_name, acc.initial_balance, acc.currency, acc.old_name))
+            
+            # Also update any transactions associated with the old name
+            if acc.old_name != acc.new_name:
+                conn.execute("UPDATE transactions SET account = ? WHERE account = ?", (acc.new_name, acc.old_name))
+        else:
+            # Add new account
+            conn.execute('''
+                INSERT INTO accounts (name, initial_balance, currency) 
+                VALUES (?, ?, ?)
+            ''', (acc.new_name, acc.initial_balance, acc.currency))
         
-        # If old_merchant is provided and exists, it's an edit/rename
-        if update.old_merchant and update.old_merchant in mappings:
-            del mappings[update.old_merchant]
-        elif update.old_merchant and update.old_merchant not in mappings:
-            # If old_merchant specified but not found, it's likely an error or trying to edit a non-existent mapping
-            raise HTTPException(status_code=404, detail=f"Original merchant '{update.old_merchant}' not found for update.")
-        
-        mappings[processor.clean_merchant_name(update.merchant)] = update.category # Ensure merchant name is cleaned
-        with open(processor.MAPPING_FILE, 'w') as f:
-            json.dump(mappings, f, indent=2)
-        return {"status": "success"}
+        conn.commit()
+        config_manager.dump_config_to_seed()
     except Exception as e:
         raise HTTPException(status_code=500, detail=str(e))
+    finally:
+        conn.close()
+    return {"status": "success"}
+
+@app.delete("/accounts/{name}")
+async def delete_account(name: str):
+    conn = get_db()
+    try:
+        conn.execute("DELETE FROM accounts WHERE name = ?", (name,))
+        conn.commit()
+        config_manager.dump_config_to_seed()
+    except Exception as e:
+        raise HTTPException(status_code=500, detail=str(e))
+    finally:
+        conn.close()
+    return {"status": "success"}
+
+# --- BUCKETS ---
+@app.get("/buckets/")
+async def get_buckets():
+    conn = get_db()
+    cursor = conn.execute("SELECT name, description FROM buckets")
+    rows = cursor.fetchall()
+    conn.close()
+    return [dict(row) for row in rows]
+
+@app.post("/buckets/")
+async def save_buckets(buckets: List[BucketModel]):
+    conn = get_db()
+    try:
+        conn.execute("DELETE FROM buckets")
+        for b in buckets:
+            conn.execute("INSERT INTO buckets (name, description) VALUES (?, ?)", (b.name, b.description))
+        conn.commit()
+        config_manager.dump_config_to_seed()
+    except Exception as e:
+        raise HTTPException(status_code=500, detail=str(e))
+    finally:
+        conn.close()
+    return {"status": "success"}
+
+# --- CATEGORIES ---
+@app.get("/categories/")
+async def get_categories():
+    conn = get_db()
+    cursor = conn.execute("SELECT name FROM categories")
+    rows = cursor.fetchall()
+    conn.close()
+    return [row['name'] for row in rows]
+
+@app.post("/categories/")
+async def save_categories(categories: List[str]):
+    conn = get_db()
+    try:
+        conn.execute("DELETE FROM categories")
+        for cat in categories:
+            conn.execute("INSERT INTO categories (name) VALUES (?)", (cat,))
+        conn.commit()
+        config_manager.dump_config_to_seed()
+    except Exception as e:
+        raise HTTPException(status_code=500, detail=str(e))
+    finally:
+        conn.close()
+    return {"status": "success"}
+
+# --- TRANSACTIONS ---
+@app.get("/transactions/")
+async def get_transactions(bucket: Optional[str] = None, account: Optional[str] = None):
+    conn = get_db()
+    query = "SELECT * FROM transactions"
+    params = []
+    if bucket or account:
+        query += " WHERE "
+        conditions = []
+        if bucket:
+            conditions.append("bucket = ?")
+            params.append(bucket)
+        if account:
+            conditions.append("account = ?")
+            params.append(account)
+        query += " AND ".join(conditions)
+    query += " ORDER BY date DESC"
+    cursor = conn.execute(query, params)
+    rows = cursor.fetchall()
+    conn.close()
+    return [dict(row) for row in rows]
+
+@app.post("/transactions/manual")
+async def add_manual_transaction(t: ManualTransaction):
+    conn = get_db()
+    try:
+        conn.execute('''
+            INSERT INTO transactions (date, merchant, details, amount, account, category, bucket, transaction_type, is_manual)
+            VALUES (?, ?, ?, ?, ?, ?, ?, ?, 1)
+        ''', (t.date, t.merchant, t.details, t.amount, t.account, t.category, t.bucket, t.transaction_type))
+        
+        if t.category != "Unknown":
+            conn.execute('''
+                INSERT INTO mappings (pattern, category, bucket) VALUES (?, ?, ?)
+                ON CONFLICT(pattern) DO UPDATE SET category = EXCLUDED.category, bucket = EXCLUDED.bucket
+            ''', (t.merchant, t.category, t.bucket))
+            config_manager.dump_config_to_seed()
+            
+        conn.commit()
+    except Exception as e:
+        raise HTTPException(status_code=500, detail=str(e))
+    finally:
+        conn.close()
+    return {"status": "success"}
+
+@app.post("/transactions/update")
+async def update_transaction(t: TransactionUpdate):
+    conn = get_db()
+    try:
+        fields, params = [], []
+        update_dict = t.dict(exclude_unset=True)
+        for field, value in update_dict.items():
+            if field != 'id':
+                fields.append(f"{field} = ?")
+                params.append(value)
+        if fields:
+            params.append(t.id)
+            conn.execute(f"UPDATE transactions SET {', '.join(fields)} WHERE id = ?", params)
+            
+            if 'category' in update_dict or 'bucket' in update_dict:
+                row = conn.execute("SELECT merchant, category, bucket FROM transactions WHERE id = ?", (t.id,)).fetchone()
+                if row and row['category'] != "Unknown":
+                    conn.execute('''
+                        INSERT INTO mappings (pattern, category, bucket) VALUES (?, ?, ?)
+                        ON CONFLICT(pattern) DO UPDATE SET category = EXCLUDED.category, bucket = EXCLUDED.bucket
+                    ''', (row['merchant'], row['category'], row['bucket']))
+                    config_manager.dump_config_to_seed()
+            conn.commit()
+    except Exception as e:
+        raise HTTPException(status_code=500, detail=str(e))
+    finally:
+        conn.close()
+    return {"status": "success"}
+
+@app.delete("/transactions/{t_id}")
+async def delete_transaction(t_id: int):
+    conn = get_db()
+    conn.execute("DELETE FROM transactions WHERE id = ?", (t_id,))
+    conn.commit()
+    conn.close()
+    return {"status": "success"}
+
+# --- MAPPINGS ---
+@app.get("/mappings/")
+async def get_mappings():
+    conn = get_db()
+    cursor = conn.execute("SELECT pattern, category, bucket FROM mappings")
+    rows = cursor.fetchall()
+    conn.close()
+    return [dict(row) for row in rows]
+
+@app.post("/mappings/")
+async def update_mapping(m: MappingRequest):
+    conn = get_db()
+    try:
+        bucket = m.bucket
+        if m.category == "Kindergeld" or "kindergeld" in m.merchant.lower():
+            bucket = "Kindergeld"
+        if m.old_merchant and m.old_merchant != m.merchant:
+            conn.execute("DELETE FROM mappings WHERE pattern = ?", (m.old_merchant,))
+        conn.execute('''
+            INSERT INTO mappings (pattern, category, bucket) VALUES (?, ?, ?)
+            ON CONFLICT(pattern) DO UPDATE SET category = EXCLUDED.category, bucket = EXCLUDED.bucket
+        ''', (m.merchant, m.category, bucket))
+        conn.commit()
+        config_manager.dump_config_to_seed()
+    except Exception as e:
+        raise HTTPException(status_code=500, detail=str(e))
+    finally:
+        conn.close()
+    return {"status": "success"}
 
 @app.delete("/mappings/bulk_delete")
-async def bulk_delete_mappings(request: MappingBulkDeleteRequest):
+async def bulk_delete_mappings(request: BulkDeleteMappings):
+    conn = get_db()
     try:
-        mappings = processor.load_mappings()
-        deleted_count = 0
-        for merchant in request.merchants:
-            # Try raw first, then cleaned
-            targets = [merchant, processor.clean_merchant_name(merchant)]
-            for t in targets:
-                if t in mappings:
-                    del mappings[t]
-                    deleted_count += 1
-                    break
-        
-        with open(processor.MAPPING_FILE, 'w') as f:
-            json.dump(mappings, f, indent=2)
-        return {"status": "success", "deleted_count": deleted_count}
+        for m in request.merchants:
+            conn.execute("DELETE FROM mappings WHERE pattern = ?", (m,))
+        conn.commit()
+        config_manager.dump_config_to_seed()
     except Exception as e:
         raise HTTPException(status_code=500, detail=str(e))
+    finally:
+        conn.close()
+    return {"status": "success"}
 
-@app.delete("/mappings/{merchant}")
-async def delete_mapping(merchant: str):
-    try:
-        mappings = processor.load_mappings()
-        # Try raw first, then cleaned
-        targets = [merchant, processor.clean_merchant_name(merchant)]
-        deleted = False
-        for t in targets:
-            if t in mappings:
-                del mappings[t]
-                deleted = True
-                break
-        
-        if deleted:
-            with open(processor.MAPPING_FILE, 'w') as f:
-                json.dump(mappings, f, indent=2)
-            return {"status": "success"}
-        return {"status": "success", "info": "Merchant not found in mappings"}
-    except Exception as e:
-        raise HTTPException(status_code=500, detail=str(e))
-
-@app.get("/master")
-async def get_master_data():
-    if not os.path.exists(OUTPUT_FILE):
-        return []
-    try:
-        df = pd.read_excel(OUTPUT_FILE)
-        df = df.fillna("")
-        return df.to_dict(orient="records")
-    except Exception as e:
-        raise HTTPException(status_code=500, detail=str(e))
-
-@app.post("/master/update")
-async def update_master_row(update: MasterUpdate):
-    if not os.path.exists(OUTPUT_FILE):
-        raise HTTPException(status_code=404, detail="Master file not found")
-    try:
-        df = pd.read_excel(OUTPUT_FILE)
-        if update.index >= len(df) or update.index < 0:
-            raise HTTPException(status_code=400, detail="Invalid row index")
-        
-        # Update values, ensuring merchant name is cleaned
-        df.at[update.index, 'DATE'] = update.DATE
-        df.at[update.index, 'MERCHANT'] = processor.clean_merchant_name(update.MERCHANT)
-        df.at[update.index, 'CATEGORY'] = update.CATEGORY
-        df.at[update.index, 'PRICE'] = update.PRICE
-        df.at[update.index, 'PAYMENT'] = update.PAYMENT
-        
-        df.to_excel(OUTPUT_FILE, index=False)
-        return {"status": "success"}
-    except Exception as e:
-        raise HTTPException(status_code=500, detail=str(e))
-
-@app.post("/master/add")
-async def add_master_row(new_row: MasterAdd):
-    try:
-        # Ensure new row merchant name is cleaned
-        cleaned_row_dict = new_row.dict()
-        cleaned_row_dict['MERCHANT'] = processor.clean_merchant_name(cleaned_row_dict['MERCHANT'])
-        df_new_row = pd.DataFrame([cleaned_row_dict])
-        
-        if os.path.exists(OUTPUT_FILE):
-            master_df = pd.read_excel(OUTPUT_FILE)
-            final_df = pd.concat([master_df, df_new_row], ignore_index=True)
-        else:
-            final_df = df_new_row
-            
-        final_df.to_excel(OUTPUT_FILE, index=False)
-        return {"status": "success", "total_rows": len(final_df)}
-    except Exception as e:
-        raise HTTPException(status_code=500, detail=str(e))
-
-@app.delete("/master/bulk_delete")
-async def bulk_delete_master_rows(request: DeleteRequest):
-    if not os.path.exists(OUTPUT_FILE):
-        raise HTTPException(status_code=404, detail="Master file not found")
-    try:
-        df = pd.read_excel(OUTPUT_FILE)
-        
-        # Sort indices in descending order to avoid issues when dropping
-        indices_to_drop = sorted(request.indices, reverse=True)
-        
-        for index in indices_to_drop:
-            if index < 0 or index >= len(df):
-                raise HTTPException(status_code=400, detail=f"Invalid row index {index} for deletion")
-        
-        df = df.drop(indices_to_drop).reset_index(drop=True)
-        df.to_excel(OUTPUT_FILE, index=False)
-        return {"status": "success", "deleted_count": len(request.indices)}
-    except Exception as e:
-        raise HTTPException(status_code=500, detail=str(e))
-
+# --- UPLOAD & MERGE ---
 @app.post("/upload/")
 async def upload_file(file: UploadFile = File(...), create_new_file: bool = Form(False)):
     try:
@@ -350,141 +340,109 @@ async def upload_file(file: UploadFile = File(...), create_new_file: bool = Form
         else:
             raise HTTPException(status_code=400, detail="Unsupported file type")
 
-        if create_new_file:
-            if not metadata.get("start_date") or not metadata.get("end_date"):
-                print(f"Error: Date range metadata missing from statement. Metadata: {metadata}")
-                raise HTTPException(status_code=400, detail="Cannot create new file: date range metadata missing from statement.")
-            
-            try:
-                start_date_obj = datetime.strptime(metadata["start_date"], '%Y-%m-%d')
-                end_date_obj = datetime.strptime(metadata["end_date"], '%Y-%m-%d')
-                start_date_str = start_date_obj.strftime('%Y-%m-%d')
-                end_date_str = end_date_obj.strftime('%Y-%m-%d')
-                
-                # Prepend bank name to the filename
-                bank_name = metadata.get("source", "Bank").replace(" ", "_")
-                new_filename = f"{bank_name}_Statement_{start_date_str}_to_{end_date_str}.xlsx"
-                new_file_path = os.path.join(STATEMENTS_DIR, new_filename)
-                
-                print(f"Attempting to create new file: {new_file_path}")
-                print(f"Start Date: {metadata['start_date']}, End Date: {metadata['end_date']}")
-                print(f"Formatted Start Date: {start_date_str}, Formatted End Date: {end_date_str}")
+        conn = get_db()
+        df['is_duplicate'] = False
+        for idx, row in df.iterrows():
+            cursor = conn.execute("SELECT id FROM transactions WHERE date = ? AND merchant = ? AND amount = ? AND account = ?", 
+                                (row['date'], row['merchant'], row['amount'], row['account']))
+            if cursor.fetchone(): df.at[idx, 'is_duplicate'] = True
+        conn.close()
 
-                df.to_excel(new_file_path, index=False)
-                print(f"Successfully created new file: {new_file_path}")
-                return {
-                    "status": "success",
-                    "message": f"New file '{new_filename}' created successfully.",
-                    "new_filename": new_filename,
-                    "metadata": metadata
-                }
-            except ValueError as ve:
-                print(f"ValueError during date parsing or file creation: {ve}. Metadata dates: {metadata.get('start_date')}, {metadata.get('end_date')}")
-                raise HTTPException(status_code=500, detail=f"Error processing dates for new file: {ve}")
-            except Exception as e:
-                print(f"General error during new file creation: {e}")
-                raise HTTPException(status_code=500, detail=f"Error creating new file: {e}")
-        else:
-            # Existing logic for merging
-            duplicates = []
-            if os.path.exists(OUTPUT_FILE):
-                master_df = pd.read_excel(OUTPUT_FILE)
-                
-                # Simple check: Date + Merchant + Price
-                for _, row in df.iterrows():
-                    is_dup = not master_df[
-                        (master_df['DATE'] == row['DATE']) & 
-                        (master_df['MERCHANT'] == row['MERCHANT']) & 
-                        (master_df['PRICE'] == row['PRICE'])
-                    ].empty
-                    duplicates.append(is_dup)
-            else:
-                # If no master file, everything is new
-                duplicates = [False] * len(df)
-            
-            df['is_duplicate'] = duplicates
-            
-            return {
-                "metadata": metadata,
-                "transactions": df.to_dict(orient="records"),
-                "categories": CATEGORIES,
-                "accounts": [acc.name for acc in ACCOUNTS] # Return account names for review page
-            }
+        if create_new_file:
+            bank_name = metadata.get("source", "Bank").replace(" ", "_")
+            new_filename = f"{bank_name}_Statement_{metadata['start_date']}_to_{metadata['end_date']}.xlsx"
+            df.drop(columns=['is_duplicate']).to_excel(os.path.join(STATEMENTS_DIR, new_filename), index=False)
+            return {"status": "success", "message": f"New file created.", "new_filename": new_filename, "metadata": metadata, "data": df.to_dict(orient='records')}
+        
+        return {"status": "review", "metadata": metadata, "data": df.to_dict(orient='records')}
     except Exception as e:
         raise HTTPException(status_code=500, detail=str(e))
 
 @app.post("/merge")
-async def merge_transactions(request: MergeRequest):
-    try:
-        new_df = pd.DataFrame([t.dict() for t in request.transactions])
-        
-        # Backup existing file
-        if os.path.exists(OUTPUT_FILE):
-            timestamp = datetime.now().strftime("%Y%m%d_%H%M%S")
-            backup_path = os.path.join(BACKUP_DIR, f"Final_Statement_{timestamp}.xlsx")
-            shutil.copy2(OUTPUT_FILE, backup_path)
-            
-            master_df = pd.read_excel(OUTPUT_FILE)
-            final_df = pd.concat([master_df, new_df], ignore_index=True)
-        else:
-            final_df = new_df
-            
-        final_df.to_excel(OUTPUT_FILE, index=False)
-        return {"status": "Success", "total_rows": len(final_df)}
-    except Exception as e:
-        raise HTTPException(status_code=500, detail=str(e))
+async def merge_to_db(request: dict):
+    df = pd.DataFrame(request['transactions'])
+    processor.save_to_db(df)
+    config_manager.dump_config_to_seed() # Sync after batch learn
+    return {"status": "success"}
 
-@app.get("/backups")
-async def list_backups():
-    if not os.path.exists(BACKUP_DIR):
-        return []
+# --- DASHBOARD & EXPORT ---
+@app.get("/dashboard/summary")
+async def get_summary():
+    conn = get_db()
+    
+    # 1. Account Balances
+    cursor = conn.execute('''
+        SELECT a.name, a.initial_balance + TOTAL(t.amount) as balance
+        FROM accounts a
+        LEFT JOIN transactions t ON a.name = t.account
+        GROUP BY a.name
+    ''')
+    accounts = [dict(row) for row in cursor.fetchall()]
+
+    # 2. Bucket Balances
+    cursor = conn.execute('SELECT bucket as name, TOTAL(amount) as balance FROM transactions GROUP BY bucket')
+    buckets = [dict(row) for row in cursor.fetchall()]
+
+    # 3. Investment Value (Total put into category 'Investment')
+    cursor = conn.execute("SELECT ABS(TOTAL(amount)) as total FROM transactions WHERE category LIKE 'Investment%'")
+    investment_value = cursor.fetchone()['total']
+
+    # 4. Transfers for current month
+    current_month = datetime.now().strftime('%Y-%m')
+    cursor = conn.execute('''
+        SELECT ABS(TOTAL(amount)) as total 
+        FROM transactions 
+        WHERE transaction_type = 'TRANSFER' AND date LIKE ?
+    ''', (f"{current_month}%",))
+    monthly_transfers = cursor.fetchone()['total']
+
+    # 5. Monthly Expenses
+    cursor = conn.execute('''
+        SELECT ABS(TOTAL(amount)) as total 
+        FROM transactions 
+        WHERE transaction_type = 'EXPENSE' AND date LIKE ?
+    ''', (f"{current_month}%",))
+    monthly_expenses = cursor.fetchone()['total']
+
+    # 6. Recent Transactions
+    cursor = conn.execute("SELECT * FROM transactions ORDER BY date DESC, created_at DESC LIMIT 5")
+    recent = [dict(row) for row in cursor.fetchall()]
+
+    # Category Summary (Existing)
+    cursor = conn.execute("SELECT category, SUM(amount) as total FROM transactions WHERE transaction_type = 'EXPENSE' GROUP BY category")
+    categories = [dict(row) for row in cursor.fetchall()]
+
+    conn.close()
+    return {
+        "accounts": accounts,
+        "buckets": buckets,
+        "investment_value": investment_value,
+        "monthly_transfers": monthly_transfers,
+        "monthly_expenses": monthly_expenses,
+        "recent_transactions": recent,
+        "categories": categories
+    }
+
+@app.get("/export/targetV2")
+async def export_target_v2():
+    conn = get_db()
+    # Use double quotes for reserved keyword "WHERE"
+    df = pd.read_sql_query('SELECT date, merchant as "WHERE", details as DETAILS, category as CATEGORY, account as PAYMENT, amount as PRICE FROM transactions ORDER BY date DESC', conn)
+    conn.close()
+    export_path = os.path.join(UPLOAD_DIR, "Export_V2_Style.xlsx")
+    with pd.ExcelWriter(export_path, engine='xlsxwriter') as writer:
+        df.to_excel(writer, sheet_name='Transactions', index=False)
+        if not df.empty:
+            summary_df = df.groupby('CATEGORY')['PRICE'].sum().reset_index()
+            summary_df.to_excel(writer, sheet_name='Summary', index=False)
+    return FileResponse(export_path, filename="Export_V2_Style.xlsx")
+
+@app.get("/backups/")
+async def get_backups():
+    if not os.path.exists(BACKUP_DIR): return []
     backups = []
     for f in os.listdir(BACKUP_DIR):
-        if f.endswith(".xlsx"):
-            stats = os.stat(os.path.join(BACKUP_DIR, f))
-            backups.append({
-                "filename": f,
-                "date": datetime.fromtimestamp(stats.st_mtime).strftime("%Y-%m-%d %H:%M:%S"),
-                "size": f"{stats.st_size / 1024:.1f} KB"
-            })
+        if f.endswith('.xlsx'):
+            stat = os.stat(os.path.join(BACKUP_DIR, f))
+            backups.append({"filename": f, "date": datetime.fromtimestamp(stat.st_mtime).strftime('%Y-%m-%d %H:%M'), "size": f"{stat.st_size / 1024:.1f} KB"})
     return sorted(backups, key=lambda x: x['date'], reverse=True)
-
-@app.get("/backups/{filename}/preview")
-async def preview_backup(filename: str):
-    try:
-        path = os.path.join(BACKUP_DIR, filename)
-        if not os.path.exists(path):
-            raise HTTPException(status_code=404, detail="Backup not found")
-        
-        df = pd.read_excel(path)
-        # Replace NaN with empty string to ensure JSON serialization
-        df = df.fillna("")
-        
-        # Return first 50 rows for preview
-        return df.head(50).to_dict(orient="records")
-    except Exception as e:
-        print(f"Error previewing backup {filename}: {e}")
-        raise HTTPException(status_code=500, detail=str(e))
-
-@app.post("/rollback")
-async def rollback(filename: str = None):
-    if filename:
-        target_path = os.path.join(BACKUP_DIR, filename)
-    else:
-        backups = sorted([f for f in os.listdir(BACKUP_DIR) if f.endswith(".xlsx")], reverse=True)
-        if not backups:
-            return {"error": "No backups found"}
-        target_path = os.path.join(BACKUP_DIR, backups[0])
-        filename = backups[0]
-    
-    if not os.path.exists(target_path):
-        raise HTTPException(status_code=404, detail="Target backup not found")
-        
-    shutil.copy2(target_path, OUTPUT_FILE)
-    return {"status": "Rollback successful", "restored_from": filename}
-
-@app.get("/download")
-def download_statement():
-    if os.path.exists(OUTPUT_FILE):
-        return FileResponse(OUTPUT_FILE, media_type='application/vnd.openxmlformats-officedocument.spreadsheetml.sheet', filename="Final_Statement.xlsx")
-    return {"error": "No statement generated yet"}

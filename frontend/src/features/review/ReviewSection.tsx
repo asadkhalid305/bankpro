@@ -5,13 +5,18 @@ import { Select } from '../../components/ui/Select';
 import { AlertCircle, CheckCircle2, FileText, Calendar, Rows, Check } from 'lucide-react';
 import { Card, CardContent } from "@/components/ui/Card";
 import { cn } from "@/lib/utils";
+import { TYPE_OPTIONS } from '../../types';
 
 interface ReviewSectionProps {
   stagedData: UploadResponse;
   selectedTransactions: number[];
+  categories: string[];
+  buckets: string[];
   onCancel: () => void;
   onMerge: () => void;
   onCategoryChange: (index: number, newCategory: string) => void;
+  onBucketChange: (index: number, newBucket: string) => void;
+  onTypeChange: (index: number, newType: any) => void;
   onToggleSelect: (index: number) => void;
   onToggleAll: () => void;
 }
@@ -19,12 +24,18 @@ interface ReviewSectionProps {
 export const ReviewSection: React.FC<ReviewSectionProps> = ({
   stagedData,
   selectedTransactions,
+  categories,
+  buckets,
   onCancel,
   onMerge,
   onCategoryChange,
+  onBucketChange,
+  onTypeChange,
   onToggleSelect,
   onToggleAll
 }) => {
+  if (!stagedData.data || !stagedData.metadata) return null;
+
   return (
     <div className="space-y-6">
       <div className="flex flex-col gap-4 md:flex-row md:items-center md:justify-between">
@@ -33,7 +44,7 @@ export const ReviewSection: React.FC<ReviewSectionProps> = ({
           <p className="text-sm text-muted-foreground mt-1">
             Verify categorized transactions before merging them into your master file.
             <span className="block mt-1 font-medium text-amber-600 dark:text-amber-400">
-              ⚠️ No changes have been saved to the master file yet.
+              ⚠️ No changes have been saved to the database yet.
             </span>
           </p>
         </div>
@@ -61,7 +72,9 @@ export const ReviewSection: React.FC<ReviewSectionProps> = ({
             <Calendar className="w-8 h-8 text-slate-400" />
             <div>
               <p className="text-xs font-medium text-muted-foreground uppercase tracking-wider">Period</p>
-              <p className="text-sm font-semibold">{stagedData.metadata.start_date.split('-')[1]}/{stagedData.metadata.start_date.split('-')[0]} - {stagedData.metadata.end_date.split('-')[1]}/{stagedData.metadata.end_date.split('-')[0]}</p>
+              <p className="text-sm font-semibold">
+                {stagedData.metadata.start_date} to {stagedData.metadata.end_date}
+              </p>
             </div>
           </CardContent>
         </Card>
@@ -70,7 +83,7 @@ export const ReviewSection: React.FC<ReviewSectionProps> = ({
             <Rows className="w-8 h-8 text-slate-400" />
             <div>
               <p className="text-xs font-medium text-muted-foreground uppercase tracking-wider">Total Rows</p>
-              <p className="text-sm font-semibold">{stagedData.transactions.length}</p>
+              <p className="text-sm font-semibold">{stagedData.data.length}</p>
             </div>
           </CardContent>
         </Card>
@@ -95,22 +108,26 @@ export const ReviewSection: React.FC<ReviewSectionProps> = ({
                     <input 
                       type="checkbox" 
                       className="rounded border-gray-300 text-primary focus:ring-primary"
-                      checked={selectedTransactions.length === stagedData.transactions.length}
+                      checked={selectedTransactions.length === stagedData.data.length}
                       onChange={onToggleAll}
                     />
                   </th>
                   <th className="px-6 py-3 font-medium">Date</th>
                   <th className="px-6 py-3 font-medium">Merchant</th>
+                  <th className="px-6 py-3 font-medium">Details</th>
+                  <th className="px-6 py-3 font-medium">Type</th>
+                  <th className="px-6 py-3 font-medium">Bucket</th>
                   <th className="px-6 py-3 font-medium">Category</th>
-                  <th className="px-6 py-3 font-medium">Price</th>
-                  <th className="px-6 py-3 font-medium">Logic Status</th>
+                  <th className="px-6 py-3 font-medium">Amount</th>
+                  <th className="px-6 py-3 font-medium">Status</th>
                 </tr>
               </thead>
               <tbody className="divide-y">
-                {stagedData.transactions.map((t, i) => (
+                {stagedData.data.map((t, i) => (
                   <tr key={i} className={cn(
                     "hover:bg-muted/30 transition-colors",
-                    t.is_duplicate ? "bg-red-50/50 dark:bg-red-950/10" : ""
+                    t.is_duplicate ? "bg-red-50/50 dark:bg-red-950/10" : "",
+                    t.transaction_type === 'TRANSFER' ? "bg-blue-50/20 dark:bg-blue-900/5" : ""
                   )}>
                     <td className="px-6 py-4">
                       <input 
@@ -120,29 +137,48 @@ export const ReviewSection: React.FC<ReviewSectionProps> = ({
                         onChange={() => onToggleSelect(i)}
                       />
                     </td>
-                    <td className="px-6 py-4">{t.DATE}</td>
-                    <td className="px-6 py-4 font-medium max-w-[200px] truncate">{t.MERCHANT}</td>
+                    <td className="px-6 py-4 text-xs whitespace-nowrap">{t.date}</td>
+                    <td className="px-6 py-4 font-medium max-w-[150px] truncate" title={t.merchant}>{t.merchant}</td>
+                    <td className="px-6 py-4 text-[10px] text-muted-foreground max-w-[200px] truncate" title={t.details}>
+                        {t.details || "-"}
+                    </td>
                     <td className="px-6 py-4">
                       <Select 
-                        value={t.CATEGORY} 
+                        value={t.transaction_type} 
+                        onChange={(e) => onTypeChange(i, e.target.value)}
+                        options={TYPE_OPTIONS}
+                        className="h-8 text-[10px] font-bold max-w-[100px]"
+                      />
+                    </td>
+                    <td className="px-6 py-4">
+                      <Select 
+                        value={t.bucket} 
+                        onChange={(e) => onBucketChange(i, e.target.value)}
+                        options={buckets}
+                        className="h-8 text-xs max-w-[120px]"
+                      />
+                    </td>
+                    <td className="px-6 py-4">
+                      <Select 
+                        value={t.category} 
                         onChange={(e) => onCategoryChange(i, e.target.value)}
-                        options={stagedData.categories}
+                        options={categories}
                         className="h-8 text-xs max-w-[150px]"
                       />
                     </td>
-                    <td className="px-6 py-4 font-mono font-medium">
-                       <span className={t.PRICE < 0 ? "text-red-600" : "text-emerald-600"}>
-                         {t.PRICE.toFixed(2)}
+                    <td className="px-6 py-4 font-mono font-medium whitespace-nowrap">
+                       <span className={t.amount < 0 ? "text-red-600" : "text-emerald-600"}>
+                         {t.amount.toFixed(2)} €
                        </span>
                     </td>
                     <td className="px-6 py-4">
                       {t.is_duplicate ? (
-                        <span className="inline-flex items-center text-xs font-semibold text-red-600 bg-red-100 dark:bg-red-900/30 dark:text-red-400 px-2 py-0.5 rounded-full">
-                          <AlertCircle className="w-3 h-3 mr-1" /> Duplicate
+                        <span className="inline-flex items-center text-[10px] font-semibold text-red-600 bg-red-100 px-2 py-0.5 rounded-full">
+                          Dup
                         </span>
                       ) : (
-                        <span className="inline-flex items-center text-xs font-semibold text-emerald-600 bg-emerald-100 dark:bg-emerald-900/30 dark:text-emerald-400 px-2 py-0.5 rounded-full">
-                          <CheckCircle2 className="w-3 h-3 mr-1" /> New
+                        <span className="inline-flex items-center text-[10px] font-semibold text-emerald-600 bg-emerald-100 px-2 py-0.5 rounded-full">
+                          New
                         </span>
                       )}
                     </td>

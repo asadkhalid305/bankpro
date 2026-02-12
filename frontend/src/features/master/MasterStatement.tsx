@@ -8,9 +8,10 @@ import {
   Check, 
   X, 
   ChevronUp, 
-  ChevronDown 
+  ChevronDown,
+  Filter
 } from 'lucide-react';
-import { CATEGORY_OPTIONS, type Transaction, type SortConfig } from '../../types';
+import { TYPE_OPTIONS, type Transaction, type SortConfig } from '../../types';
 import { Button } from '../../components/ui/Button';
 import { Input } from '../../components/ui/Input';
 import { Select } from '../../components/ui/Select';
@@ -18,35 +19,43 @@ import { Card, CardContent, CardHeader } from "@/components/ui/Card";
 import { cn } from "@/lib/utils";
 
 interface MasterStatementProps {
-  data: (Transaction & { originalIndex: number })[];
+  data: Transaction[];
   totalCount: number;
+  categories: string[];
+  buckets: string[];
   paymentTypes: string[];
   search: string;
   onSearchChange: (val: string) => void;
   categoryFilter: string;
   onCategoryFilterChange: (val: string) => void;
-  paymentFilter: string;
-  onPaymentFilterChange: (val: string) => void;
+  accountFilter: string;
+  onAccountFilterChange: (val: string) => void;
+  bucketFilter: string;
+  onBucketFilterChange: (val: string) => void;
   sortConfig: SortConfig<Transaction> | null;
   onSort: (key: keyof Transaction) => void;
   selectedRows: Set<number>;
-  onToggleRow: (index: number) => void;
+  onToggleRow: (id: number) => void;
   onToggleAll: () => void;
-  onDelete: (indices: number[]) => void;
-  onUpdate: (index: number, row: Transaction) => void;
-  onAdd: (row: Transaction) => void;
+  onDelete: (ids: number[]) => void;
+  onUpdate: (id: number, updates: Partial<Transaction>) => void;
+  onAdd: (row: Partial<Transaction>) => void;
 }
 
 export const MasterStatement: React.FC<MasterStatementProps> = ({
   data,
   totalCount,
+  categories,
+  buckets,
   paymentTypes,
   search,
   onSearchChange,
   categoryFilter,
   onCategoryFilterChange,
-  paymentFilter,
-  onPaymentFilterChange,
+  accountFilter,
+  onAccountFilterChange,
+  bucketFilter,
+  onBucketFilterChange,
   sortConfig,
   onSort,
   selectedRows,
@@ -57,32 +66,42 @@ export const MasterStatement: React.FC<MasterStatementProps> = ({
   onAdd
 }) => {
   const [showAddForm, setShowAddForm] = useState(false);
-  const [editingIndex, setEditingIndex] = useState<number | null>(null);
-  const [editRow, setEditRow] = useState<Transaction | null>(null);
-  const [newRow, setNewRow] = useState<Transaction>({
-    DATE: new Date().toISOString().split('T')[0],
-    MERCHANT: '',
-    CATEGORY: 'Unknown',
-    PRICE: 0,
-    PAYMENT: 'Other'
+  const [editingId, setEditingId] = useState<number | null>(null);
+  const [editRow, setEditRow] = useState<Partial<Transaction>>({});
+
+  const [newRow, setNewRow] = useState<Partial<Transaction>>({
+    date: new Date().toISOString().split('T')[0],
+    merchant: '',
+    details: '',
+    category: 'Unknown',
+    amount: 0,
+    account: 'Cash',
+    bucket: 'Main',
+    transaction_type: 'EXPENSE'
   });
 
-  const handleEditClick = (row: Transaction & { originalIndex: number }) => {
-    setEditingIndex(row.originalIndex);
+  const handleEditClick = (row: Transaction) => {
+    setEditingId(row.id!);
     setEditRow(row);
   };
 
-  const handleUpdateClick = (originalIndex: number) => {
-    if (editRow) {
-      onUpdate(originalIndex, editRow);
-      setEditingIndex(null);
-      setEditRow(null);
-    }
+  const handleUpdateSave = (id: number) => {
+    onUpdate(id, editRow);
+    setEditingId(null);
   };
 
   const handleAddClick = () => {
     onAdd(newRow);
-    setNewRow({ DATE: new Date().toISOString().split('T')[0], MERCHANT: '', CATEGORY: 'Unknown', PRICE: 0, PAYMENT: 'Other' });
+    setNewRow({ 
+        date: new Date().toISOString().split('T')[0], 
+        merchant: '', 
+        details: '',
+        category: 'Unknown', 
+        amount: 0, 
+        account: 'Cash', 
+        bucket: 'Main', 
+        transaction_type: 'EXPENSE' 
+    });
     setShowAddForm(false);
   };
 
@@ -95,61 +114,71 @@ export const MasterStatement: React.FC<MasterStatementProps> = ({
     <div className="space-y-6">
       <div className="flex flex-col gap-4 md:flex-row md:items-center md:justify-between">
         <div>
-          <h1 className="text-2xl font-bold tracking-tight">Transactions</h1>
+          <h1 className="text-2xl font-bold tracking-tight">Transaction Log</h1>
           <p className="text-sm text-muted-foreground">
-            Manage your historical records and financial data.
+            Central database of all bank statements and manual entries.
           </p>
         </div>
         <div className="flex items-center gap-2">
           <Button onClick={() => setShowAddForm(!showAddForm)} variant={showAddForm ? 'outline' : 'default'} size="sm">
             {showAddForm ? <X className="w-4 h-4 mr-2" /> : <Plus className="w-4 h-4 mr-2" />}
-            {showAddForm ? 'Cancel' : 'Add Record'}
+            {showAddForm ? 'Cancel' : 'Manual Entry'}
           </Button>
-          <Button variant="outline" size="sm" onClick={() => window.open('/api/download', '_blank')}>
+          <Button variant="outline" size="sm" onClick={() => window.open('http://localhost:8000/export/targetV2', '_blank')}>
             <Download className="w-4 h-4 mr-2" />
-            Export
+            V2 Excel
           </Button>
         </div>
       </div>
 
       <Card>
         <CardHeader className="p-4 border-b">
-          <div className="flex flex-col gap-4 md:flex-row md:items-center">
-            <div className="relative flex-1">
+          <div className="flex flex-col gap-4 md:grid md:grid-cols-12 md:items-center">
+            <div className="relative col-span-4">
               <Search className="absolute left-2.5 top-2.5 h-4 w-4 text-muted-foreground" />
               <Input
-                placeholder="Search merchants..."
+                placeholder="Search..."
                 className="pl-9"
                 value={search}
                 onChange={(e) => onSearchChange(e.target.value)}
               />
             </div>
-            <div className="flex items-center gap-2">
+            <div className="col-span-8 flex items-center gap-2 overflow-x-auto pb-2 md:pb-0">
+              <Filter className="w-4 h-4 text-muted-foreground shrink-0" />
+              <Select 
+                value={bucketFilter} 
+                onChange={(e) => onBucketFilterChange(e.target.value)}
+                className="w-[140px] shrink-0"
+              >
+                <option value="All">All Buckets</option>
+                {buckets.map(b => <option key={b} value={b}>{b}</option>)}
+              </Select>
+              <Select 
+                value={accountFilter} 
+                onChange={(e) => onAccountFilterChange(e.target.value)}
+                className="w-[140px] shrink-0"
+              >
+                <option value="All">All Accounts</option>
+                {paymentTypes.map(c => <option key={c} value={c}>{c}</option>)}
+              </Select>
               <Select 
                 value={categoryFilter} 
                 onChange={(e) => onCategoryFilterChange(e.target.value)}
-                className="w-[180px]"
+                className="w-[140px] shrink-0"
               >
                 <option value="All">All Categories</option>
-                {CATEGORY_OPTIONS.map(c => <option key={c} value={c}>{c}</option>)}
-              </Select>
-              <Select 
-                value={paymentFilter} 
-                onChange={(e) => onPaymentFilterChange(e.target.value)}
-                className="w-[180px]"
-              >
-                <option value="All">All Payments</option>
-                {paymentTypes.map(c => <option key={c} value={c}>{c}</option>)}
+                {categories.map(c => <option key={c} value={c}>{c}</option>)}
               </Select>
             </div>
             {selectedRows.size > 0 && (
               <Button 
                 variant="destructive" 
                 size="sm" 
+                className="col-span-full mt-2"
                 onClick={() => onDelete(Array.from(selectedRows))}
               >
                 <Trash2 className="w-4 h-4 mr-2" />
-                Delete ({selectedRows.size})
+                Delete Selected ({selectedRows.size})
               </Button>
             )}
           </div>
@@ -157,24 +186,49 @@ export const MasterStatement: React.FC<MasterStatementProps> = ({
         <CardContent className="p-0">
           {showAddForm && (
             <div className="p-4 border-b bg-muted/30 animate-in fade-in slide-in-from-top-2">
-              <div className="grid grid-cols-1 gap-4 md:grid-cols-5">
-                <Input type="date" value={newRow.DATE} onChange={(e) => setNewRow({...newRow, DATE: e.target.value})} />
-                <Input placeholder="Merchant" value={newRow.MERCHANT} onChange={(e) => setNewRow({...newRow, MERCHANT: e.target.value})} />
-                <Select value={newRow.CATEGORY} onChange={(e) => setNewRow({...newRow, CATEGORY: e.target.value})} options={CATEGORY_OPTIONS} />
-                <Select value={newRow.PAYMENT} onChange={(e) => setNewRow({...newRow, PAYMENT: e.target.value})} options={paymentTypes} />
-                <div className="flex gap-2">
-                  <Input type="number" step="0.01" placeholder="Price" value={newRow.PRICE} onChange={(e) => setNewRow({...newRow, PRICE: parseFloat(e.target.value)})} />
-                  <Button onClick={handleAddClick} size="icon" className="shrink-0"><Check className="w-4 h-4" /></Button>
+              <div className="grid grid-cols-1 gap-4 md:grid-cols-9 items-end">
+                <div className="space-y-1">
+                    <label className="text-[10px] uppercase font-bold text-muted-foreground">Date</label>
+                    <Input type="date" value={newRow.date} onChange={(e) => setNewRow({...newRow, date: e.target.value})} />
                 </div>
+                <div className="space-y-1">
+                    <label className="text-[10px] uppercase font-bold text-muted-foreground">Merchant</label>
+                    <Input placeholder="Who" value={newRow.merchant} onChange={(e) => setNewRow({...newRow, merchant: e.target.value})} />
+                </div>
+                <div className="space-y-1">
+                    <label className="text-[10px] uppercase font-bold text-muted-foreground">Type</label>
+                    <Select value={newRow.transaction_type} onChange={(e) => setNewRow({...newRow, transaction_type: e.target.value as any})} options={TYPE_OPTIONS} />
+                </div>
+                <div className="space-y-1">
+                    <label className="text-[10px] uppercase font-bold text-muted-foreground">Details</label>
+                    <Input placeholder="Ref/Order#" value={newRow.details} onChange={(e) => setNewRow({...newRow, details: e.target.value})} />
+                </div>
+                <div className="space-y-1">
+                    <label className="text-[10px] uppercase font-bold text-muted-foreground">Amount</label>
+                    <Input type="number" step="0.01" value={newRow.amount} onChange={(e) => setNewRow({...newRow, amount: parseFloat(e.target.value)})} />
+                </div>
+                <div className="space-y-1">
+                    <label className="text-[10px] uppercase font-bold text-muted-foreground">Account</label>
+                    <Select value={newRow.account} onChange={(e) => setNewRow({...newRow, account: e.target.value})} options={paymentTypes} />
+                </div>
+                <div className="space-y-1">
+                    <label className="text-[10px] uppercase font-bold text-muted-foreground">Bucket</label>
+                    <Select value={newRow.bucket} onChange={(e) => setNewRow({...newRow, bucket: e.target.value})} options={buckets} />
+                </div>
+                <div className="space-y-1">
+                    <label className="text-[10px] uppercase font-bold text-muted-foreground">Category</label>
+                    <Select value={newRow.category} onChange={(e) => setNewRow({...newRow, category: e.target.value})} options={categories} />
+                </div>
+                <Button onClick={handleAddClick} className="w-full"><Check className="w-4 h-4 mr-2" /> Save</Button>
               </div>
             </div>
           )}
 
           <div className="relative overflow-x-auto">
-            <table className="w-full text-sm text-left">
+            <table className="w-full text-sm text-left table-fixed">
               <thead className="text-xs uppercase bg-muted/50 text-muted-foreground border-b">
                 <tr>
-                  <th className="px-6 py-3 w-4">
+                  <th className="px-6 py-3 w-12">
                     <input 
                       type="checkbox" 
                       className="rounded border-gray-300 text-primary focus:ring-primary"
@@ -182,95 +236,140 @@ export const MasterStatement: React.FC<MasterStatementProps> = ({
                       onChange={onToggleAll}
                     />
                   </th>
-                  <th onClick={() => onSort('DATE')} className="px-6 py-3 cursor-pointer hover:text-foreground transition-colors group whitespace-nowrap w-[120px]">
-                    <div className="flex items-center">Date <SortIcon column="DATE" /></div>
+                  <th onClick={() => onSort('date')} className="px-6 py-3 cursor-pointer hover:text-foreground transition-colors w-[110px]">
+                    <div className="flex items-center">Date <SortIcon column="date" /></div>
                   </th>
-                  <th onClick={() => onSort('MERCHANT')} className="px-6 py-3 cursor-pointer hover:text-foreground transition-colors whitespace-nowrap">
-                    <div className="flex items-center">Merchant <SortIcon column="MERCHANT" /></div>
+                  <th onClick={() => onSort('merchant')} className="px-6 py-3 cursor-pointer hover:text-foreground transition-colors w-[18%]">
+                    <div className="flex items-center">Merchant <SortIcon column="merchant" /></div>
                   </th>
-                  <th onClick={() => onSort('CATEGORY')} className="px-6 py-3 cursor-pointer hover:text-foreground transition-colors whitespace-nowrap w-[150px]">
-                    <div className="flex items-center">Category <SortIcon column="CATEGORY" /></div>
+                  <th onClick={() => onSort('transaction_type')} className="px-6 py-3 cursor-pointer hover:text-foreground transition-colors w-[100px]">
+                    <div className="flex items-center">Type <SortIcon column="transaction_type" /></div>
                   </th>
-                  <th onClick={() => onSort('PRICE')} className="px-6 py-3 cursor-pointer hover:text-foreground transition-colors whitespace-nowrap w-[120px]">
-                    <div className="flex items-center">Price <SortIcon column="PRICE" /></div>
+                  <th onClick={() => onSort('details')} className="px-6 py-3 cursor-pointer hover:text-foreground transition-colors w-[15%]">
+                    <div className="flex items-center">Details <SortIcon column="details" /></div>
                   </th>
-                  <th onClick={() => onSort('PAYMENT')} className="px-6 py-3 cursor-pointer hover:text-foreground transition-colors whitespace-nowrap w-[150px]">
-                    <div className="flex items-center">Payment <SortIcon column="PAYMENT" /></div>
+                  <th onClick={() => onSort('category')} className="px-6 py-3 cursor-pointer hover:text-foreground transition-colors w-[130px]">
+                    <div className="flex items-center">Category <SortIcon column="category" /></div>
                   </th>
-                  <th className="px-6 py-3 text-right whitespace-nowrap w-[100px]">Actions</th>
+                  <th onClick={() => onSort('bucket')} className="px-6 py-3 cursor-pointer hover:text-foreground transition-colors w-[110px]">
+                    <div className="flex items-center">Bucket <SortIcon column="bucket" /></div>
+                  </th>
+                  <th onClick={() => onSort('amount')} className="px-6 py-3 cursor-pointer hover:text-foreground transition-colors w-[110px]">
+                    <div className="flex items-center">Amount <SortIcon column="amount" /></div>
+                  </th>
+                  <th onClick={() => onSort('account')} className="px-6 py-3 cursor-pointer hover:text-foreground transition-colors w-[120px]">
+                    <div className="flex items-center">Account <SortIcon column="account" /></div>
+                  </th>
+                  <th className="px-6 py-3 text-right w-[100px]">Actions</th>
                 </tr>
               </thead>
               <tbody className="divide-y">
                 {data.map((r) => (
-                  <tr key={r.originalIndex} className={cn(
+                  <tr key={r.id} className={cn(
                     "hover:bg-muted/30 transition-colors",
-                    selectedRows.has(r.originalIndex!) && "bg-primary/5"
+                    selectedRows.has(r.id!) && "bg-primary/5",
+                    r.transaction_type === 'TRANSFER' && "bg-blue-50/20 dark:bg-blue-900/5"
                   )}>
                     <td className="px-6 py-4">
                       <input 
                         type="checkbox" 
                         className="rounded border-gray-300 text-primary focus:ring-primary"
-                        checked={selectedRows.has(r.originalIndex!)}
-                        onChange={() => onToggleRow(r.originalIndex!)}
+                        checked={selectedRows.has(r.id!)}
+                        onChange={() => onToggleRow(r.id!)}
                       />
                     </td>
-                    <td className="px-6 py-4 font-medium">
-                      {editingIndex === r.originalIndex ? (
-                        <Input type="date" value={editRow?.DATE} onChange={(e) => setEditRow({...editRow!, DATE: e.target.value})} />
-                      ) : r.DATE}
+                    <td className="px-6 py-4 text-xs text-muted-foreground">
+                      {editingId === r.id ? (
+                        <Input type="date" className="h-8 text-xs px-1" value={editRow.date} onChange={e => setEditRow({...editRow, date: e.target.value})} />
+                      ) : r.date}
                     </td>
-                    <td className="px-6 py-4 max-w-[300px]" title={r.MERCHANT}>
-                      {editingIndex === r.originalIndex ? (
-                        <Input value={editRow?.MERCHANT} onChange={(e) => setEditRow({...editRow!, MERCHANT: e.target.value})} />
+                    <td className="px-6 py-4">
+                        {editingId === r.id ? (
+                          <Input className="h-8 text-xs" value={editRow.merchant} onChange={e => setEditRow({...editRow, merchant: e.target.value})} />
+                        ) : (
+                          <div className="font-medium text-foreground/90 break-words leading-tight">{r.merchant}</div>
+                        )}
+                    </td>
+                    <td className="px-6 py-4">
+                        {editingId === r.id ? (
+                           <Select value={editRow.transaction_type} onChange={e => setEditRow({...editRow, transaction_type: e.target.value as any})} options={TYPE_OPTIONS} className="h-8 text-[10px] font-bold" />
+                        ) : (
+                          <span className={cn(
+                            "text-[10px] font-bold px-1.5 py-0.5 rounded",
+                            r.transaction_type === 'EXPENSE' ? "text-red-600 bg-red-50 dark:bg-red-950/20" : 
+                            r.transaction_type === 'INCOME' ? "text-emerald-600 bg-emerald-50 dark:bg-emerald-950/20" : 
+                            "text-blue-600 bg-blue-50 dark:bg-blue-950/20"
+                          )}>
+                            {r.transaction_type}
+                          </span>
+                        )}
+                    </td>
+                    <td className="px-6 py-4">
+                        {editingId === r.id ? (
+                          <Input className="h-8 text-xs" value={editRow.details} onChange={e => setEditRow({...editRow, details: e.target.value})} />
+                        ) : (
+                          <div className="text-[10px] text-muted-foreground truncate" title={r.details}>{r.details || "-"}</div>
+                        )}
+                    </td>
+                    <td className="px-6 py-4">
+                      {editingId === r.id ? (
+                         <Select value={editRow.category} onChange={e => setEditRow({...editRow, category: e.target.value})} options={categories} className="h-8 text-xs" />
                       ) : (
-                         <div className="truncate font-medium text-foreground/90">{r.MERCHANT}</div>
+                        <span className="text-[11px] font-semibold text-muted-foreground uppercase">{r.category}</span>
                       )}
                     </td>
                     <td className="px-6 py-4">
-                      {editingIndex === r.originalIndex ? (
-                        <Select value={editRow?.CATEGORY} onChange={(e) => setEditRow({...editRow!, CATEGORY: e.target.value})} options={CATEGORY_OPTIONS} />
-                      ) : (
-                        <span className="inline-flex items-center px-2.5 py-0.5 rounded-full text-xs font-medium bg-slate-100 text-slate-700 dark:bg-slate-800 dark:text-slate-300">
-                          {r.CATEGORY}
-                        </span>
-                      )}
+                        {editingId === r.id ? (
+                           <Select value={editRow.bucket} onChange={e => setEditRow({...editRow, bucket: e.target.value})} options={buckets} className="h-8 text-xs" />
+                        ) : (
+                          <span className={cn(
+                              "inline-flex items-center px-2 py-0.5 rounded text-[10px] font-bold uppercase",
+                              r.bucket === 'Kindergeld' ? "bg-blue-100 text-blue-700 dark:bg-blue-900/30 dark:text-blue-400" :
+                              r.bucket === 'Savings' ? "bg-amber-100 text-amber-700" : "bg-slate-100 text-slate-600"
+                          )}>
+                            {r.bucket}
+                          </span>
+                        )}
                     </td>
-                    <td className="px-6 py-4 font-mono font-medium">
-                      {editingIndex === r.originalIndex ? (
-                        <Input type="number" step="0.01" value={editRow?.PRICE} onChange={(e) => setEditRow({...editRow!, PRICE: parseFloat(e.target.value)})} />
-                      ) : (
-                        <span className={cn(
-                          r.PRICE < 0 ? "text-red-600" : "text-emerald-600"
-                        )}>
-                           {typeof r.PRICE === 'number' ? r.PRICE.toFixed(2) : r.PRICE}
-                        </span>
-                      )}
+                    <td className="px-6 py-4 font-mono font-bold">
+                        {editingId === r.id ? (
+                           <Input type="number" step="0.01" className="h-8 text-xs" value={editRow.amount} onChange={e => setEditRow({...editRow, amount: parseFloat(e.target.value)})} />
+                        ) : (
+                          <span className={cn(
+                            r.transaction_type === 'TRANSFER' ? "text-slate-500" :
+                            r.amount < 0 ? "text-red-600" : "text-emerald-600"
+                          )}>
+                             {r.amount.toFixed(2)} €
+                          </span>
+                        )}
                     </td>
-                    <td className="px-6 py-4 text-muted-foreground">
-                      {editingIndex === r.originalIndex ? (
-                        <Select value={editRow?.PAYMENT} onChange={(e) => setEditRow({...editRow!, PAYMENT: e.target.value})} options={paymentTypes} />
-                      ) : r.PAYMENT}
+                    <td className="px-6 py-4 text-xs font-medium">
+                      {editingId === r.id ? (
+                         <Select value={editRow.account} onChange={e => setEditRow({...editRow, account: e.target.value})} options={paymentTypes} className="h-8 text-xs" />
+                      ) : r.account}
                     </td>
                     <td className="px-6 py-4 text-right">
-                      {editingIndex === r.originalIndex ? (
-                        <div className="flex justify-end gap-2">
-                          <Button onClick={() => handleUpdateClick(r.originalIndex!)} size="icon" variant="ghost" className="text-emerald-600">
-                            <Check className="w-4 h-4" />
-                          </Button>
-                          <Button onClick={() => setEditingIndex(null)} size="icon" variant="ghost" className="text-muted-foreground">
-                            <X className="w-4 h-4" />
-                          </Button>
+                        <div className="flex justify-end gap-1">
+                          {editingId === r.id ? (
+                             <>
+                               <Button onClick={() => handleUpdateSave(r.id!)} size="icon" variant="ghost" className="h-8 w-8 text-emerald-600">
+                                 <Check className="w-4 h-4" />
+                               </Button>
+                               <Button onClick={() => setEditingId(null)} size="icon" variant="ghost" className="h-8 w-8 text-muted-foreground">
+                                 <X className="w-4 h-4" />
+                               </Button>
+                             </>
+                          ) : (
+                            <>
+                              <Button onClick={() => handleEditClick(r)} size="icon" variant="ghost" className="h-8 w-8">
+                                <Edit3 className="w-4 h-4" />
+                              </Button>
+                              <Button onClick={() => onDelete([r.id!])} size="icon" variant="ghost" className="text-destructive h-8 w-8">
+                                <Trash2 className="w-4 h-4" />
+                              </Button>
+                            </>
+                          )}
                         </div>
-                      ) : (
-                        <div className="flex justify-end gap-2">
-                          <Button onClick={() => handleEditClick(r)} size="icon" variant="ghost">
-                            <Edit3 className="w-4 h-4" />
-                          </Button>
-                          <Button onClick={() => onDelete([r.originalIndex!])} size="icon" variant="ghost" className="text-destructive">
-                            <Trash2 className="w-4 h-4" />
-                          </Button>
-                        </div>
-                      )}
                     </td>
                   </tr>
                 ))}
@@ -278,15 +377,18 @@ export const MasterStatement: React.FC<MasterStatementProps> = ({
             </table>
           </div>
           {data.length === 0 && (
-            <div className="flex flex-col items-center justify-center py-12 text-center text-muted-foreground">
-              <Check className="w-12 h-12 mb-4 opacity-20" />
-              <p>No transactions found matching your criteria.</p>
+            <div className="flex flex-col items-center justify-center py-20 text-center text-muted-foreground">
+              <div className="w-16 h-16 bg-muted rounded-full flex items-center justify-center mb-4">
+                <Search className="w-8 h-8 opacity-20" />
+              </div>
+              <p className="text-lg font-medium">No results found</p>
+              <p className="text-sm">Try adjusting your filters or importing more data.</p>
             </div>
           )}
         </CardContent>
         <CardHeader className="p-4 border-t bg-muted/20">
-           <div className="text-xs text-muted-foreground">
-             Showing {data.length} of {totalCount} total records in database.
+           <div className="text-xs text-muted-foreground font-medium">
+             Total Records: {totalCount} | Filtered: {data.length}
            </div>
         </CardHeader>
       </Card>

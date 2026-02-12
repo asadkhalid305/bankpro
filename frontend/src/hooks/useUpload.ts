@@ -7,7 +7,7 @@ export const useUpload = () => {
   const [message, setMessage] = useState('');
   const [stagedData, setStagedData] = useState<UploadResponse | null>(null);
   const [selectedTransactions, setSelectedTransactions] = useState<number[]>([]);
-  const [createNewFile, setCreateNewFile] = useState(false); // New state for checkbox
+  const [createNewFile, setCreateNewFile] = useState(false);
 
   const handleFileChange = useCallback((e: React.ChangeEvent<HTMLInputElement>) => {
     if (e.target.files && e.target.files.length > 0) {
@@ -23,8 +23,7 @@ export const useUpload = () => {
     setStatus('uploading');
     const formData = new FormData();
     formData.append('file', file);
-    formData.append('create_new_file', createNewFile ? 'true' : 'false'); // Send as string "true" or "false"
-
+    formData.append('create_new_file', createNewFile ? 'true' : 'false');
 
     try {
       const response = await fetch('/api/upload/', { method: 'POST', body: formData });
@@ -32,18 +31,18 @@ export const useUpload = () => {
       if (response.ok) {
         if (createNewFile) {
           setStatus('new_file_created');
-          setMessage(data.message || `File created successfully.`); // Use data.message directly, with a generic fallback
-
+          setMessage(data.message || `File created successfully.`);
         } else {
           setStagedData(data);
           setStatus('review');
-          setFile(null); // Clear file input state in React
-          // Note: Clearing the actual DOM element needs to happen in the UI component
+          setFile(null);
           
-          const nonDups = data.transactions
-            .map((t: Transaction, i: number) => t.is_duplicate ? -1 : i)
-            .filter((i: number) => i !== -1);
-          setSelectedTransactions(nonDups);
+          if (data.data) {
+            const nonDups = data.data
+              .map((t: Transaction, i: number) => t.is_duplicate ? -1 : i)
+              .filter((i: number) => i !== -1);
+            setSelectedTransactions(nonDups);
+          }
         }
       } else {
         setStatus('error');
@@ -56,9 +55,9 @@ export const useUpload = () => {
   }, [file, createNewFile]);
 
   const mergeTransactions = useCallback(async () => {
-    if (!stagedData) return;
+    if (!stagedData || !stagedData.data) return;
     setStatus('merging');
-    const toMerge = stagedData.transactions.filter((_, i) => selectedTransactions.includes(i));
+    const toMerge = stagedData.data.filter((_, i) => selectedTransactions.includes(i));
     
     try {
       const response = await fetch('/api/merge', {
@@ -66,11 +65,11 @@ export const useUpload = () => {
         headers: { 'Content-Type': 'application/json' },
         body: JSON.stringify({ transactions: toMerge })
       });
-      const data = await response.json();
       if (response.ok) {
         setStatus('success');
         setMessage(`Successfully merged ${toMerge.length} transactions.`);
       } else {
+        const data = await response.json();
         setStatus('error');
         setMessage(data.detail || 'Merge failed');
       }
@@ -81,12 +80,32 @@ export const useUpload = () => {
   }, [stagedData, selectedTransactions]);
 
   const updateCategory = useCallback((index: number, newCategory: string) => {
-    if (!stagedData) return;
+    if (!stagedData || !stagedData.data) return;
     setStagedData(prev => {
-        if (!prev) return null;
-        const updatedTransactions = [...prev.transactions];
-        updatedTransactions[index] = { ...updatedTransactions[index], CATEGORY: newCategory };
-        return { ...prev, transactions: updatedTransactions };
+        if (!prev || !prev.data) return null;
+        const updatedTransactions = [...prev.data];
+        updatedTransactions[index] = { ...updatedTransactions[index], category: newCategory };
+        return { ...prev, data: updatedTransactions };
+    });
+  }, [stagedData]);
+
+  const updateBucket = useCallback((index: number, newBucket: string) => {
+    if (!stagedData || !stagedData.data) return;
+    setStagedData(prev => {
+        if (!prev || !prev.data) return null;
+        const updatedTransactions = [...prev.data];
+        updatedTransactions[index] = { ...updatedTransactions[index], bucket: newBucket };
+        return { ...prev, data: updatedTransactions };
+    });
+  }, [stagedData]);
+
+  const updateType = useCallback((index: number, newType: 'EXPENSE' | 'INCOME' | 'TRANSFER') => {
+    if (!stagedData || !stagedData.data) return;
+    setStagedData(prev => {
+        if (!prev || !prev.data) return null;
+        const updatedTransactions = [...prev.data];
+        updatedTransactions[index] = { ...updatedTransactions[index], transaction_type: newType };
+        return { ...prev, data: updatedTransactions };
     });
   }, [stagedData]);
 
@@ -97,21 +116,21 @@ export const useUpload = () => {
   }, []);
 
   const toggleAllTransactions = useCallback(() => {
-    if (!stagedData) return;
-    if (selectedTransactions.length === stagedData.transactions.length) {
+    if (!stagedData || !stagedData.data) return;
+    if (selectedTransactions.length === stagedData.data.length) {
         setSelectedTransactions([]);
     } else {
-        setSelectedTransactions(stagedData.transactions.map((_, i) => i));
+        setSelectedTransactions(stagedData.data.map((_, i) => i));
     }
   }, [stagedData, selectedTransactions]);
 
   const resetStatus = useCallback(() => {
       setStatus('idle');
-      setFile(null); // Also clear file here for a complete reset
+      setFile(null);
       setStagedData(null);
       setSelectedTransactions([]);
       setMessage('');
-      setCreateNewFile(false); // Reset create new file checkbox state
+      setCreateNewFile(false);
   }, []);
 
   return {
@@ -120,14 +139,16 @@ export const useUpload = () => {
     message,
     stagedData,
     selectedTransactions,
-    createNewFile, // Expose for UI
+    createNewFile,
     handleFileChange,
     uploadFile,
     mergeTransactions,
     updateCategory,
+    updateBucket,
+    updateType,
     toggleTransactionSelection,
     toggleAllTransactions,
     resetStatus,
-    setCreateNewFile // Expose setter for UI
+    setCreateNewFile
   };
 };

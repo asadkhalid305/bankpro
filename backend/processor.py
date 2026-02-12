@@ -4,64 +4,33 @@ import pdfplumber
 import re
 import os
 import json
+import sqlite3
+from datetime import datetime
 
-TARGET_COLUMNS = ['DATE', 'MERCHANT', 'CATEGORY', 'PAYMENT', 'PRICE']
-OUTPUT_FILE = 'files/Final_Statement.xlsx'
-MAPPING_FILE = os.path.join(os.path.dirname(__file__), 'mappings.json')
+BASE_DIR = os.path.dirname(os.path.abspath(__file__))
+DB_PATH = os.path.join(BASE_DIR, 'processor.db')
 
-def load_mappings():
-    if os.path.exists(MAPPING_FILE):
-        if os.path.getsize(MAPPING_FILE) == 0:
-            return {}
-        try:
-            with open(MAPPING_FILE, 'r') as f:
-                return json.load(f)
-        except json.JSONDecodeError:
-            return {}
-    return {}
+USER_NAME = "Asad Ullah Khalid"
 
-def save_mapping(merchant, category):
-    mappings = load_mappings()
-    mappings[merchant] = category
-    with open(MAPPING_FILE, 'w') as f:
-        json.dump(mappings, f, indent=2)
+def get_db_connection():
+    conn = sqlite3.connect(DB_PATH)
+    conn.row_factory = sqlite3.Row
+    return conn
 
 def clean_currency(s):
     if isinstance(s, (int, float)):
         return float(s)
     s = str(s).strip()
-    
-    # Identify the positions of the last comma and last dot
     last_comma = s.rfind(',')
     last_dot = s.rfind('.')
-
     if last_comma != -1 and last_dot != -1:
         if last_comma > last_dot:
-            # European format: 1.234,56 -> comma is decimal
             s = s.replace('.', '').replace(',', '.')
         else:
-            # English format: 1,234.56 -> dot is decimal
             s = s.replace(',', '')
     elif last_comma != -1:
-        # Only comma present: 1,23 or 1.234 (but here no dot)
-        # In German bank statements, a single comma is always a decimal.
         s = s.replace(',', '.')
-    elif last_dot != -1:
-        # Only dot present: 1.23 or 1.234
-        # If the dot is followed by exactly 3 digits and it's not the only dot, 
-        # it could be a thousand separator. But if there's only one dot, 
-        # it's most likely a decimal for amounts < 1000 or a thousand separator for exactly 1000.
-        # Most PDF extractors for German statements will extract 1.234,56. 
-        # If it's just 1.234, we'll assume it's 1.234 (float) unless it's very likely to be a thousand.
-        # Heuristic: if it's followed by 2 digits, it's a decimal.
-        if len(s.split('.')[-1]) == 3 and float(s.replace('.', '')) >= 1000:
-            # High probability of being a thousand separator (e.g., 1.000)
-            # However, for banking, 1.234 is more likely 1.23 in some cases? 
-            # No, let's stick to standard float parsing if only dot is present.
-            pass
-    
     s = re.sub(r'[^\d.-]', '', s)
-    
     try:
         return float(s)
     except ValueError:
@@ -69,122 +38,127 @@ def clean_currency(s):
 
 def clean_merchant_name(text):
     if not text: return ""
-    
-    # 1. German SEPA Specific Cleaning
-    text = re.sub(r'^(Sepalastschrifteinzugvon|Sepaüberweisungan|Sepaüberweisungvon|Sepaechtzeitüberweisungan|Sepaechtzeitüberweisungvon)\s*', '', text, flags=re.IGNORECASE)
-    
-    # 2. Conservative Regex Cleaning (Always runs)
-    # Remove IBANs
-    text = re.sub(r'[A-Z]{2}\d{2}[A-Z0-9]{11,30}', '', text)
-    # Remove Payment/Reference noise (More comprehensive)
+    match = re.search(r'(?:von|an|aus)\s+(.*?)\s+(?:IBAN|BIC|PaymentReference|Creditor-Id|Mand-Id|E2E-Ref)', text, re.IGNORECASE)
+    if match:
+        text = match.group(1).strip()
+    else:
+        text = re.sub(r'^(Sepalastschrifteinzugvon|Sepaüberweisungan|Sepaüberweisungvon|Sepaechtzeitüberweisungan|Sepaechtzeitüberweisungvon|Sepadauerauftragan)\s*', '', text, flags=re.IGNORECASE)
+
     noise_patterns = [
-        r'Paymentreference', r'E2E-Ref\.', r'Creditor-Id', r'Mand-Id', 
-        r'Othrsonst\.Transakt\.', r'Rcurwiederholungslastschrift', 
-        r'Kd-Nr\.', r'Rg-Nr\.', r'Iban', r'Bic', r'Ultm', r'Ultd',
-        r'Niederlassung Deutschland', r'Ihre Tarifrechnung',
-        r'Folgenr\.\d+', r'Verfalld\.\d+'
+        r'IBAN[A-Z0-9\s]{15,35}', 
+        r'BIC[A-Z0-9\s]{8,15}',
+        r'PaymentReference/E2E-Ref\.',
+        r'E2E-Ref\.',
+        r'Creditor-Id\.',
+        r'Mand-Id',
+        r'OTHRSonst\.Transakt\.',
+        r'RCURWiederholungslastschrift',
+        r'RINPDauerauftrag',
+        r'Kd-Nr\.', r'Rg-Nr\.',
+        r'Niederlassung Deutschland',
+        r'Branchnumber', r'Accountnumber', r'Newbalance',
+        r'92115202/00900560/3000000000'
     ]
     for pattern in noise_patterns:
-        text = re.sub(pattern, '', text, flags=re.IGNORECASE)
+        text = re.sub(pattern, ' ', text, flags=re.IGNORECASE)
 
-    text = re.sub(r'(ID|REF|TRACE|SEQ|AUTH|TERMINAL|CARD|BATCH|VISA|MC)[:\s]*\d+', '', text, flags=re.IGNORECASE)
-    text = re.sub(r'\d{6,}', '', text)
-    text = re.sub(r'^(DIRECT DEBIT|CREDIT TRANSFER|PAYMENT TO|PURCHASE AT)\s+', '', text, flags=re.IGNORECASE)
+    text = re.sub(r'[A-Z]{2}\d{2}[A-Z0-9]{11,30}', ' ', text)
+    text = re.sub(r'\d{8,}', ' ', text)
     text = re.sub(r'[^\w\s\.\-]', ' ', text)
     text = re.sub(r'\s+', ' ', text).strip()
+    if len(text) > 50:
+        text = text[:47] + "..."
     return text.title()
 
-def get_category_from_mappings(merchant, mappings):
-    if not merchant: return 'Unknown'
-    
-    m_lower = merchant.lower()
-    
-    # Sort keys by length descending to match most specific keywords first
-    sorted_keys = sorted(mappings.keys(), key=len, reverse=True)
-    
-    for key in sorted_keys:
-        if not key or len(key) < 2: continue
-        
-        # Use regex to find the key as a whole word/phrase within the merchant string
-        # \b ensures we match "Rewe" in "Rewe 123" but not in "Prewen"
-        pattern = rf'\b{re.escape(key.lower())}\b'
-        if re.search(pattern, m_lower):
-            return mappings[key]
-            
-    return 'Unknown'
+def extract_details(text):
+    if not text: return ""
+    # Look for reference part in SEPA strings
+    # Usually after 'Ref.' or 'Reference'
+    ref_match = re.search(r'(?:PaymentReference/E2E-Ref\.|E2E-Ref\.|Ref\.)\s*(.*?)(?:\s+Creditor-Id|\s+Mand-Id|\s+RCUR|\s+OTHR|\s+BIC|$)', text, re.IGNORECASE)
+    if ref_match:
+        details = ref_match.group(1).strip()
+        # Clean up some common noise from details
+        details = re.sub(r'IBAN[A-Z0-9\s]{15,35}', '', details, flags=re.IGNORECASE)
+        details = re.sub(r'\s+', ' ', details).strip()
+        return details[:100] # Limit length
+    return ""
+
+def get_category_from_db(raw_merchant):
+    if not raw_merchant: return "Unknown", "Main"
+    conn = get_db_connection()
+    cursor = conn.cursor()
+    cursor.execute("SELECT pattern, category, bucket FROM mappings")
+    mappings = cursor.fetchall()
+    conn.close()
+    m_lower = raw_merchant.lower()
+    sorted_mappings = sorted(mappings, key=lambda x: len(x['pattern']), reverse=True)
+    for m in sorted_mappings:
+        if m['pattern'].lower() in m_lower:
+            return m['category'], m['bucket']
+    return "Unknown", "Main"
+
+def identify_transaction_type(merchant, amount, payer=None, payee=None):
+    combined_names = f"{merchant} {payer or ''} {payee or ''}".lower()
+    user_tokens = USER_NAME.lower().split()
+    match_count = sum(1 for token in user_tokens if token in combined_names)
+    if match_count >= 2:
+        return "TRANSFER"
+    if "transfer" in combined_names or "internal" in combined_names:
+        return "TRANSFER"
+    return "INCOME" if amount > 0 else "EXPENSE"
 
 def process_excel(file_path):
-    print(f"Processing Excel: {file_path}")
     df = pd.read_excel(file_path)
-    
-    # Metadata extraction (Wise specific)
-    metadata = {
-        "source": "Wise",
-        "start_date": None,
-        "end_date": None,
-        "initial_balance": None,
-        "final_balance": None
-    }
-    
+    metadata = {"source": "Wise", "start_date": None, "end_date": None}
     if 'Date' in df.columns:
         dates = pd.to_datetime(df['Date'])
         metadata["start_date"] = dates.min().strftime('%Y-%m-%d')
         metadata["end_date"] = dates.max().strftime('%Y-%m-%d')
 
-    # Mapping
-    new_df = pd.DataFrame(columns=TARGET_COLUMNS)
-    if 'Date' in df.columns:
-        new_df['DATE'] = pd.to_datetime(df['Date']).dt.strftime('%Y-%m-%d')
-    
-    def get_merchant(row):
-        if 'Merchant' in row and pd.notna(row['Merchant']): return row['Merchant']
-        if 'Payee Name' in row and pd.notna(row['Payee Name']): return row['Payee Name']
-        return row.get('Description', '')
+    processed_data = []
+    for _, row in df.iterrows():
+        raw_merchant = str(row.get('Merchant', row.get('Payee Name', row.get('Description', ''))))
+        merchant = clean_merchant_name(raw_merchant)
+        # For Wise, Description or Reference often has the details
+        details = str(row.get('Description', row.get('Reference', '')))
+        if details == raw_merchant: details = "" # Avoid redundancy
         
-    mappings = load_mappings()
-    
-    new_df['MERCHANT'] = df.apply(get_merchant, axis=1).apply(clean_merchant_name)
-    new_df['CATEGORY'] = new_df['MERCHANT'].map(lambda x: get_category_from_mappings(x, mappings))
-    new_df['PAYMENT'] = 'Wise'
-    new_df['PRICE'] = df.get('Amount', 0)
-        
-    return new_df, metadata
+        amount = float(row.get('Amount', 0))
+        category, bucket = get_category_from_db(raw_merchant)
+        t_type = identify_transaction_type(raw_merchant, amount)
+        if "kindergeld" in raw_merchant.lower(): bucket = "Kindergeld"
+
+        processed_data.append({
+            'date': pd.to_datetime(row['Date']).strftime('%Y-%m-%d') if 'Date' in row else None,
+            'merchant': merchant,
+            'details': details,
+            'raw_merchant': raw_merchant,
+            'amount': amount,
+            'account': 'Wise',
+            'bucket': bucket,
+            'transaction_type': t_type,
+            'category': category,
+            'payer': row.get('Payer Name', None),
+            'payee': row.get('Payee Name', None)
+        })
+    return pd.DataFrame(processed_data), metadata
 
 def process_pdf(file_path):
-    print(f"Processing PDF: {file_path}")
     transactions = []
-    metadata = {
-        "source": "Deutsche Bank",
-        "start_date": None,
-        "end_date": None,
-        "initial_balance": None,
-        "final_balance": None
-    }
-    
+    metadata = {"source": "Deutsche Bank", "start_date": None, "end_date": None}
     with pdfplumber.open(file_path) as pdf:
-        full_text = ""
         for page in pdf.pages:
             text = page.extract_text()
             if not text: continue
-            full_text += text + "\n"
             lines = text.split('\n')
-            
-            # ... (Transaction extraction logic remains similar but improved)
             date_start_pattern = re.compile(r'^(\d{2}-\d{2}-)\s+(\d{2}-\d{2}-)\s+(.*?)\s+([-+]?[\d,.]+)$')
             current_transaction = None
-            
             for line in lines:
                 match = date_start_pattern.match(line)
                 if match:
                     if current_transaction: transactions.append(current_transaction)
-                    current_transaction = {
-                        'date_part': match.group(1),
-                        'item_lines': [match.group(3)],
-                        'amount': clean_currency(match.group(4)),
-                        'year': None
-                    }
+                    current_transaction = {'date_part': match.group(1), 'item_lines': [match.group(3)], 'amount': clean_currency(match.group(4)), 'year': None}
                     continue
-                
                 if current_transaction and not current_transaction['year']:
                     year_match = re.match(r'^(\d{4})\s+(\d{4})', line)
                     if year_match:
@@ -192,100 +166,58 @@ def process_pdf(file_path):
                         rest = line[len(year_match.group(0)):].strip()
                         if rest: current_transaction['item_lines'].append(rest)
                         continue
-                
                 if current_transaction:
                     if any(x in line for x in ["Account statement", "Page", "Deutsche Bank"]): continue
                     current_transaction['item_lines'].append(line)
-            
             if current_transaction: transactions.append(current_transaction)
 
-        # Meta extraction from full_text
-        # Example: "Balance on 01-10-2025 + 5,000.00"
-        balance_matches = re.findall(r'Balance on (\d{2}-\d{2}-\d{4})\s+([+-]?\s*[\d,.]+)', full_text)
-        if balance_matches:
-            metadata["initial_balance"] = clean_currency(balance_matches[0][1])
-            metadata["final_balance"] = clean_currency(balance_matches[-1][1])
-
-    mappings = load_mappings()
-    data = []
+    processed_data = []
     for t in transactions:
-        year = t['year'] or "2025" # Fallback
+        year = t['year'] or datetime.now().strftime('%Y')
         day, month = t['date_part'].split('-')[:2]
         full_date = f"{year}-{month}-{day}"
         raw_merchant = " ".join(t['item_lines'])
         merchant = clean_merchant_name(raw_merchant)
-        data.append({
-            'DATE': full_date,
-            'MERCHANT': merchant,
-            'CATEGORY': get_category_from_mappings(merchant, mappings),
-            'PAYMENT': 'Deutsche Bank',
-            'PRICE': t['amount']
-        })
-    
-    df = pd.DataFrame(data)
-    if not df.empty:
-        metadata["start_date"] = df['DATE'].min()
-        metadata["end_date"] = df['DATE'].max()
+        details = extract_details(raw_merchant)
         
+        category, bucket = get_category_from_db(raw_merchant)
+        t_type = identify_transaction_type(raw_merchant, t['amount'])
+        if "kindergeld" in raw_merchant.lower(): bucket = "Kindergeld"
+
+        processed_data.append({
+            'date': full_date,
+            'merchant': merchant,
+            'details': details,
+            'raw_merchant': raw_merchant,
+            'amount': t['amount'],
+            'account': 'Deutsche Bank',
+            'bucket': bucket,
+            'transaction_type': t_type,
+            'category': category,
+            'payer': None, 'payee': None
+        })
+    df = pd.DataFrame(processed_data)
+    if not df.empty:
+        metadata["start_date"] = df['date'].min()
+        metadata["end_date"] = df['date'].max()
     return df, metadata
 
-def main():
-    import glob
-    
-    # If a specific file is provided, process it.
-    if len(sys.argv) > 1:
-        files_to_process = [sys.argv[1]]
-    else:
-        # Otherwise, scan for source files
-        print("Scanning 'files/' directory for *source* files...")
-        files_to_process = []
-        files_to_process.extend(glob.glob('files/*source*.pdf'))
-        files_to_process.extend(glob.glob('files/*source*.xlsx'))
-        
-        if not files_to_process:
-            print("No files found matching '*source*' in 'files/' directory.")
-            sys.exit(0)
-
-    print(f"Found {len(files_to_process)} files to process.")
-    
-    all_dfs = []
-    
-    for file_path in files_to_process:
+def save_to_db(df, original_file=None):
+    conn = get_db_connection()
+    cursor = conn.cursor()
+    for _, row in df.iterrows():
         try:
-            if file_path.lower().endswith('.pdf'):
-                df = process_pdf(file_path)
-                all_dfs.append(df)
-            elif file_path.lower().endswith('.xlsx'):
-                df = process_excel(file_path)
-                all_dfs.append(df)
-            else:
-                print(f"Skipping unsupported file: {file_path}")
+            cursor.execute('''
+                INSERT INTO transactions (date, merchant, details, raw_merchant, amount, account, bucket, transaction_type, category, payer, payee, original_file)
+                VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)
+                ON CONFLICT(date, merchant, amount, account) DO NOTHING
+            ''', (row['date'], row['merchant'], row.get('details', ''), row['raw_merchant'], row['amount'], row['account'], row['bucket'], row['transaction_type'], row['category'], row.get('payer'), row.get('payee'), original_file))
+            if row['category'] != "Unknown":
+                cursor.execute('''
+                    INSERT INTO mappings (pattern, category, bucket) VALUES (?, ?, ?)
+                    ON CONFLICT(pattern) DO UPDATE SET category = EXCLUDED.category, bucket = EXCLUDED.bucket
+                ''', (row['merchant'], row['category'], row['bucket']))
         except Exception as e:
-            print(f"Error processing {file_path}: {e}")
-
-    if not all_dfs:
-        print("No data extracted.")
-        sys.exit(0)
-
-    # Merge all new data
-    new_data_df = pd.concat(all_dfs, ignore_index=True)
-    
-    # Handle Output
-    if os.path.exists(OUTPUT_FILE):
-        print(f"Appending to existing {OUTPUT_FILE}")
-        try:
-            existing_df = pd.read_excel(OUTPUT_FILE)
-            final_df = pd.concat([existing_df, new_data_df], ignore_index=True)
-        except Exception as e:
-            print(f"Error reading existing output file, creating new one: {e}")
-            final_df = new_data_df
-    else:
-        print(f"Creating new {OUTPUT_FILE}")
-        final_df = new_data_df
-        
-    print(f"Writing {len(final_df)} rows to {OUTPUT_FILE}")
-    final_df.to_excel(OUTPUT_FILE, index=False)
-    print("Done.")
-
-if __name__ == "__main__":
-    main()
+            print(f"Error saving row: {e}")
+    conn.commit()
+    conn.close()
