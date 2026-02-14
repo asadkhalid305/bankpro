@@ -111,6 +111,7 @@ function App() {
           <Route path="/accounts" element={
             <AccountsManager 
               accounts={accounts.accounts}
+              buckets={buckets.buckets.map(b => b.name)}
               onAdd={accounts.addAccount}
               onUpdate={accounts.updateAccount}
               onDelete={accounts.deleteAccount}

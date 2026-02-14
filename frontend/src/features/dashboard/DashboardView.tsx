@@ -1,196 +1,381 @@
 import {
   PlusCircle,
-  ArrowUpRight,
   TrendingUp,
   Wallet,
   Baby,
   PiggyBank,
   ArrowLeftRight,
-  CreditCard
+  CreditCard,
+  CalendarDays,
+  Globe,
+  User,
+  Heart,
+  Filter,
+  ChevronDown,
+  RotateCcw,
+  Activity,
+  BarChart3,
+  History
 } from 'lucide-react';
 import { Card, CardContent, CardHeader, CardTitle, CardDescription } from "@/components/ui/Card";
 import { Button } from "@/components/ui/Button";
 import { PageHeader } from '@/components/ui/PageHeader';
+import { Input } from "@/components/ui/Input";
 import { cn } from "@/lib/utils";
 import { useNavigate } from 'react-router-dom';
-import { useState, useEffect } from 'react';
+import { useState, useEffect, useCallback } from 'react';
 import { api } from '@/lib/api';
 
-const StatCard = ({ title, value, description, icon: Icon, trend, trendType }: {
+const StatCard = ({ title, value, description, icon: Icon, variant = 'default' }: {
   title: string;
   value: string | number;
   description: string;
   icon: React.ElementType;
-  trend?: string;
-  trendType?: 'positive' | 'negative' | 'neutral';
-}) => (
-  <Card>
-    <CardHeader className="flex flex-row items-center justify-between pb-2 space-y-0">
-      <CardTitle className="text-xs font-bold uppercase tracking-wider text-muted-foreground">{title}</CardTitle>
-      <Icon className="w-4 h-4 text-muted-foreground" />
-    </CardHeader>
-    <CardContent>
-      <div className="text-2xl font-bold">{value}</div>
-      <p className="text-[10px] text-muted-foreground mt-1 text-nowrap truncate">
-        {description}
-      </p>
-    </CardContent>
-  </Card>
-);
+  variant?: 'default' | 'primary' | 'success' | 'destructive' | 'info' | 'purple';
+}) => {
+  const variants = {
+    default: "border-muted/40",
+    primary: "border-primary/20 bg-primary/5",
+    success: "border-emerald-500/20 bg-emerald-500/5",
+    destructive: "border-red-500/20 bg-red-500/5",
+    info: "border-blue-500/20 bg-blue-500/5",
+    purple: "border-purple-500/20 bg-purple-500/5"
+  };
+
+  const iconColors = {
+    default: "text-muted-foreground",
+    primary: "text-primary",
+    success: "text-emerald-500",
+    destructive: "text-red-500",
+    info: "text-blue-500",
+    purple: "text-purple-500"
+  };
+
+  return (
+    <Card className={cn("shadow-sm transition-all hover:shadow-md", variants[variant])}>
+      <CardHeader className="flex flex-row items-center justify-between pb-2 space-y-0">
+        <CardTitle className="text-[10px] font-bold uppercase tracking-widest text-muted-foreground">{title}</CardTitle>
+        <Icon className={cn("w-4 h-4", iconColors[variant])} />
+      </CardHeader>
+      <CardContent>
+        <div className="text-2xl font-bold tracking-tight">{value}</div>
+        <p className="text-[10px] text-muted-foreground mt-1 text-nowrap truncate font-medium">
+          {description}
+        </p>
+      </CardContent>
+    </Card>
+  );
+};
 
 export const DashboardView = () => {
   const navigate = useNavigate();
   const [summary, setSummary] = useState<any>(null);
 
-  useEffect(() => {
-    api.get('/dashboard/summary').then(setSummary);
+  const fmt = (d: Date) => {
+    const year = d.getFullYear();
+    const month = String(d.getMonth() + 1).padStart(2, '0');
+    const day = String(d.getDate()).padStart(2, '0');
+    return `${year}-${month}-${day}`;
+  };
+
+  // Date Filters (Initialize with local date strings)
+  const [startDate, setStartDate] = useState(() => {
+    const d = new Date();
+    return fmt(new Date(d.getFullYear(), d.getMonth(), 1));
+  });
+  const [endDate, setEndDate] = useState(() => {
+    const d = new Date();
+    return fmt(new Date(d.getFullYear(), d.getMonth() + 1, 0));
+  });
+
+  const [activeFilter, setActiveFilter] = useState('month');
+
+  const fetchSummary = useCallback(async (start: string, end: string) => {
+    const data = await api.get(`/dashboard/summary?start_date=${start}&end_date=${end}`);
+    setSummary(data);
   }, []);
 
-  const totalBalance = summary?.buckets?.reduce((acc: number, b: any) => acc + b.balance, 0) || 0;
+  useEffect(() => {
+    fetchSummary(startDate, endDate);
+  }, [startDate, endDate, fetchSummary]);
+
+  const setPeriod = (type: string) => {
+    const now = new Date();
+    let start, end;
+
+    setActiveFilter(type);
+
+    switch (type) {
+      case 'month':
+        start = new Date(now.getFullYear(), now.getMonth(), 1);
+        end = new Date(now.getFullYear(), now.getMonth() + 1, 0);
+        break;
+      case 'quarter':
+        const quarter = Math.floor(now.getMonth() / 3);
+        start = new Date(now.getFullYear(), quarter * 3, 1);
+        end = new Date(now.getFullYear(), (quarter + 1) * 3, 0);
+        break;
+      case 'year':
+        start = new Date(now.getFullYear(), 0, 1);
+        end = new Date(now.getFullYear(), 11, 31);
+        break;
+      case 'all':
+        start = new Date(2023, 0, 1);
+        end = new Date(now.getFullYear(), 11, 31);
+        break;
+      default:
+        return;
+    }
+
+    setStartDate(fmt(start));
+    setEndDate(fmt(end));
+  };
+
+  const totalBalance = summary?.total_net_worth || 0;
+
+  const formatEuro = (val: number) => {
+    return (val || 0).toLocaleString('de-DE', { minimumFractionDigits: 2, maximumFractionDigits: 2 }) + " €";
+  };
+
+  const getPeriodLabel = () => {
+    if (activeFilter === 'all') return "All Time";
+    if (startDate && endDate) {
+      const s = new Date(startDate);
+      const e = new Date(endDate);
+      return `${s.toLocaleDateString('en-US', { month: 'short', day: 'numeric' })} - ${e.toLocaleDateString('en-US', { month: 'short', day: 'numeric', year: 'numeric' })}`;
+    }
+    return "Custom Period";
+  };
 
   return (
-    <div className="space-y-8 pb-12">
+    <div className="space-y-12 pb-12">
       <PageHeader
-        title="Dashboard"
-        description="Comprehensive overview of your financial health and activity."
+        title="Financial Dashboard"
+        description="Comprehensive overview of your wealth and performance."
       >
         <Button onClick={() => navigate('/import')} className="shadow-lg">
           <PlusCircle className="mr-2 h-4 w-4" />
-          Import
+          Import Statement
         </Button>
       </PageHeader>
 
-      {/* Main Highlights */}
-      <div className="grid gap-4 md:grid-cols-2 lg:grid-cols-4">
-        <StatCard
-          title="Total Net Worth"
-          value={`${totalBalance.toFixed(2)} €`}
-          description="Combined balance of all accounts"
-          icon={Wallet}
-        />
-        <StatCard
-          title="Expenses (Month)"
-          value={`${(summary?.monthly_expenses || 0).toFixed(2)} €`}
-          description="Total spending in February"
-          icon={CreditCard}
-          trendType="negative"
-        />
-        <StatCard
-          title="Investments"
-          value={`${(summary?.investment_value || 0).toFixed(2)} €`}
-          description="Total principal invested"
-          icon={TrendingUp}
-          trendType="positive"
-        />
-        <StatCard
-          title="Monthly Transfers"
-          value={`${(summary?.monthly_transfers || 0).toFixed(2)} €`}
-          description="Internal movements this month"
-          icon={ArrowLeftRight}
-        />
+      {/* SECTION 1: GLOBAL WEALTH (Static Snapshot) */}
+      <div className="space-y-6">
+        <div className="flex items-center gap-2 border-b pb-2">
+          <Globe className="w-5 h-5 text-primary" />
+          <h2 className="text-lg font-bold tracking-tight">Wealth Snapshot</h2>
+          <span className="text-xs text-muted-foreground ml-auto uppercase font-bold tracking-widest bg-muted px-2 py-0.5 rounded">All-Time Status</span>
+        </div>
+
+        <div className="grid gap-4 md:grid-cols-3">
+          <StatCard
+            title="Total Net Worth"
+            value={formatEuro(totalBalance)}
+            description="Combined balance of all accounts"
+            icon={Wallet}
+            variant="primary"
+          />
+          <StatCard
+            title="Personal Portfolio"
+            value={formatEuro(summary?.investment_personal)}
+            description="Current value of TR - Personal"
+            icon={User}
+            variant="success"
+          />
+          <StatCard
+            title="Child Investment"
+            value={formatEuro(summary?.investment_child)}
+            description="Current value of TR - Child"
+            icon={Heart}
+            variant="purple"
+          />
+        </div>
+
+        <div className="grid gap-6 md:grid-cols-2 lg:grid-cols-12">
+          {/* Account Balances */}
+          <Card className="lg:col-span-4 shadow-sm border-muted/40">
+            <CardHeader>
+              <CardTitle className="text-base flex items-center gap-2">
+                <PiggyBank className="w-4 h-4 text-primary" />
+                Physical Accounts
+              </CardTitle>
+              <CardDescription className="text-xs">Current bank balances.</CardDescription>
+            </CardHeader>
+            <CardContent className="space-y-3">
+              {summary?.accounts?.sort((a: any, b: any) => b.balance - a.balance).map((acc: any) => (
+                <div key={acc.name} className="flex items-center justify-between p-2 rounded-lg hover:bg-muted/30 transition-all group">
+                  <span className="text-sm text-foreground/80">{acc.name}</span>
+                  <span className={cn("font-mono font-bold text-sm", acc.balance < 0 ? "text-red-500" : "text-emerald-500")}>
+                    {formatEuro(acc.balance)}
+                  </span>
+                </div>
+              ))}
+            </CardContent>
+          </Card>
+
+          {/* Bucket Balances */}
+          <Card className="lg:col-span-4 shadow-sm border-muted/40">
+            <CardHeader>
+              <CardTitle className="text-base flex items-center gap-2">
+                <Baby className="w-4 h-4 text-blue-500" />
+                Logical Buckets
+              </CardTitle>
+              <CardDescription className="text-xs">Allocation by purpose.</CardDescription>
+            </CardHeader>
+            <CardContent className="space-y-5">
+              {summary?.buckets?.map((bucket: any) => (
+                <div key={bucket.name} className="space-y-2">
+                  <div className="flex justify-between text-sm">
+                    <span className="font-semibold text-foreground/80">{bucket.name}</span>
+                    <span className="font-bold">{formatEuro(bucket.balance)}</span>
+                  </div>
+                  <div className="h-1 bg-muted rounded-full overflow-hidden">
+                    <div
+                      className={cn(
+                        "h-full rounded-full transition-all duration-500",
+                        bucket.name === 'Main' ? "bg-primary" :
+                          bucket.name === 'Kindergeld' ? "bg-blue-500" : "bg-amber-500"
+                      )}
+                      style={{ width: `${Math.min(100, (Math.abs(bucket.balance) / (Math.abs(totalBalance) || 1)) * 100)}%` }}
+                    />
+                  </div>
+                </div>
+              ))}
+            </CardContent>
+          </Card>
+
+          {/* Recent Transactions */}
+          <Card className="lg:col-span-4 shadow-sm border-muted/40">
+            <CardHeader className="flex flex-row items-center justify-between">
+              <div>
+                <CardTitle className="text-base flex items-center gap-2">
+                    <History className="w-4 h-4 text-primary" />
+                    Latest Activity
+                </CardTitle>
+                <CardDescription className="text-xs">Most recent movements.</CardDescription>
+              </div>
+              <Button variant="ghost" size="sm" className="h-7 text-[10px] uppercase font-bold" onClick={() => navigate('/transactions')}>All</Button>
+            </CardHeader>
+            <CardContent>
+              <div className="space-y-4">
+                {summary?.recent_transactions?.map((t: any) => (
+                  <div key={t.id} className="flex items-center justify-between group">
+                    <div className="min-w-0 flex-1">
+                      <p className="text-xs font-semibold truncate group-hover:text-primary transition-colors">{t.merchant}</p>
+                      <p className="text-[10px] text-muted-foreground uppercase font-medium">{t.date}</p>
+                    </div>
+                    <div className={cn(
+                      "text-[10px] font-bold ml-4 whitespace-nowrap px-1.5 py-0.5 rounded",
+                      t.transaction_type === 'TRANSFER' ? "text-slate-500 bg-slate-50" :
+                        t.amount < 0 ? "text-red-500 bg-red-50" : "text-emerald-500 bg-emerald-50"
+                    )}>
+                      {formatEuro(t.amount)}
+                    </div>
+                  </div>
+                ))}
+              </div>
+            </CardContent>
+          </Card>
+        </div>
       </div>
 
-      <div className="grid gap-6 md:grid-cols-2 lg:grid-cols-12">
-        {/* Account Balances */}
-        <Card className="lg:col-span-4 shadow-sm border-muted/40">
-          <CardHeader>
-            <CardTitle className="text-lg flex items-center gap-2">
-              <PiggyBank className="w-5 h-5 text-primary" />
-              Physical Accounts
-            </CardTitle>
-            <CardDescription>Current balance per bank source.</CardDescription>
-          </CardHeader>
-          <CardContent className="space-y-3">
-            {summary?.accounts?.sort((a: any, b: any) => b.balance - a.balance).map((acc: any) => (
-              <div key={acc.name} className="flex items-center justify-between p-2.5 rounded-lg border border-transparent hover:bg-muted/30 hover:border-muted transition-all">
-                <span className="font-medium text-sm text-foreground/80">{acc.name}</span>
-                <span className={cn("font-mono font-bold text-sm", acc.balance < 0 ? "text-red-500" : "text-emerald-500")}>
-                  {acc.balance.toFixed(2)} €
-                </span>
-              </div>
-            ))}
-          </CardContent>
-        </Card>
-
-        {/* Bucket Balances */}
-        <Card className="lg:col-span-4 shadow-sm border-muted/40">
-          <CardHeader>
-            <CardTitle className="text-lg flex items-center gap-2">
-              <Baby className="w-5 h-5 text-blue-500" />
-              Logical Buckets
-            </CardTitle>
-            <CardDescription>Allocation across purposes.</CardDescription>
-          </CardHeader>
-          <CardContent className="space-y-5">
-            {summary?.buckets?.map((bucket: any) => (
-              <div key={bucket.name} className="space-y-2">
-                <div className="flex justify-between text-sm">
-                  <span className="font-semibold text-foreground/80">{bucket.name}</span>
-                  <span className="font-bold">{bucket.balance.toFixed(2)} €</span>
-                </div>
-                <div className="h-1.5 bg-muted rounded-full overflow-hidden">
-                  <div
-                    className={cn(
-                      "h-full rounded-full transition-all duration-500",
-                      bucket.name === 'Main' ? "bg-primary" :
-                        bucket.name === 'Kindergeld' ? "bg-blue-500" : "bg-amber-500"
-                    )}
-                    style={{ width: `${Math.min(100, (Math.abs(bucket.balance) / (Math.abs(totalBalance) || 1)) * 100)}%` }}
-                  />
-                </div>
-              </div>
-            ))}
-          </CardContent>
-        </Card>
-
-        {/* Recent Transactions */}
-        <Card className="lg:col-span-4 shadow-sm border-muted/40">
-          <CardHeader className="flex flex-row items-center justify-between">
-            <div>
-              <CardTitle className="text-lg">Recent Activity</CardTitle>
-              <CardDescription>Latest log entries.</CardDescription>
+      {/* SECTION 2: PERFORMANCE ANALYSIS (Dynamic View) */}
+      <div className="space-y-6 pt-4">
+        <div className="flex flex-col md:flex-row md:items-center justify-between gap-4 border-b pb-2">
+          <div className="flex items-center gap-2">
+            <BarChart3 className="w-5 h-5 text-blue-500" />
+            <h2 className="text-lg font-bold tracking-tight">Period Analysis</h2>
+          </div>
+          
+          <div className="flex items-center gap-2">
+            <div className="flex bg-muted p-1 rounded-lg">
+              {['month', 'quarter', 'year', 'all'].map((p) => (
+                <Button
+                  key={p}
+                  variant={activeFilter === p ? 'default' : 'ghost'}
+                  size="sm"
+                  className="h-7 text-[10px] px-3 uppercase font-bold"
+                  onClick={() => setPeriod(p)}
+                >{p}</Button>
+              ))}
             </div>
-            <Button variant="ghost" size="sm" className="h-8 text-xs" onClick={() => navigate('/transactions')}>View All</Button>
+
+            <div className="flex items-center gap-2 ml-2 border-l pl-4 border-muted">
+              <Input
+                type="date"
+                className="h-8 w-32 text-[10px]"
+                value={startDate}
+                onChange={(e) => { setStartDate(e.target.value); setActiveFilter('custom'); }}
+              />
+              <span className="text-muted-foreground text-[10px] uppercase font-bold">to</span>
+              <Input
+                type="date"
+                className="h-8 w-32 text-[10px]"
+                value={endDate}
+                onChange={(e) => { setEndDate(e.target.value); setActiveFilter('custom'); }}
+              />
+              <Button
+                variant="ghost"
+                size="icon"
+                className="h-8 w-8 text-muted-foreground hover:text-foreground"
+                onClick={() => setPeriod('month')}
+                title="Reset to current month"
+              >
+                <RotateCcw className="w-4 h-4" />
+              </Button>
+            </div>
+          </div>
+        </div>
+
+        <div className="grid gap-4 md:grid-cols-4">
+          <StatCard
+            title="Total Income"
+            value={formatEuro(summary?.monthly_income)}
+            description={`Inflow: ${getPeriodLabel()}`}
+            icon={TrendingUp}
+            variant="success"
+          />
+          <StatCard
+            title="Total Expenses"
+            value={formatEuro(summary?.monthly_expenses)}
+            description={`Outflow: ${getPeriodLabel()}`}
+            icon={CreditCard}
+            variant="destructive"
+          />
+          <StatCard
+            title="Net Savings"
+            value={formatEuro(summary?.monthly_savings)}
+            description="Difference between In/Out"
+            icon={Activity}
+            variant={summary?.monthly_savings >= 0 ? "success" : "destructive"}
+          />
+          <StatCard
+            title="Internal Flows"
+            value={formatEuro(summary?.monthly_transfers)}
+            description="Movements between accounts"
+            icon={ArrowLeftRight}
+            variant="info"
+          />
+        </div>
+
+        {/* Spending Breakdown */}
+        <Card className="shadow-sm border-muted/40">
+          <CardHeader>
+            <CardTitle className="text-base">Top Spending Categories</CardTitle>
+            <CardDescription className="text-xs">Category-wise breakdown for {getPeriodLabel()}.</CardDescription>
           </CardHeader>
           <CardContent>
-            <div className="space-y-4">
-              {summary?.recent_transactions?.map((t: any) => (
-                <div key={t.id} className="flex items-center justify-between group">
-                  <div className="min-w-0 flex-1">
-                    <p className="text-sm font-medium truncate group-hover:text-primary transition-colors">{t.merchant}</p>
-                    <p className="text-[10px] text-muted-foreground uppercase">{t.date} • {t.account}</p>
-                  </div>
-                  <div className={cn(
-                    "text-xs font-bold ml-4 whitespace-nowrap",
-                    t.transaction_type === 'TRANSFER' ? "text-slate-400" :
-                      t.amount < 0 ? "text-red-500" : "text-emerald-500"
-                  )}>
-                    {t.amount.toFixed(2)} €
-                  </div>
+            <div className="grid gap-3 md:grid-cols-3 lg:grid-cols-5">
+              {summary?.categories?.sort((a: any, b: any) => a.total - b.total).slice(0, 10).map((cat: any) => (
+                <div key={cat.category} className="p-4 border rounded-2xl bg-card/50 hover:border-primary/40 hover:bg-primary/5 transition-all group cursor-default">
+                  <p className="text-[10px] font-bold uppercase text-muted-foreground mb-1 truncate tracking-wider">{cat.category}</p>
+                  <p className="text-xl font-bold text-red-500 group-hover:scale-105 transition-transform">{formatEuro(Math.abs(cat.total))}</p>
                 </div>
               ))}
             </div>
           </CardContent>
         </Card>
       </div>
-
-      {/* Spending Breakdown */}
-      <Card className="shadow-sm border-muted/40">
-        <CardHeader>
-          <CardTitle className="text-lg">Top Spending Categories</CardTitle>
-          <CardDescription>Where your money went this month.</CardDescription>
-        </CardHeader>
-        <CardContent>
-          <div className="grid gap-3 md:grid-cols-3 lg:grid-cols-5">
-            {summary?.categories?.sort((a: any, b: any) => a.total - b.total).slice(0, 10).map((cat: any) => (
-              <div key={cat.category} className="p-3 border rounded-xl bg-card/50 hover:border-primary/30 transition-all group">
-                <p className="text-[10px] font-bold uppercase text-muted-foreground mb-1 truncate">{cat.category}</p>
-                <p className="text-lg font-bold text-red-500 group-hover:scale-105 transition-transform">{Math.abs(cat.total).toFixed(2)} €</p>
-              </div>
-            ))}
-          </div>
-        </CardContent>
-      </Card>
     </div>
   );
 };

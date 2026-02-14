@@ -5,18 +5,12 @@ import {
   Edit3, 
   Check, 
   X,
-  CreditCard,
-  Banknote,
-  Landmark,
-  Globe,
-  Wallet,
-  Smartphone,
-  Coins,
   PiggyBank
 } from 'lucide-react';
 import { Button } from '../../components/ui/Button';
 import { Input } from '../../components/ui/Input';
-import { Card, CardContent, CardHeader } from "@/components/ui/Card";
+import { Select } from '../../components/ui/Select';
+import { Card, CardContent } from "@/components/ui/Card";
 import { PageHeader } from '../../components/ui/PageHeader';
 import { Badge } from '../../components/ui/Badge';
 import { cn } from "@/lib/utils";
@@ -24,13 +18,15 @@ import { type Account } from '../../types';
 
 interface AccountsManagerProps {
   accounts: Account[];
-  onAdd: (name: string, initialBalance: number, currency?: string) => void;
-  onUpdate: (oldName: string, newName: string, initialBalance: number, currency?: string) => void;
+  buckets: string[];
+  onAdd: (name: string, initialBalance: number, bucket: string, currency?: string) => void;
+  onUpdate: (oldName: string, newName: string, initialBalance: number, bucket: string, currency?: string) => void;
   onDelete: (name: string) => void;
 }
 
 export const AccountsManager: React.FC<AccountsManagerProps> = ({
   accounts,
+  buckets,
   onAdd,
   onUpdate,
   onDelete,
@@ -38,24 +34,27 @@ export const AccountsManager: React.FC<AccountsManagerProps> = ({
   const [showAddForm, setShowAddForm] = useState(false);
   const [newAccountName, setNewAccountName] = useState('');
   const [newInitialBalance, setNewInitialBalance] = useState<string>('0');
+  const [newBucket, setNewBucket] = useState('Main');
   
   const [editingAccount, setEditingAccount] = useState<string | null>(null);
   const [editAccountName, setEditAccountName] = useState('');
   const [editInitialBalance, setEditInitialBalance] = useState<string>('0');
+  const [editBucket, setEditBucket] = useState('Main');
 
   const handleAdd = () => {
     const balance = parseFloat(newInitialBalance);
     if (isNaN(balance)) return;
-    onAdd(newAccountName, balance);
+    onAdd(newAccountName, balance, newBucket);
     setNewAccountName('');
     setNewInitialBalance('0');
+    setNewBucket('Main');
     setShowAddForm(false);
   };
 
   const handleUpdate = (oldName: string) => {
     const balance = parseFloat(editInitialBalance);
     if (isNaN(balance)) return;
-    onUpdate(oldName, editAccountName, balance);
+    onUpdate(oldName, editAccountName, balance, editBucket);
     setEditingAccount(null);
   };
 
@@ -79,7 +78,7 @@ export const AccountsManager: React.FC<AccountsManagerProps> = ({
         <CardContent className="p-0">
           {showAddForm && (
             <div className="p-6 border-b bg-muted/30 animate-in fade-in slide-in-from-top-2">
-              <div className="grid grid-cols-1 md:grid-cols-3 gap-4 items-end max-w-3xl">
+              <div className="grid grid-cols-1 md:grid-cols-4 gap-4 items-end">
                 <div className="space-y-1.5">
                     <label className="text-xs font-bold uppercase text-muted-foreground tracking-wider">Account Name</label>
                     <Input 
@@ -98,6 +97,14 @@ export const AccountsManager: React.FC<AccountsManagerProps> = ({
                       onChange={(e) => setNewInitialBalance(e.target.value)} 
                     />
                 </div>
+                <div className="space-y-1.5">
+                    <label className="text-xs font-bold uppercase text-muted-foreground tracking-wider">Logical Bucket</label>
+                    <Select 
+                      value={newBucket} 
+                      onChange={(e) => setNewBucket(e.target.value)}
+                      options={buckets}
+                    />
+                </div>
                 <Button onClick={handleAdd} className="w-full">Create Account</Button>
               </div>
             </div>
@@ -110,13 +117,14 @@ export const AccountsManager: React.FC<AccountsManagerProps> = ({
                   <th className="px-6 py-4 font-bold tracking-wider">Account Name</th>
                   <th className="px-6 py-4 font-bold tracking-wider">Initial Balance</th>
                   <th className="px-6 py-4 font-bold tracking-wider">Current Balance</th>
+                  <th className="px-6 py-4 font-bold tracking-wider">Linked Bucket</th>
                   <th className="px-6 py-4 text-right">Actions</th>
                 </tr>
               </thead>
               <tbody className="divide-y">
                 {accounts.length === 0 && (
                   <tr>
-                    <td colSpan={4} className="px-6 py-12 text-center text-muted-foreground italic">
+                    <td colSpan={5} className="px-6 py-12 text-center text-muted-foreground italic">
                       No accounts defined.
                     </td>
                   </tr>
@@ -158,6 +166,18 @@ export const AccountsManager: React.FC<AccountsManagerProps> = ({
                         {formatCurrency(account.current_balance, account.currency)}
                       </span>
                     </td>
+                    <td className="px-6 py-4">
+                      {editingAccount === account.name ? (
+                        <Select 
+                          value={editBucket} 
+                          onChange={(e) => setEditBucket(e.target.value)} 
+                          options={buckets}
+                          className="h-8 text-xs w-32"
+                        />
+                      ) : (
+                        <Badge variant={account.bucket === 'Kindergeld' ? 'info' : 'default'}>{account.bucket}</Badge>
+                      )}
+                    </td>
                     <td className="px-6 py-4 text-right">
                       <div className="flex justify-end gap-2">
                         {editingAccount === account.name ? (
@@ -176,6 +196,7 @@ export const AccountsManager: React.FC<AccountsManagerProps> = ({
                                 setEditingAccount(account.name);
                                 setEditAccountName(account.name);
                                 setEditInitialBalance(account.initial_balance.toString());
+                                setEditBucket(account.bucket || 'Main');
                               }} 
                               size="icon" 
                               variant="ghost"

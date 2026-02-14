@@ -1,17 +1,17 @@
 import React, { useState } from 'react';
-import {
-  Search,
-  Download,
-  Trash2,
-  Plus,
-  Edit3,
-  Check,
-  X,
-  ChevronUp,
+import { 
+  Search, 
+  Download, 
+  Trash2, 
+  Plus, 
+  Edit3, 
+  Check, 
+  X, 
+  ChevronUp, 
   ChevronDown,
-  Filter
-} from 'lucide-react';
-import { TYPE_OPTIONS, type Transaction, type SortConfig } from '../../types';
+  Filter,
+  RotateCcw
+} from 'lucide-react';import { TYPE_OPTIONS, type Transaction, type SortConfig } from '../../types';
 import { Button } from '../../components/ui/Button';
 import { Input } from '../../components/ui/Input';
 import { Select } from '../../components/ui/Select';
@@ -141,34 +141,47 @@ export const MasterStatement: React.FC<MasterStatementProps> = ({
                 onChange={(e) => onSearchChange(e.target.value)}
               />
             </div>
-            <div className="col-span-8 flex items-center gap-2 overflow-x-auto pb-2 md:pb-0">
-              <Filter className="w-4 h-4 text-muted-foreground shrink-0" />
-              <Select
-                value={bucketFilter}
-                onChange={(e) => onBucketFilterChange(e.target.value)}
-                className="w-[140px] shrink-0"
-              >
-                <option value="All">All Buckets</option>
-                {buckets.map(b => <option key={b} value={b}>{b}</option>)}
-              </Select>
-              <Select
-                value={accountFilter}
-                onChange={(e) => onAccountFilterChange(e.target.value)}
-                className="w-[140px] shrink-0"
-              >
-                <option value="All">All Accounts</option>
-                {paymentTypes.map(c => <option key={c} value={c}>{c}</option>)}
-              </Select>
-              <Select
-                value={categoryFilter}
-                onChange={(e) => onCategoryFilterChange(e.target.value)}
-                className="w-[140px] shrink-0"
-              >
-                <option value="All">All Categories</option>
-                {categories.map(c => <option key={c} value={c}>{c}</option>)}
-              </Select>
-            </div>
-            {selectedRows.size > 0 && (
+                        <div className="col-span-8 flex items-center gap-2 overflow-x-auto pb-2 md:pb-0">
+                          <Filter className="w-4 h-4 text-muted-foreground shrink-0" />
+                          <Select 
+                            value={bucketFilter} 
+                            onChange={(e) => onBucketFilterChange(e.target.value)}
+                            className="w-[140px] shrink-0"
+                          >
+                            <option value="All">All Buckets</option>
+                            {buckets.map(b => <option key={b} value={b}>{b}</option>)}
+                          </Select>
+                          <Select 
+                            value={accountFilter} 
+                            onChange={(e) => onAccountFilterChange(e.target.value)}
+                            className="w-[140px] shrink-0"
+                          >
+                            <option value="All">All Accounts</option>
+                            {paymentTypes.map(c => <option key={c} value={c}>{c}</option>)}
+                          </Select>
+                          <Select 
+                            value={categoryFilter} 
+                            onChange={(e) => onCategoryFilterChange(e.target.value)}
+                            className="w-[140px] shrink-0"
+                          >
+                            <option value="All">All Categories</option>
+                            {categories.map(c => <option key={c} value={c}>{c}</option>)}
+                          </Select>
+                          <Button 
+                            variant="ghost" 
+                            size="sm" 
+                            className="h-9 px-2 text-muted-foreground hover:text-foreground"
+                            onClick={() => {
+                              onSearchChange('');
+                              onBucketFilterChange('All');
+                              onAccountFilterChange('All');
+                              onCategoryFilterChange('All');
+                            }}
+                            title="Clear all filters"
+                          >
+                            <RotateCcw className="w-4 h-4" />
+                          </Button>
+                        </div>            {selectedRows.size > 0 && (
               <Button
                 variant="destructive"
                 size="sm"

@@ -14,7 +14,7 @@ export const useAccounts = () => {
     }
   }, []);
 
-  const addAccount = useCallback(async (name: string, initialBalance: number, currency: string = 'EUR'): Promise<boolean> => {
+  const addAccount = useCallback(async (name: string, initialBalance: number, bucket: string = 'Main', currency: string = 'EUR'): Promise<boolean> => {
     if (!name.trim()) {
       alert("Account name cannot be empty.");
       return false;
@@ -23,7 +23,8 @@ export const useAccounts = () => {
       await api.post('/accounts/', { 
           new_name: name,
           initial_balance: initialBalance,
-          currency: currency
+          currency: currency,
+          bucket: bucket
       });
       await fetchAccounts();
       return true;
@@ -34,7 +35,7 @@ export const useAccounts = () => {
     }
   }, [fetchAccounts]);
 
-  const updateAccount = useCallback(async (oldName: string, newName: string, initialBalance: number, currency: string = 'EUR'): Promise<boolean> => {
+  const updateAccount = useCallback(async (oldName: string, newName: string, initialBalance: number, bucket: string = 'Main', currency: string = 'EUR'): Promise<boolean> => {
      if (!newName.trim()) {
       alert("Account name cannot be empty.");
       return false;
@@ -44,7 +45,8 @@ export const useAccounts = () => {
           old_name: oldName, 
           new_name: newName,
           initial_balance: initialBalance,
-          currency: currency
+          currency: currency,
+          bucket: bucket
       });
       await fetchAccounts();
       return true;

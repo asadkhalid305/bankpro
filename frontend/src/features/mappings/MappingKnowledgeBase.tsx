@@ -8,7 +8,8 @@ import {
   X, 
   Brain,
   ChevronUp,
-  ChevronDown
+  ChevronDown,
+  RotateCcw
 } from 'lucide-react';
 import { type SortConfig } from '../../types';
 import { Button } from '../../components/ui/Button';
@@ -123,6 +124,18 @@ export const MappingKnowledgeBase: React.FC<MappingKnowledgeBaseProps> = ({
                 <option value="All">All Categories</option>
                 {categories.map(c => <option key={c} value={c}>{c}</option>)}
               </Select>
+              <Button 
+                variant="ghost" 
+                size="sm" 
+                className="h-9 px-2 text-muted-foreground hover:text-foreground"
+                onClick={() => {
+                  onSearchChange('');
+                  onCategoryFilterChange('All');
+                }}
+                title="Clear all filters"
+              >
+                <RotateCcw className="w-4 h-4" />
+              </Button>
             </div>
             {selectedRows.size > 0 && (
               <Button 

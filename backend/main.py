@@ -49,12 +49,14 @@ class AccountModel(BaseModel):
     name: str
     initial_balance: float = 0.0
     currency: str = "EUR"
+    bucket: str = "Main"
 
 class AccountUpdate(BaseModel):
     old_name: Optional[str] = None
     new_name: str
     initial_balance: float
     currency: str = "EUR"
+    bucket: str = "Main"
 
 class BucketModel(BaseModel):
     name: str
@@ -98,7 +100,7 @@ async def get_accounts():
     conn = get_db()
     # Calculate current balance: initial_balance + sum(transactions)
     cursor = conn.execute('''
-        SELECT a.name, a.initial_balance, a.currency,
+        SELECT a.name, a.initial_balance, a.currency, a.bucket,
                a.initial_balance + TOTAL(t.amount) as current_balance
         FROM accounts a
         LEFT JOIN transactions t ON a.name = t.account
@@ -116,9 +118,9 @@ async def update_or_add_account(acc: AccountUpdate):
             # Update existing account
             conn.execute('''
                 UPDATE accounts 
-                SET name = ?, initial_balance = ?, currency = ? 
+                SET name = ?, initial_balance = ?, currency = ?, bucket = ?
                 WHERE name = ?
-            ''', (acc.new_name, acc.initial_balance, acc.currency, acc.old_name))
+            ''', (acc.new_name, acc.initial_balance, acc.currency, acc.bucket, acc.old_name))
             
             # Also update any transactions associated with the old name
             if acc.old_name != acc.new_name:
@@ -126,9 +128,9 @@ async def update_or_add_account(acc: AccountUpdate):
         else:
             # Add new account
             conn.execute('''
-                INSERT INTO accounts (name, initial_balance, currency) 
-                VALUES (?, ?, ?)
-            ''', (acc.new_name, acc.initial_balance, acc.currency))
+                INSERT INTO accounts (name, initial_balance, currency, bucket) 
+                VALUES (?, ?, ?, ?)
+            ''', (acc.new_name, acc.initial_balance, acc.currency, acc.bucket))
         
         conn.commit()
         config_manager.dump_config_to_seed()
@@ -348,13 +350,19 @@ async def upload_file(file: UploadFile = File(...), create_new_file: bool = Form
             if cursor.fetchone(): df.at[idx, 'is_duplicate'] = True
         conn.close()
 
+        # Prepare clean data for JSON (replace NaN with None)
+        clean_data = []
+        for row in df.to_dict(orient='records'):
+            clean_row = {k: (v if pd.notna(v) else None) for k, v in row.items()}
+            clean_data.append(clean_row)
+
         if create_new_file:
             bank_name = metadata.get("source", "Bank").replace(" ", "_")
             new_filename = f"{bank_name}_Statement_{metadata['start_date']}_to_{metadata['end_date']}.xlsx"
             df.drop(columns=['is_duplicate']).to_excel(os.path.join(STATEMENTS_DIR, new_filename), index=False)
-            return {"status": "success", "message": f"New file created.", "new_filename": new_filename, "metadata": metadata, "data": df.to_dict(orient='records')}
+            return {"status": "success", "message": f"New file created.", "new_filename": new_filename, "metadata": metadata, "data": clean_data}
         
-        return {"status": "review", "metadata": metadata, "data": df.to_dict(orient='records')}
+        return {"status": "review", "metadata": metadata, "data": clean_data}
     except Exception as e:
         raise HTTPException(status_code=500, detail=str(e))
 
@@ -367,10 +375,20 @@ async def merge_to_db(request: dict):
 
 # --- DASHBOARD & EXPORT ---
 @app.get("/dashboard/summary")
-async def get_summary():
+async def get_summary(start_date: Optional[str] = None, end_date: Optional[str] = None):
     conn = get_db()
     
-    # 1. Account Balances
+    # If no dates provided, default to current month
+    if not start_date or not end_date:
+        now = datetime.now()
+        start_date = now.strftime('%Y-%m-01')
+        # Simple end of month (next month day 1 - 1)
+        if now.month == 12:
+            end_date = f"{now.year}-12-31"
+        else:
+            end_date = (datetime(now.year, now.month + 1, 1)).strftime('%Y-%m-%d')
+    
+    # 1. Account Balances (Always Global Snapshot)
     cursor = conn.execute('''
         SELECT a.name, a.initial_balance + TOTAL(t.amount) as balance
         FROM accounts a
@@ -378,49 +396,117 @@ async def get_summary():
         GROUP BY a.name
     ''')
     accounts = [dict(row) for row in cursor.fetchall()]
+    total_net_worth = sum(acc['balance'] for acc in accounts)
 
-    # 2. Bucket Balances
-    cursor = conn.execute('SELECT bucket as name, TOTAL(amount) as balance FROM transactions GROUP BY bucket')
-    buckets = [dict(row) for row in cursor.fetchall()]
+    # 2. Bucket Balances (Always Global Snapshot)
+    # Corrected: Initial Balances of linked accounts + All transactions
+    cursor = conn.execute('SELECT bucket as name, SUM(initial_balance) as initial FROM accounts GROUP BY bucket')
+    initial_balances = {row['name']: row['initial'] for row in cursor.fetchall()}
+    
+    cursor = conn.execute('SELECT bucket as name, TOTAL(amount) as trans_sum FROM transactions GROUP BY bucket')
+    trans_sums = {row['name']: row['trans_sum'] for row in cursor.fetchall()}
+    
+    cursor = conn.execute('SELECT name FROM buckets')
+    all_buckets = [row['name'] for row in cursor.fetchall()]
+    
+    buckets = []
+    for b_name in all_buckets:
+        balance = initial_balances.get(b_name, 0) + trans_sums.get(b_name, 0)
+        buckets.append({"name": b_name, "balance": balance})
 
-    # 3. Investment Value (Total put into category 'Investment')
-    cursor = conn.execute("SELECT ABS(TOTAL(amount)) as total FROM transactions WHERE category LIKE 'Investment%'")
-    investment_value = cursor.fetchone()['total']
+    # 3. Global Snapshot Pillars (Account-based as requested)
+    # Personal Portfolio = Balance of TR - Personal
+    # Child Investment = Balance of TR - Child
+    investment_personal = sum(acc['balance'] for acc in accounts if 'personal' in acc['name'].lower() and 'tr' in acc['name'].lower())
+    investment_child = sum(acc['balance'] for acc in accounts if 'child' in acc['name'].lower() and 'tr' in acc['name'].lower())
 
-    # 4. Transfers for current month
-    current_month = datetime.now().strftime('%Y-%m')
+    # 4. Period Activity (Filtered by Date Range)
+    # Transfers (Positive side only to show volume)
     cursor = conn.execute('''
         SELECT ABS(TOTAL(amount)) as total 
         FROM transactions 
-        WHERE transaction_type = 'TRANSFER' AND date LIKE ?
-    ''', (f"{current_month}%",))
+        WHERE transaction_type = 'TRANSFER' AND amount > 0 AND date BETWEEN ? AND ?
+    ''', (start_date, end_date))
     monthly_transfers = cursor.fetchone()['total']
 
-    # 5. Monthly Expenses
+    # Period Flow
+    cursor = conn.execute('''
+        SELECT TOTAL(amount) as total 
+        FROM transactions 
+        WHERE transaction_type = 'INCOME' 
+        AND date BETWEEN ? AND ?
+    ''', (start_date, end_date))
+    monthly_income = cursor.fetchone()['total']
+
     cursor = conn.execute('''
         SELECT ABS(TOTAL(amount)) as total 
         FROM transactions 
-        WHERE transaction_type = 'EXPENSE' AND date LIKE ?
-    ''', (f"{current_month}%",))
+        WHERE transaction_type = 'EXPENSE' 
+        AND date BETWEEN ? AND ?
+    ''', (start_date, end_date))
     monthly_expenses = cursor.fetchone()['total']
+    
+    monthly_savings = monthly_income - monthly_expenses
 
-    # 6. Recent Transactions
+    # 5. Recent Transactions
     cursor = conn.execute("SELECT * FROM transactions ORDER BY date DESC, created_at DESC LIMIT 5")
     recent = [dict(row) for row in cursor.fetchall()]
 
-    # Category Summary (Existing)
-    cursor = conn.execute("SELECT category, SUM(amount) as total FROM transactions WHERE transaction_type = 'EXPENSE' GROUP BY category")
+    # Category Summary (Filtered)
+    cursor = conn.execute('''
+        SELECT category, SUM(amount) as total 
+        FROM transactions 
+        WHERE transaction_type = 'EXPENSE' 
+        AND date BETWEEN ? AND ?
+        GROUP BY category
+    ''', (start_date, end_date))
     categories = [dict(row) for row in cursor.fetchall()]
 
     conn.close()
     return {
         "accounts": accounts,
         "buckets": buckets,
-        "investment_value": investment_value,
+        "total_net_worth": total_net_worth,
+        "investment_child": investment_child,
+        "investment_personal": investment_personal,
         "monthly_transfers": monthly_transfers,
         "monthly_expenses": monthly_expenses,
+        "monthly_income": monthly_income,
+        "monthly_savings": monthly_savings,
         "recent_transactions": recent,
-        "categories": categories
+        "categories": categories,
+        "filters": {"start_date": start_date, "end_date": end_date}
+    }
+    
+    monthly_savings = monthly_income - monthly_expenses
+
+    # 6. Recent Transactions (Always Latest)
+    cursor = conn.execute("SELECT * FROM transactions ORDER BY date DESC, created_at DESC LIMIT 5")
+    recent = [dict(row) for row in cursor.fetchall()]
+
+    # Category Summary (Filtered by Date Range)
+    cursor = conn.execute('''
+        SELECT category, SUM(amount) as total 
+        FROM transactions 
+        WHERE transaction_type = 'EXPENSE' 
+        AND date BETWEEN ? AND ?
+        GROUP BY category
+    ''', (start_date, end_date))
+    categories = [dict(row) for row in cursor.fetchall()]
+
+    conn.close()
+    return {
+        "accounts": accounts,
+        "buckets": buckets,
+        "investment_child": investment_child,
+        "investment_personal": investment_personal,
+        "monthly_transfers": monthly_transfers,
+        "monthly_expenses": monthly_expenses,
+        "monthly_income": monthly_income,
+        "monthly_savings": monthly_savings,
+        "recent_transactions": recent,
+        "categories": categories,
+        "filters": {"start_date": start_date, "end_date": end_date}
     }
 
 @app.get("/export/targetV2")

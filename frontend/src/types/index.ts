@@ -20,6 +20,7 @@ export interface Account {
   initial_balance: number;
   current_balance: number;
   currency?: string;
+  bucket: string;
 }
 
 export interface Metadata {

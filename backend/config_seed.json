@@ -36,37 +36,37 @@
   "accounts": [
     {
       "name": "Deutsche Bank",
-      "initial_balance": 0.0,
+      "initial_balance": 19416.25,
       "currency": "EUR"
     },
     {
       "name": "Wise",
-      "initial_balance": 0.0,
+      "initial_balance": 336.0,
       "currency": "EUR"
     },
     {
       "name": "Paypal",
-      "initial_balance": 0.0,
+      "initial_balance": 29.43,
       "currency": "EUR"
     },
     {
       "name": "Cash",
-      "initial_balance": 0.0,
+      "initial_balance": 80.0,
       "currency": "EUR"
     },
     {
       "name": "Revolut",
-      "initial_balance": 0.0,
+      "initial_balance": 19.17,
       "currency": "EUR"
     },
     {
       "name": "TR - Personal",
-      "initial_balance": 0.0,
+      "initial_balance": 15860.98,
       "currency": "EUR"
     },
     {
       "name": "TR - Child",
-      "initial_balance": 0.0,
+      "initial_balance": 900.0,
       "currency": "EUR"
     }
   ],
@@ -1784,11 +1784,6 @@
     {
       "pattern": "Croissant",
       "category": "Food & Outing",
-      "bucket": "Main"
-    },
-    {
-      "pattern": "Amazon Pime",
-      "category": "Shopping",
       "bucket": "Main"
     },
     {
@@ -3684,6 +3679,121 @@
     {
       "pattern": "Mercedes-Benzgroupag",
       "category": "Salary",
+      "bucket": "Main"
+    },
+    {
+      "pattern": "Paypal Bolt.Eu O 2601312",
+      "category": "Transport",
+      "bucket": "Main"
+    },
+    {
+      "pattern": "Tedi Fil 6240 Berlin",
+      "category": "Grocery",
+      "bucket": "Main"
+    },
+    {
+      "pattern": "Google Google One Ireland",
+      "category": "Bill",
+      "bucket": "Main"
+    },
+    {
+      "pattern": "Long Shop Berlin",
+      "category": "Food & Outing",
+      "bucket": "Main"
+    },
+    {
+      "pattern": "Amzn Mktp De Amzn.Com Bill",
+      "category": "Shopping",
+      "bucket": "Main"
+    },
+    {
+      "pattern": "Kik Fil 8212 Berlin",
+      "category": "Shopping",
+      "bucket": "Main"
+    },
+    {
+      "pattern": "Askanier Apotheke Berlin",
+      "category": "Medical",
+      "bucket": "Main"
+    },
+    {
+      "pattern": "E-Plus Service Gmbh",
+      "category": "Bill",
+      "bucket": "Main"
+    },
+    {
+      "pattern": "Nan",
+      "category": "Food & Outing",
+      "bucket": "Main"
+    },
+    {
+      "pattern": "Azzam Supermarkt Berlin",
+      "category": "Grocery",
+      "bucket": "Main"
+    },
+    {
+      "pattern": "Rossmann 596 Berlin",
+      "category": "Grocery",
+      "bucket": "Main"
+    },
+    {
+      "pattern": "Amzn Mktp De Ke8Qd46D5 Amzn.Com Bill",
+      "category": "Shopping",
+      "bucket": "Main"
+    },
+    {
+      "pattern": "Ditsch Berlin Spandau Berlin",
+      "category": "Food & Outing",
+      "bucket": "Main"
+    },
+    {
+      "pattern": "Thalia Deutschland 0373 Berlin",
+      "category": "Shopping",
+      "bucket": "Main"
+    },
+    {
+      "pattern": "Doener Inn Berlin",
+      "category": "Food & Outing",
+      "bucket": "Main"
+    },
+    {
+      "pattern": "Rossmann 814 Berlin",
+      "category": "Grocery",
+      "bucket": "Main"
+    },
+    {
+      "pattern": "E Center 3459 Berlin",
+      "category": "Grocery",
+      "bucket": "Main"
+    },
+    {
+      "pattern": "Best Kebab 63 Berlin",
+      "category": "Food & Outing",
+      "bucket": "Main"
+    },
+    {
+      "pattern": "Hfb Eco Ikea 394 Berlin S Berlin Spanda",
+      "category": "Shopping",
+      "bucket": "Main"
+    },
+    {
+      "pattern": "If Kio Ikea 394 Berlin Sp Berlin Spanda",
+      "category": "Shopping",
+      "bucket": "Main"
+    },
+    {
+      "pattern": "Amzn Mktp De Zg1D90E84 Amzn.Com Bill",
+      "category": "Shopping",
+      "bucket": "Main"
+    },
+    {
+      "pattern": "Paypal Urbansports",
+      "category": "Bill",
+      "bucket": "Main"
+    },
+    {
+      "pattern": "",
+      "category": "Investment",
       "bucket": "Main"
     }
   ]

@@ -53,9 +53,16 @@ def init_db():
             name TEXT UNIQUE NOT NULL,
             initial_balance REAL DEFAULT 0.0,
             currency TEXT DEFAULT 'EUR',
+            bucket TEXT DEFAULT 'Main',
             created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP
         )
     ''')
+
+    # Migration for existing DBs
+    try:
+        cursor.execute("ALTER TABLE accounts ADD COLUMN bucket TEXT DEFAULT 'Main'")
+    except:
+        pass # Already exists
 
     # 4. Buckets table
     cursor.execute('''
