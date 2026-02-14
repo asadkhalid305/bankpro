@@ -84,6 +84,13 @@ class MappingRequest(BaseModel):
 class BulkDeleteMappings(BaseModel):
     merchants: List[str]
 
+class FixedExpenseModel(BaseModel):
+    service: str
+    category: str
+    payment_account: str
+    period: str
+    price: float
+
 def get_db():
     conn = sqlite3.connect(DB_PATH)
     conn.row_factory = sqlite3.Row
@@ -532,3 +539,35 @@ async def get_backups():
             stat = os.stat(os.path.join(BACKUP_DIR, f))
             backups.append({"filename": f, "date": datetime.fromtimestamp(stat.st_mtime).strftime('%Y-%m-%d %H:%M'), "size": f"{stat.st_size / 1024:.1f} KB"})
     return sorted(backups, key=lambda x: x['date'], reverse=True)
+
+# --- FIXED EXPENSES ---
+@app.get("/fixed_expenses/")
+async def get_fixed_expenses():
+    conn = get_db()
+    cursor = conn.execute("SELECT * FROM fixed_expenses ORDER BY period ASC, price DESC")
+    rows = cursor.fetchall()
+    conn.close()
+    return [dict(row) for row in rows]
+
+@app.post("/fixed_expenses/")
+async def add_fixed_expense(exp: FixedExpenseModel):
+    conn = get_db()
+    try:
+        conn.execute('''
+            INSERT INTO fixed_expenses (service, category, payment_account, period, price) 
+            VALUES (?, ?, ?, ?, ?)
+        ''', (exp.service, exp.category, exp.payment_account, exp.period, exp.price))
+        conn.commit()
+    except Exception as e:
+        raise HTTPException(status_code=500, detail=str(e))
+    finally:
+        conn.close()
+    return {"status": "success"}
+
+@app.delete("/fixed_expenses/{exp_id}")
+async def delete_fixed_expense(exp_id: int):
+    conn = get_db()
+    conn.execute("DELETE FROM fixed_expenses WHERE id = ?", (exp_id,))
+    conn.commit()
+    conn.close()
+    return {"status": "success"}

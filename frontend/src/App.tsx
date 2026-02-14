@@ -23,6 +23,8 @@ import { useMasterData } from './hooks/useMasterData';
 import { useMappings } from './hooks/useMappings';
 import { useCategories } from './hooks/useCategories';
 import { useBuckets } from './hooks/useBuckets';
+import { useFixedExpenses } from './hooks/useFixedExpenses';
+import { FixedExpensesView } from './features/fixed/FixedExpensesView';
 
 function App() {
   const location = useLocation();
@@ -35,6 +37,7 @@ function App() {
   const mappings = useMappings();
   const categories = useCategories();
   const buckets = useBuckets();
+  const fixed = useFixedExpenses();
 
   // Load initial data
   useEffect(() => {
@@ -50,7 +53,23 @@ function App() {
     if (path.startsWith('/backups')) backups.fetchBackups();
     if (path.startsWith('/accounts')) accounts.fetchAccounts();
     if (path.startsWith('/buckets')) buckets.fetchBuckets();
-  }, [path, master.fetchMasterData, mappings.fetchMappings, backups.fetchBackups, accounts.fetchAccounts, buckets.fetchBuckets]);
+    if (path.startsWith('/fixed')) fixed.fetchExpenses();
+  }, [path, master.fetchMasterData, mappings.fetchMappings, backups.fetchBackups, accounts.fetchAccounts, buckets.fetchBuckets, fixed.fetchExpenses]);
+
+  const getPageTitle = () => {
+    switch (true) {
+      case path === '/': return 'Dashboard';
+      case path.startsWith('/transactions'): return 'Transactions';
+      case path.startsWith('/import'): return 'Import';
+      case path.startsWith('/mappings'): return 'Categorization Rules';
+      case path.startsWith('/backups'): return 'Backups';
+      case path.startsWith('/accounts'): return 'Accounts';
+      case path.startsWith('/buckets'): return 'Buckets';
+      case path.startsWith('/fixed'): return 'Fixed Expenses';
+      case path.startsWith('/settings'): return 'Settings';
+      default: return 'BankPro';
+    }
+  };
 
   return (
     <ThemeProvider defaultTheme="dark" storageKey="vite-ui-theme">
@@ -59,6 +78,16 @@ function App() {
           <Route path="/" element={
             <DashboardView 
               masterCount={master.data.length}
+            />
+          } />
+
+          <Route path="/fixed" element={
+            <FixedExpensesView 
+              expenses={fixed.expenses}
+              accounts={accounts.accounts.map(a => a.name)}
+              categories={['Essential', 'Transport', 'Entertainment', 'Shopping', 'Personal']}
+              onAdd={fixed.addExpense}
+              onDelete={fixed.deleteExpense}
             />
           } />
 

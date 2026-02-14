@@ -8,6 +8,7 @@ import {
   Settings,
   FileStack,
   Landmark,
+  LayoutList,
   ChevronLeft,
   ChevronRight
 } from 'lucide-react';
@@ -62,6 +63,7 @@ export const DashboardLayout = ({ children }: DashboardLayoutProps) => {
       case pathname.startsWith('/backups'): return 'Backups';
       case pathname.startsWith('/accounts'): return 'Accounts';
       case pathname.startsWith('/buckets'): return 'Buckets';
+      case pathname.startsWith('/fixed'): return 'Fixed Expenses';
       case pathname.startsWith('/settings'): return 'Settings';
       default: return 'BankPro';
     }
@@ -117,6 +119,13 @@ export const DashboardLayout = ({ children }: DashboardLayoutProps) => {
             label="Buckets"
             active={isActive('/buckets')}
             onClick={() => navigate('/buckets')}
+            collapsed={collapsed}
+          />
+          <NavItem
+            icon={LayoutList}
+            label="Fixed Expenses"
+            active={isActive('/fixed')}
+            onClick={() => navigate('/fixed')}
             collapsed={collapsed}
           />
           <NavItem

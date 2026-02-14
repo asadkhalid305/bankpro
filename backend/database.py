@@ -82,6 +82,47 @@ def init_db():
         )
     ''')
 
+    # 6. Fixed Expenses table
+    cursor.execute('''
+        CREATE TABLE IF NOT EXISTS fixed_expenses (
+            id INTEGER PRIMARY KEY AUTOINCREMENT,
+            service TEXT NOT NULL,
+            category TEXT NOT NULL,
+            payment_account TEXT NOT NULL,
+            period TEXT NOT NULL,
+            price REAL NOT NULL,
+            created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP
+        )
+    ''')
+
+    # Seed Fixed Expenses
+    FIXED_DATA = [
+        ('Strabag House Rent', 'Essential', 'Deutsche Bank', 'Monthly', 1331.55),
+        ('Eprimo Electricity', 'Essential', 'Deutsche Bank', 'Monthly', 100.00),
+        ('Miles', 'Transport', 'Wise', 'Monthly', 49.90),
+        ('HVV Javeria', 'Transport', 'Deutsche Bank', 'Monthly', 49.00),
+        ('Telekom', 'Essential', 'Deutsche Bank', 'Monthly', 45.00),
+        ('Kita', 'Essential', 'Deutsche Bank', 'Monthly', 33.00),
+        ('Getsafe Liability & Legal Insurance', 'Essential', 'Deutsche Bank', 'Monthly', 27.54),
+        ('OpenAI', 'Essential', 'Deutsche Bank', 'Monthly', 23.00),
+        ('USC', 'Entertainment', 'Deutsche Bank', 'Monthly', 9.99),
+        ('Aldi Talk', 'Essential', 'Wise', 'Monthly', 8.99),
+        ('Amazon Prime', 'Shopping', 'Wise', 'Monthly', 8.99),
+        ('Apple iTunes', 'Essential', 'Wise', 'Monthly', 2.99),
+        ('Netflix', 'Entertainment', 'Meezan', 'Monthly', 1.00),
+        ('Spotify', 'Entertainment', 'Meezan', 'Monthly', 1.00),
+        ('Radio Tax (ARD)', 'Essential', 'Deutsche Bank', 'Quarterly', 55.08),
+        ('Deutsche Bank Fee', 'Essential', 'Deutsche Bank', 'Quarterly', 20.70),
+        ('HUK24', 'Essential', 'Deutsche Bank', 'Yearly', 860.38),
+        ('Car Maintainance', 'Essential', 'Deutsche Bank', 'Yearly', 640.00),
+        ('Domain', 'Personal', 'Wise', 'Yearly', 18.00)
+    ]
+    cursor.execute("SELECT COUNT(*) FROM fixed_expenses")
+    if cursor.fetchone()[0] == 0:
+        for item in FIXED_DATA:
+            cursor.execute("INSERT INTO fixed_expenses (service, category, payment_account, period, price) VALUES (?, ?, ?, ?, ?)", item)
+
+
     # Migration & Seeding
     
     # Seed Categories

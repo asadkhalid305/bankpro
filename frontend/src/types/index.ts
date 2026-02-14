@@ -44,6 +44,15 @@ export interface Backup {
   size: string;
 }
 
+export interface FixedExpense {
+  id?: number;
+  service: string;
+  category: string;
+  payment_account: string;
+  period: 'Monthly' | 'Quarterly' | 'Yearly';
+  price: number;
+}
+
 export interface SortConfig<T> {
   key: keyof T;
   direction: 'asc' | 'desc';
