@@ -51,6 +51,14 @@ export interface FixedExpense {
   payment_account: string;
   period: 'Monthly' | 'Quarterly' | 'Yearly';
   price: number;
+  bucket: string;
+}
+
+export interface CategoryBudget {
+  id?: number;
+  category_name: string;
+  month: string;
+  target_amount: number;
 }
 
 export interface SortConfig<T> {

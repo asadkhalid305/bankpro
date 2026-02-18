@@ -25,6 +25,17 @@ export const useFixedExpenses = () => {
     }
   }, [fetchExpenses]);
 
+  const updateExpense = useCallback(async (expense: FixedExpense): Promise<boolean> => {
+    try {
+      await api.post('/fixed_expenses/update', expense);
+      await fetchExpenses();
+      return true;
+    } catch (error) {
+      console.error("Failed to update fixed expense:", error);
+      return false;
+    }
+  }, [fetchExpenses]);
+
   const deleteExpense = useCallback(async (id: number): Promise<boolean> => {
     if (!window.confirm("Are you sure you want to remove this recurring expense?")) return false;
     try {
@@ -41,6 +52,7 @@ export const useFixedExpenses = () => {
     expenses,
     fetchExpenses,
     addExpense,
+    updateExpense,
     deleteExpense
   };
 };

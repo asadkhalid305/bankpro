@@ -38,10 +38,23 @@ export const useCategories = () => {
     }
   }, [categories, fetchCategories]);
 
+  const updateCategory = useCallback(async (oldName: string, newName: string): Promise<boolean> => {
+    if (!newName || categories.includes(newName)) return false;
+    try {
+      await api.post('/categories/update', { old_name: oldName, new_name: newName });
+      await fetchCategories();
+      return true;
+    } catch (error) {
+      console.error("Failed to update category:", error);
+      return false;
+    }
+  }, [categories, fetchCategories]);
+
   return {
     categories,
     fetchCategories,
     addCategory,
-    deleteCategory
+    deleteCategory,
+    updateCategory
   };
 };

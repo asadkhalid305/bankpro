@@ -6,7 +6,6 @@ import {
   Edit3, 
   Check, 
   X, 
-  Brain,
   ChevronUp,
   ChevronDown,
   RotateCcw

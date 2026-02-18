@@ -15,5 +15,6 @@
   },
   "editor.codeActionsOnSave": {
     "source.fixAll.eslint": "explicit"
-  }
+  },
+  "terminal.integrated.fontFamily": "MesloLGS NF",
 }

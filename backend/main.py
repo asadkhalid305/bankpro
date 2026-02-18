@@ -90,11 +90,40 @@ class FixedExpenseModel(BaseModel):
     payment_account: str
     period: str
     price: float
+    bucket: str = "Main"
+
+class FixedExpenseUpdate(FixedExpenseModel):
+    id: int
+
+class CategoryBudgetModel(BaseModel):
+    category_name: str
+    month: str
+    target_amount: float
 
 def get_db():
     conn = sqlite3.connect(DB_PATH)
     conn.row_factory = sqlite3.Row
     return conn
+
+def get_monthly_fixed_by_category():
+    conn = get_db()
+    cursor = conn.execute("SELECT category, period, price FROM fixed_expenses")
+    rows = cursor.fetchall()
+    conn.close()
+    
+    fixed_by_cat = {}
+    for row in rows:
+        cat = row['category']
+        price = row['price']
+        period = row['period']
+        
+        monthly_equiv = 0
+        if period == 'Monthly': monthly_equiv = price
+        elif period == 'Quarterly': monthly_equiv = price / 3
+        elif period == 'Yearly': monthly_equiv = price / 12
+        
+        fixed_by_cat[cat] = fixed_by_cat.get(cat, 0) + monthly_equiv
+    return fixed_by_cat
 
 @app.on_event("startup")
 def startup():
@@ -200,6 +229,31 @@ async def save_categories(categories: List[str]):
         conn.execute("DELETE FROM categories")
         for cat in categories:
             conn.execute("INSERT INTO categories (name) VALUES (?)", (cat,))
+        conn.commit()
+        config_manager.dump_config_to_seed()
+    except Exception as e:
+        raise HTTPException(status_code=500, detail=str(e))
+    finally:
+        conn.close()
+    return {"status": "success"}
+
+@app.post("/categories/update")
+async def update_category(request: dict):
+    old_name = request.get('old_name')
+    new_name = request.get('new_name')
+    if not old_name or not new_name:
+        raise HTTPException(status_code=400, detail="Missing old_name or new_name")
+        
+    conn = get_db()
+    try:
+        # Update category name
+        conn.execute("UPDATE categories SET name = ? WHERE name = ?", (new_name, old_name))
+        # Propagate to all tables
+        conn.execute("UPDATE transactions SET category = ? WHERE category = ?", (new_name, old_name))
+        conn.execute("UPDATE mappings SET category = ? WHERE category = ?", (new_name, old_name))
+        conn.execute("UPDATE fixed_expenses SET category = ? WHERE category = ?", (new_name, old_name))
+        conn.execute("UPDATE category_budgets SET category_name = ? WHERE category_name = ?", (new_name, old_name))
+        
         conn.commit()
         config_manager.dump_config_to_seed()
     except Exception as e:
@@ -384,6 +438,7 @@ async def merge_to_db(request: dict):
 @app.get("/dashboard/summary")
 async def get_summary(start_date: Optional[str] = None, end_date: Optional[str] = None):
     conn = get_db()
+    fixed_baselines = get_monthly_fixed_by_category()
     
     # If no dates provided, default to current month
     if not start_date or not end_date:
@@ -459,52 +514,79 @@ async def get_summary(start_date: Optional[str] = None, end_date: Optional[str] 
     cursor = conn.execute("SELECT * FROM transactions ORDER BY date DESC, created_at DESC LIMIT 5")
     recent = [dict(row) for row in cursor.fetchall()]
 
-    # Category Summary (Filtered)
+    # Category Summary (Filtered & Period-Aware)
+    # 1. Calculate months in period for scaling fixed baselines
+    d1 = datetime.strptime(start_date, '%Y-%m-%d')
+    d2 = datetime.strptime(end_date, '%Y-%m-%d')
+    # Use a simple month count (difference in months + 1)
+    months_in_period = (d2.year - d1.year) * 12 + d2.month - d1.month + 1
+    
+    # 2. Get Sum of Manual Budgets in range
+    # Get all month strings in range (e.g. "2024-01", "2024-02")
+    months_list = []
+    curr = d1
+    while curr <= d2:
+        m_str = curr.strftime('%Y-%m')
+        if m_str not in months_list: months_list.append(m_str)
+        # Move to next month safely
+        if curr.month == 12: curr = curr.replace(year=curr.year+1, month=1)
+        else: curr = curr.replace(month=curr.month+1)
+        
+    cursor = conn.execute(f'''
+        SELECT category_name as category, SUM(target_amount) as manual_total
+        FROM category_budgets
+        WHERE month IN ({','.join(['?']*len(months_list))})
+        GROUP BY category_name
+    ''', months_list)
+    manual_sums = {row['category']: row['manual_total'] for row in cursor.fetchall()}
+
+    # 3. Get Transactions in range
     cursor = conn.execute('''
-        SELECT category, SUM(amount) as total 
+        SELECT category, SUM(amount) as amount 
         FROM transactions 
         WHERE transaction_type = 'EXPENSE' 
         AND date BETWEEN ? AND ?
         GROUP BY category
     ''', (start_date, end_date))
-    categories = [dict(row) for row in cursor.fetchall()]
+    trans_rows = cursor.fetchall()
+    
+    categories = []
+    processed_cats = set()
+    for row in trans_rows:
+        cat = row['category']
+        processed_cats.add(cat)
+        fixed_baseline = fixed_baselines.get(cat, 0)
+        # Use manual total if set, otherwise fallback to fixed baseline
+        # Note: manual_sums already contains the SUM of targets across the months in the period
+        # If a category has fixed expenses but NO manual budget entries in the period, 
+        # we calculate its total as fixed * months.
+        total_budget_for_period = manual_sums.get(cat, fixed_baseline * months_in_period)
+        
+        categories.append({
+            "category": cat,
+            "total": row['amount'],
+            "budget": total_budget_for_period
+        })
+
+    # 4. Add categories that have budget but no transactions
+    all_budget_cats = set(manual_sums.keys()) | set(fixed_baselines.keys())
+    for cat in all_budget_cats:
+        if cat not in processed_cats:
+            fixed_baseline = fixed_baselines.get(cat, 0)
+            total_budget_for_period = manual_sums.get(cat, fixed_baseline * months_in_period)
+            
+            if total_budget_for_period > 0:
+                categories.append({
+                    "category": cat,
+                    "total": 0,
+                    "budget": total_budget_for_period
+                })
 
     conn.close()
     return {
         "accounts": accounts,
         "buckets": buckets,
         "total_net_worth": total_net_worth,
-        "investment_child": investment_child,
-        "investment_personal": investment_personal,
-        "monthly_transfers": monthly_transfers,
-        "monthly_expenses": monthly_expenses,
-        "monthly_income": monthly_income,
-        "monthly_savings": monthly_savings,
-        "recent_transactions": recent,
-        "categories": categories,
-        "filters": {"start_date": start_date, "end_date": end_date}
-    }
-    
-    monthly_savings = monthly_income - monthly_expenses
-
-    # 6. Recent Transactions (Always Latest)
-    cursor = conn.execute("SELECT * FROM transactions ORDER BY date DESC, created_at DESC LIMIT 5")
-    recent = [dict(row) for row in cursor.fetchall()]
-
-    # Category Summary (Filtered by Date Range)
-    cursor = conn.execute('''
-        SELECT category, SUM(amount) as total 
-        FROM transactions 
-        WHERE transaction_type = 'EXPENSE' 
-        AND date BETWEEN ? AND ?
-        GROUP BY category
-    ''', (start_date, end_date))
-    categories = [dict(row) for row in cursor.fetchall()]
-
-    conn.close()
-    return {
-        "accounts": accounts,
-        "buckets": buckets,
         "investment_child": investment_child,
         "investment_personal": investment_personal,
         "monthly_transfers": monthly_transfers,
@@ -554,9 +636,25 @@ async def add_fixed_expense(exp: FixedExpenseModel):
     conn = get_db()
     try:
         conn.execute('''
-            INSERT INTO fixed_expenses (service, category, payment_account, period, price) 
-            VALUES (?, ?, ?, ?, ?)
-        ''', (exp.service, exp.category, exp.payment_account, exp.period, exp.price))
+            INSERT INTO fixed_expenses (service, category, payment_account, period, price, bucket) 
+            VALUES (?, ?, ?, ?, ?, ?)
+        ''', (exp.service, exp.category, exp.payment_account, exp.period, exp.price, exp.bucket))
+        conn.commit()
+    except Exception as e:
+        raise HTTPException(status_code=500, detail=str(e))
+    finally:
+        conn.close()
+    return {"status": "success"}
+
+@app.post("/fixed_expenses/update")
+async def update_fixed_expense(exp: FixedExpenseUpdate):
+    conn = get_db()
+    try:
+        conn.execute('''
+            UPDATE fixed_expenses 
+            SET service = ?, category = ?, payment_account = ?, period = ?, price = ?, bucket = ?
+            WHERE id = ?
+        ''', (exp.service, exp.category, exp.payment_account, exp.period, exp.price, exp.bucket, exp.id))
         conn.commit()
     except Exception as e:
         raise HTTPException(status_code=500, detail=str(e))
@@ -565,9 +663,162 @@ async def add_fixed_expense(exp: FixedExpenseModel):
     return {"status": "success"}
 
 @app.delete("/fixed_expenses/{exp_id}")
+
 async def delete_fixed_expense(exp_id: int):
+
     conn = get_db()
+
     conn.execute("DELETE FROM fixed_expenses WHERE id = ?", (exp_id,))
+
     conn.commit()
+
     conn.close()
+
+    return {"status": "success"}
+
+
+
+# --- CATEGORY BUDGETS ---
+
+@app.get("/budgets/")
+async def get_budgets(month: Optional[str] = None):
+    conn = get_db()
+    fixed_baselines = get_monthly_fixed_by_category()
+    
+    # 1. Get manual budgets for the month
+    if month:
+        cursor = conn.execute("SELECT * FROM category_budgets WHERE month = ?", (month,))
+    else:
+        cursor = conn.execute("SELECT * FROM category_budgets ORDER BY month DESC")
+    manual_rows = cursor.fetchall()
+    
+    # SMART DEFAULT: If this month is empty, carry forward the latest setup
+    if month and not manual_rows:
+        cursor = conn.execute("SELECT * FROM category_budgets WHERE month < ? ORDER BY month DESC", (month,))
+        latest_rows = cursor.fetchall()
+        if latest_rows:
+            latest_month = latest_rows[0]['month']
+            manual_rows = [r for r in latest_rows if r['month'] == latest_month]
+
+    conn.close()
+    manual_map = {row['category_name']: row['target_amount'] for row in manual_rows}
+    
+    results = []
+    # Show categories that have either a fixed baseline OR a manual budget
+    all_active_cats = set(fixed_baselines.keys()) | set(manual_map.keys())
+    
+    for cat in sorted(list(all_active_cats)):
+        fixed = fixed_baselines.get(cat, 0)
+        # If no manual budget is set, the "Total" defaults to the "Fixed" commitment
+        total = manual_map.get(cat, fixed)
+        
+        results.append({
+            "category_name": cat,
+            "fixed_baseline": fixed,
+            "total_budget": total,
+            "flexible_allowance": total - fixed # Calculated: what's left for variable spending
+        })
+        
+    return results
+
+@app.post("/budgets/sync_year")
+async def sync_year_budgets(request: dict):
+    source_month = request.get('month')
+    if not source_month:
+        raise HTTPException(status_code=400, detail="Missing month")
+    
+    conn = get_db()
+    try:
+        # Get source setup - specifically for the selected month
+        cursor = conn.execute("SELECT category_name, target_amount FROM category_budgets WHERE month = ?", (source_month,))
+        manual_rows = cursor.fetchall()
+        
+        # SMART DEFAULT: If the source month has no records, find the LATEST month that does
+        if not manual_rows:
+            cursor = conn.execute("SELECT * FROM category_budgets WHERE month < ? ORDER BY month DESC", (source_month,))
+            latest_rows = cursor.fetchall()
+            if latest_rows:
+                latest_month = latest_rows[0]['month']
+                manual_rows = [r for r in latest_rows if r['month'] == latest_month]
+        
+        # Decouple results from cursor
+        sources = [{"category": row['category_name'], "amount": row['target_amount']} for row in manual_rows]
+        
+        # Determine year
+        year = source_month.split('-')[0]
+        all_months = [f"{year}-{m:02d}" for m in range(1, 13)]
+        
+        # Clear all months for this year
+        placeholders = ', '.join(['?'] * len(all_months))
+        conn.execute(f"DELETE FROM category_budgets WHERE month IN ({placeholders})", all_months)
+        
+        # Re-populate all 12 months with the EXACT setup
+        for m in all_months:
+            for row in sources:
+                conn.execute('''
+                    INSERT INTO category_budgets (category_name, month, target_amount)
+                    VALUES (?, ?, ?)
+                ''', (row['category'], m, row['amount']))
+        
+        conn.commit()
+    except Exception as e:
+        raise HTTPException(status_code=500, detail=str(e))
+    finally:
+        conn.close()
+    return {"status": "success"}
+
+
+
+@app.post("/budgets/")
+async def update_budget(budget: CategoryBudgetModel):
+    conn = get_db()
+    try:
+        conn.execute('''
+            INSERT INTO category_budgets (category_name, month, target_amount) 
+            VALUES (?, ?, ?)
+            ON CONFLICT(category_name, month) DO UPDATE SET target_amount = EXCLUDED.target_amount
+        ''', (budget.category_name, budget.month, budget.target_amount))
+        conn.commit()
+    except Exception as e:
+        raise HTTPException(status_code=500, detail=str(e))
+    finally:
+        conn.close()
+    return {"status": "success"}
+
+@app.delete("/budgets/{month}/{category}")
+async def delete_budget(month: str, category: str):
+    conn = get_db()
+    try:
+        conn.execute("DELETE FROM category_budgets WHERE month = ? AND category_name = ?", (month, category))
+        conn.commit()
+    except Exception as e:
+        raise HTTPException(status_code=500, detail=str(e))
+    finally:
+        conn.close()
+    return {"status": "success"}
+
+@app.post("/budgets/copy")
+async def copy_budgets(request: dict):
+    from_month = request.get('from_month')
+    to_month = request.get('to_month')
+    if not from_month or not to_month:
+        raise HTTPException(status_code=400, detail="Missing from_month or to_month")
+    
+    conn = get_db()
+    try:
+        # Get source budgets
+        cursor = conn.execute("SELECT category_name, target_amount FROM category_budgets WHERE month = ?", (from_month,))
+        sources = cursor.fetchall()
+        
+        for row in sources:
+            conn.execute('''
+                INSERT INTO category_budgets (category_name, month, target_amount)
+                VALUES (?, ?, ?)
+                ON CONFLICT(category_name, month) DO UPDATE SET target_amount = EXCLUDED.target_amount
+            ''', (row['category_name'], to_month, row['target_amount']))
+        conn.commit()
+    except Exception as e:
+        raise HTTPException(status_code=500, detail=str(e))
+    finally:
+        conn.close()
     return {"status": "success"}

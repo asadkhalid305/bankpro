@@ -13,7 +13,6 @@ import { Select } from '../../components/ui/Select';
 import { Card, CardContent } from "@/components/ui/Card";
 import { PageHeader } from '../../components/ui/PageHeader';
 import { Badge } from '../../components/ui/Badge';
-import { cn } from "@/lib/utils";
 import { type Account } from '../../types';
 
 interface AccountsManagerProps {

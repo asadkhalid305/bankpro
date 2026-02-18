@@ -2,22 +2,27 @@
   "categories": [
     "Benefit",
     "Bill",
+    "Car",
+    "Charity",
     "Conversion",
     "Dependant",
+    "Entertainment",
     "Extra",
+    "Fees",
     "Food & Outing",
     "Gifts",
     "Grocery",
     "Investment",
+    "Kindergeld",
     "Medical",
     "Office",
+    "Rent",
     "Salary",
     "Shopping",
     "Transport",
-    "Vacation",
-    "Car",
     "Unknown",
-    "Kindergeld"
+    "Vacation",
+    "Test"
   ],
   "buckets": [
     {

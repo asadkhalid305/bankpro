@@ -1,5 +1,5 @@
 import React, { useState } from 'react';
-import { Plus, Trash2, Wallet, Baby, ShieldCheck, X, Check } from 'lucide-react';
+import { Plus, Trash2, Wallet, Baby, ShieldCheck, X } from 'lucide-react';
 import { Card, CardContent } from "@/components/ui/Card";
 import { Button } from "@/components/ui/Button";
 import { Input } from "@/components/ui/Input";

@@ -9,8 +9,10 @@ import {
   FileStack,
   Landmark,
   LayoutList,
+  Tag,
   ChevronLeft,
-  ChevronRight
+  ChevronRight,
+  TrendingDown
 } from 'lucide-react';
 import { cn } from '@/lib/utils';
 
@@ -62,7 +64,9 @@ export const DashboardLayout = ({ children }: DashboardLayoutProps) => {
       case pathname.startsWith('/mappings'): return 'Categorization Rules';
       case pathname.startsWith('/backups'): return 'Backups';
       case pathname.startsWith('/accounts'): return 'Accounts';
+      case pathname.startsWith('/budgets'): return 'Budget Manager';
       case pathname.startsWith('/buckets'): return 'Buckets';
+      case pathname.startsWith('/categories'): return 'Categories';
       case pathname.startsWith('/fixed'): return 'Fixed Expenses';
       case pathname.startsWith('/settings'): return 'Settings';
       default: return 'BankPro';
@@ -115,10 +119,24 @@ export const DashboardLayout = ({ children }: DashboardLayoutProps) => {
             collapsed={collapsed}
           />
           <NavItem
+            icon={TrendingDown}
+            label="Budget Manager"
+            active={isActive('/budgets')}
+            onClick={() => navigate('/budgets')}
+            collapsed={collapsed}
+          />
+          <NavItem
             icon={FileStack}
             label="Buckets"
             active={isActive('/buckets')}
             onClick={() => navigate('/buckets')}
+            collapsed={collapsed}
+          />
+          <NavItem
+            icon={Tag}
+            label="Categories"
+            active={isActive('/categories')}
+            onClick={() => navigate('/categories')}
             collapsed={collapsed}
           />
           <NavItem

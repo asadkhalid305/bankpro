@@ -1,9 +1,7 @@
 import React from 'react';
 import { 
   FileStack, 
-  Download, 
   RotateCcw, 
-  Eye, 
   X,
   History,
   Calendar,

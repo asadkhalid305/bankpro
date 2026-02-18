@@ -1,5 +1,5 @@
 import { useState, useCallback } from 'react';
-import type { Account } from '../types/Account';
+import type { Account } from '../types';
 import { api } from '../lib/api';
 
 export const useAccounts = () => {

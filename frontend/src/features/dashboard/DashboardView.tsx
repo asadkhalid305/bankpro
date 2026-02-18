@@ -6,12 +6,9 @@ import {
   PiggyBank,
   ArrowLeftRight,
   CreditCard,
-  CalendarDays,
   Globe,
   User,
   Heart,
-  Filter,
-  ChevronDown,
   RotateCcw,
   Activity,
   BarChart3,
@@ -21,51 +18,11 @@ import { Card, CardContent, CardHeader, CardTitle, CardDescription } from "@/com
 import { Button } from "@/components/ui/Button";
 import { PageHeader } from '@/components/ui/PageHeader';
 import { Input } from "@/components/ui/Input";
+import { StatCard } from "@/components/ui/StatCard";
 import { cn } from "@/lib/utils";
 import { useNavigate } from 'react-router-dom';
 import { useState, useEffect, useCallback } from 'react';
 import { api } from '@/lib/api';
-
-const StatCard = ({ title, value, description, icon: Icon, variant = 'default' }: {
-  title: string;
-  value: string | number;
-  description: string;
-  icon: React.ElementType;
-  variant?: 'default' | 'primary' | 'success' | 'destructive' | 'info' | 'purple';
-}) => {
-  const variants = {
-    default: "border-muted/40",
-    primary: "border-primary/20 bg-primary/5",
-    success: "border-emerald-500/20 bg-emerald-500/5",
-    destructive: "border-red-500/20 bg-red-500/5",
-    info: "border-blue-500/20 bg-blue-500/5",
-    purple: "border-purple-500/20 bg-purple-500/5"
-  };
-
-  const iconColors = {
-    default: "text-muted-foreground",
-    primary: "text-primary",
-    success: "text-emerald-500",
-    destructive: "text-red-500",
-    info: "text-blue-500",
-    purple: "text-purple-500"
-  };
-
-  return (
-    <Card className={cn("shadow-sm transition-all hover:shadow-md", variants[variant])}>
-      <CardHeader className="flex flex-row items-center justify-between pb-2 space-y-0">
-        <CardTitle className="text-[10px] font-bold uppercase tracking-widest text-muted-foreground">{title}</CardTitle>
-        <Icon className={cn("w-4 h-4", iconColors[variant])} />
-      </CardHeader>
-      <CardContent>
-        <div className="text-2xl font-bold tracking-tight">{value}</div>
-        <p className="text-[10px] text-muted-foreground mt-1 text-nowrap truncate font-medium">
-          {description}
-        </p>
-      </CardContent>
-    </Card>
-  );
-};
 
 export const DashboardView = () => {
   const navigate = useNavigate();
@@ -120,6 +77,7 @@ export const DashboardView = () => {
         end = new Date(now.getFullYear(), 11, 31);
         break;
       case 'all':
+        // Sensible all-time: from 2023 to end of current year
         start = new Date(2023, 0, 1);
         end = new Date(now.getFullYear(), 11, 31);
         break;
@@ -358,20 +316,56 @@ export const DashboardView = () => {
           />
         </div>
 
-        {/* Spending Breakdown */}
+        {/* Spending Breakdown & Budgets */}
         <Card className="shadow-sm border-muted/40">
           <CardHeader>
-            <CardTitle className="text-base">Top Spending Categories</CardTitle>
-            <CardDescription className="text-xs">Category-wise breakdown for {getPeriodLabel()}.</CardDescription>
+            <CardTitle className="text-base flex items-center justify-between">
+              <span>Budget vs Actual Spending</span>
+              <span className="text-[10px] uppercase font-bold text-muted-foreground">{getPeriodLabel()}</span>
+            </CardTitle>
+            <CardDescription className="text-xs">Monitor your spending across categories against monthly targets.</CardDescription>
           </CardHeader>
           <CardContent>
-            <div className="grid gap-3 md:grid-cols-3 lg:grid-cols-5">
-              {summary?.categories?.sort((a: any, b: any) => a.total - b.total).slice(0, 10).map((cat: any) => (
-                <div key={cat.category} className="p-4 border rounded-2xl bg-card/50 hover:border-primary/40 hover:bg-primary/5 transition-all group cursor-default">
-                  <p className="text-[10px] font-bold uppercase text-muted-foreground mb-1 truncate tracking-wider">{cat.category}</p>
-                  <p className="text-xl font-bold text-red-500 group-hover:scale-105 transition-transform">{formatEuro(Math.abs(cat.total))}</p>
-                </div>
-              ))}
+            <div className="grid gap-6 md:grid-cols-2 lg:grid-cols-3">
+              {summary?.categories?.sort((a: any, b: any) => (b.budget || 0) - (a.budget || 0)).map((cat: any) => {
+                const spent = Math.abs(cat.total || 0);
+                const budget = cat.budget || 0;
+                const percent = budget > 0 ? Math.min(100, (spent / budget) * 100) : 0;
+                const isOver = budget > 0 && spent > budget;
+                
+                return (
+                  <div key={cat.category} className="space-y-3 p-4 rounded-xl border bg-card/50 hover:bg-accent/5 transition-all">
+                    <div className="flex items-center justify-between">
+                      <span className="text-xs font-bold uppercase tracking-wider text-muted-foreground">{cat.category}</span>
+                      <span className={cn("text-[10px] font-bold px-1.5 py-0.5 rounded", isOver ? "bg-red-100 text-red-600" : "bg-emerald-100 text-emerald-600")}>
+                        {isOver ? "Over Budget" : `${Math.round(percent)}% Used`}
+                      </span>
+                    </div>
+                    
+                    <div className="flex items-end justify-between gap-2">
+                      <div className="flex flex-col">
+                        <span className="text-lg font-bold">{formatEuro(spent)}</span>
+                        <span className="text-[10px] text-muted-foreground">of {formatEuro(budget)}</span>
+                      </div>
+                      <div className="text-right">
+                        <span className={cn("text-xs font-bold", isOver ? "text-red-500" : "text-emerald-500")}>
+                          {isOver ? `+${formatEuro(spent - budget)}` : `${formatEuro(budget - spent)} left`}
+                        </span>
+                      </div>
+                    </div>
+
+                    <div className="h-2 bg-muted rounded-full overflow-hidden">
+                      <div
+                        className={cn(
+                          "h-full rounded-full transition-all duration-1000",
+                          isOver ? "bg-red-500" : percent > 85 ? "bg-amber-500" : "bg-emerald-500"
+                        )}
+                        style={{ width: `${percent}%` }}
+                      />
+                    </div>
+                  </div>
+                );
+              })}
             </div>
           </CardContent>
         </Card>
