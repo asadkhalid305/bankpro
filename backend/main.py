@@ -13,7 +13,7 @@ import sqlite3
 import database
 import config_manager
 
-app = FastAPI()
+app = FastAPI(title="BankPro")
 
 # Enable CORS
 app.add_middleware(

@@ -72,6 +72,19 @@ npm install
 ```
 
 ### 3. Execution
+
+**Option A: Using Docker (Recommended)**
+The easiest way to run both backend and frontend simultaneously is using Docker Compose. This ensures you don't have to manually manage dependencies or set up two separate terminals.
+
+```bash
+# In the root of your project
+docker-compose up --build
+```
+Navigate to `http://localhost:5173`.
+To stop the application, press `Ctrl+C` or run `docker-compose down`.
+
+**Option B: Manual Execution**
+
 **Run Backend:**
 ```bash
 cd backend

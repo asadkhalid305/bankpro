@@ -26,14 +26,13 @@ import { useMappings } from './hooks/useMappings';
 import { useCategories } from './hooks/useCategories';
 import { useBuckets } from './hooks/useBuckets';
 import { useFixedExpenses } from './hooks/useFixedExpenses';
-import { useBills } from './hooks/useBills';
 import { FixedExpensesView } from './features/fixed/FixedExpensesView';
 import { BillsSection } from './features/bills/BillsSection';
 
 function App() {
   const location = useLocation();
   const path = location.pathname;
-  
+
   const upload = useUpload();
   const backups = useBackups();
   const accounts = useAccounts();
@@ -69,7 +68,7 @@ function App() {
           } />
 
           <Route path="/fixed" element={
-            <FixedExpensesView 
+            <FixedExpensesView
               expenses={fixed.expenses}
               accounts={accounts.accounts.map(a => a.name)}
               categories={categories.categories}
@@ -84,7 +83,7 @@ function App() {
           } />
 
           <Route path="/mappings" element={
-            <MappingKnowledgeBase 
+            <MappingKnowledgeBase
               mappings={mappings.getSortedMappings()}
               categories={categories.categories}
               buckets={buckets.buckets.map(b => b.name)}
@@ -104,7 +103,7 @@ function App() {
           } />
 
           <Route path="/transactions" element={
-            <MasterStatement 
+            <MasterStatement
               data={master.getFilteredData()}
               totalCount={master.data.length}
               categories={categories.categories}
@@ -130,7 +129,7 @@ function App() {
           } />
 
           <Route path="/accounts" element={
-            <AccountsManager 
+            <AccountsManager
               accounts={accounts.accounts}
               buckets={buckets.buckets.map(b => b.name)}
               onAdd={accounts.addAccount}
@@ -140,14 +139,14 @@ function App() {
           } />
 
           <Route path="/buckets" element={
-            <BucketsManager 
+            <BucketsManager
               buckets={buckets.buckets}
               onSave={buckets.saveBuckets}
             />
           } />
 
           <Route path="/categories" element={
-            <CategoriesManager 
+            <CategoriesManager
               categories={categories.categories}
               onAdd={categories.addCategory}
               onUpdate={categories.updateCategory}
@@ -160,7 +159,7 @@ function App() {
           } />
 
           <Route path="/backups" element={
-            <BackupsSection 
+            <BackupsSection
               backups={backups.backups}
               onPreview={backups.previewBackup}
               previewData={backups.previewData}
@@ -175,7 +174,7 @@ function App() {
               onClosePreview={backups.closePreview}
             />
           } />
-          
+
           <Route path="/settings" element={
             <SettingsView />
           } />
@@ -183,7 +182,7 @@ function App() {
           <Route path="/import" element={
             <>
               {(upload.status === 'idle' || upload.status === 'uploading') && (
-                <UploadSection 
+                <UploadSection
                   file={upload.file}
                   status={upload.status}
                   onFileChange={upload.handleFileChange}
@@ -194,7 +193,7 @@ function App() {
               )}
 
               {upload.status === 'review' && upload.stagedData && (
-                <ReviewSection 
+                <ReviewSection
                   stagedData={upload.stagedData}
                   selectedTransactions={upload.selectedTransactions}
                   categories={categories.categories}
@@ -212,10 +211,10 @@ function App() {
               {(upload.status === 'success' || upload.status === 'new_file_created') && (
                 <Card className="max-w-md mx-auto mt-12">
                   <CardHeader>
-                     <CardTitle className={upload.status === 'success' ? "text-emerald-600" : "text-blue-600"}>
-                        {upload.status === 'success' ? "Import Successful!" : "New File Created!"}
-                     </CardTitle>
-                     <CardDescription>{upload.message}</CardDescription>
+                    <CardTitle className={upload.status === 'success' ? "text-emerald-600" : "text-blue-600"}>
+                      {upload.status === 'success' ? "Import Successful!" : "New File Created!"}
+                    </CardTitle>
+                    <CardDescription>{upload.message}</CardDescription>
                   </CardHeader>
                   <CardContent className="space-y-4">
                     {upload.status === 'success' && (

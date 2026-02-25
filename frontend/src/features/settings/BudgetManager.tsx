@@ -4,8 +4,7 @@ import { Input } from "@/components/ui/Input";
 import { Button } from "@/components/ui/Button";
 import { PageHeader } from "@/components/ui/PageHeader";
 import { api } from "@/lib/api";
-import { CATEGORY_OPTIONS, type CategoryBudget } from "@/types";
-import { Calendar, ArrowLeft, ArrowRight, TrendingDown, Trash2, Plus, ArrowRightCircle, Tag } from "lucide-react";
+import { Calendar, ArrowLeft, ArrowRight, TrendingDown, Trash2, ArrowRightCircle, Tag } from "lucide-react";
 import { cn } from "@/lib/utils";
 import { Select } from "../../components/ui/Select";
 
@@ -15,11 +14,11 @@ export const BudgetManager = () => {
     const d = new Date();
     const year = d.getFullYear();
     if (year === 2026) {
-        return `2026-${String(d.getMonth() + 1).padStart(2, '0')}`;
+      return `2026-${String(d.getMonth() + 1).padStart(2, '0')}`;
     }
     return "2026-02";
   });
-  
+
   const [budgetData, setBudgetData] = useState<any[]>([]);
   const [allCategories, setAllCategories] = useState<string[]>([]);
   const [selectedToAdd, setSelectedToAdd] = useState('');
@@ -60,7 +59,7 @@ export const BudgetManager = () => {
         month: month,
         target_amount: amount
       });
-      fetchInitialData(); 
+      fetchInitialData();
       setMessage({ type: 'success', text: `Budget updated.` });
       setTimeout(() => setMessage(null), 3000);
     } catch (err) {
@@ -83,7 +82,7 @@ export const BudgetManager = () => {
   const syncYear = async () => {
     const monthName = new Date(month + '-01').toLocaleDateString('en-US', { month: 'long' });
     if (!window.confirm(`APPLY TO ALL OF 2026? This will overwrite EVERY month in 2026 (Jan to Dec) with the setup from ${monthName}.`)) return;
-    
+
     try {
       await api.post('/budgets/sync_year', { month: month });
       setMessage({ type: 'success', text: `Budget synced to all months in 2026.` });
@@ -96,10 +95,10 @@ export const BudgetManager = () => {
   const changeMonth = (delta: number) => {
     const [year, m] = month.split('-').map(Number);
     const date = new Date(year, m - 1 + delta, 1);
-    
+
     // Restrict to Jan 2026 - Dec 2026
     if (date.getFullYear() !== 2026) return;
-    
+
     setMonth(`2026-${String(date.getMonth() + 1).padStart(2, '0')}`);
   };
 
@@ -111,58 +110,58 @@ export const BudgetManager = () => {
 
   return (
     <div className="space-y-8 pb-12">
-      <PageHeader 
-        title="Budget Manager" 
+      <PageHeader
+        title="Budget Manager"
         description="Plan your finances for 2026 by category."
       >
         <div className="flex flex-wrap items-center gap-4">
-            {/* MONTH NAVIGATOR */}
-            <div className="flex items-center gap-2 bg-muted/50 p-1 rounded-xl border shadow-sm">
-              <Button variant="ghost" size="icon" className="h-9 w-9" onClick={() => changeMonth(-1)} disabled={month === '2026-01' || loading}>
-                  <ArrowLeft className="h-4 w-4" />
-              </Button>
-              <div className="flex items-center gap-2 px-4 border-x border-muted-foreground/10">
-                  <Calendar className="h-4 w-4 text-primary" />
-                  <span className="font-bold text-xs min-w-[110px] text-center uppercase tracking-wider text-foreground/80">
-                  {new Date(month + '-01').toLocaleDateString('en-US', { month: 'long', year: 'numeric' })}
-                  </span>
-              </div>
-              <Button variant="ghost" size="icon" className="h-9 w-9" onClick={() => changeMonth(1)} disabled={month === '2026-12' || loading}>
-                  <ArrowRight className="h-4 w-4" />
-              </Button>
+          {/* MONTH NAVIGATOR */}
+          <div className="flex items-center gap-2 bg-muted/50 p-1 rounded-xl border shadow-sm">
+            <Button variant="ghost" size="icon" className="h-9 w-9" onClick={() => changeMonth(-1)} disabled={month === '2026-01' || loading}>
+              <ArrowLeft className="h-4 w-4" />
+            </Button>
+            <div className="flex items-center gap-2 px-4 border-x border-muted-foreground/10">
+              <Calendar className="h-4 w-4 text-primary" />
+              <span className="font-bold text-xs min-w-[110px] text-center uppercase tracking-wider text-foreground/80">
+                {new Date(month + '-01').toLocaleDateString('en-US', { month: 'long', year: 'numeric' })}
+              </span>
+            </div>
+            <Button variant="ghost" size="icon" className="h-9 w-9" onClick={() => changeMonth(1)} disabled={month === '2026-12' || loading}>
+              <ArrowRight className="h-4 w-4" />
+            </Button>
+          </div>
+
+          <div className="h-8 w-px bg-muted mx-1 hidden lg:block" />
+
+          {/* QUICK ACTIONS */}
+          <div className="flex items-center gap-3">
+            <div className="relative group">
+              <Tag className="absolute left-3 top-1/2 -translate-y-1/2 h-3.5 w-3.5 text-muted-foreground group-focus-within:text-primary transition-colors pointer-events-none" />
+              <Select
+                value={selectedToAdd}
+                onChange={(e) => handleAddCategory(e.target.value)}
+                options={allCategories.filter(cat =>
+                  !budgetData.some(b => b.category_name === cat) &&
+                  !['Unknown', 'Salary', 'Benefit'].includes(cat)
+                )}
+                placeholder="Add Category..."
+                disabled={loading}
+                className="h-11 pl-9 w-48 text-[10px] font-bold uppercase tracking-tight bg-card border-muted-foreground/20 hover:border-primary/50 transition-all shadow-sm rounded-xl"
+              />
             </div>
 
-            <div className="h-8 w-px bg-muted mx-1 hidden lg:block" />
-
-            {/* QUICK ACTIONS */}
-            <div className="flex items-center gap-3">
-                <div className="relative group">
-                    <Tag className="absolute left-3 top-1/2 -translate-y-1/2 h-3.5 w-3.5 text-muted-foreground group-focus-within:text-primary transition-colors pointer-events-none" />
-                    <Select 
-                        value={selectedToAdd}
-                        onChange={(e) => handleAddCategory(e.target.value)}
-                        options={allCategories.filter(cat => 
-                            !budgetData.some(b => b.category_name === cat) && 
-                            !['Unknown', 'Salary', 'Benefit'].includes(cat)
-                        )}
-                        placeholder="Add Category..."
-                        disabled={loading}
-                        className="h-11 pl-9 w-48 text-[10px] font-bold uppercase tracking-tight bg-card border-muted-foreground/20 hover:border-primary/50 transition-all shadow-sm rounded-xl"
-                    />
-                </div>
-
-                <Button 
-                    variant="default" 
-                    size="sm" 
-                    onClick={syncYear} 
-                    disabled={loading}
-                    title="Apply this setup to ALL months of 2026 (Jan - Dec)" 
-                    className="h-11 px-5 text-[10px] uppercase font-bold tracking-widest shadow-md rounded-xl hover:scale-[1.02] transition-transform active:scale-95"
-                >
-                   <ArrowRightCircle className="h-4 w-4 mr-2" />
-                   Sync All 2026
-                </Button>
-            </div>
+            <Button
+              variant="default"
+              size="sm"
+              onClick={syncYear}
+              disabled={loading}
+              title="Apply this setup to ALL months of 2026 (Jan - Dec)"
+              className="h-11 px-5 text-[10px] uppercase font-bold tracking-widest shadow-md rounded-xl hover:scale-[1.02] transition-transform active:scale-95"
+            >
+              <ArrowRightCircle className="h-4 w-4 mr-2" />
+              Sync All 2026
+            </Button>
+          </div>
         </div>
       </PageHeader>
 
@@ -186,11 +185,11 @@ export const BudgetManager = () => {
             </CardHeader>
             <CardContent>
               <div className="grid gap-4">
-                {budgetData.filter(b => b.category_name !== 'Unknown' && b.category_name !== 'Salary' && b.category_name !== 'Benefit').sort((a,b) => a.category_name.localeCompare(b.category_name)).map(data => {
+                {budgetData.filter(b => b.category_name !== 'Unknown' && b.category_name !== 'Salary' && b.category_name !== 'Benefit').sort((a, b) => a.category_name.localeCompare(b.category_name)).map(data => {
                   const cat = data.category_name;
                   // Rounding comparison to avoid precision issues
                   const isUnderfunded = Math.round(data.total_budget * 100) < Math.round(data.fixed_baseline * 100);
-                  
+
                   return (
                     <div key={cat} className={cn(
                       "flex flex-col md:flex-row md:items-center justify-between group p-4 rounded-xl border transition-all gap-4",
@@ -199,20 +198,20 @@ export const BudgetManager = () => {
                       <div className="space-y-1">
                         <p className="text-sm font-bold uppercase tracking-wider text-foreground/80">{cat}</p>
                         <div className="flex flex-wrap items-center gap-2">
-                           <span className="text-[10px] text-muted-foreground uppercase font-bold bg-muted px-1.5 py-0.5 rounded" title="Commitment from your Fixed Expenses">Committed: {formatEuro(data.fixed_baseline)}</span>
-                           <span className={cn(
-                             "text-[10px] uppercase font-bold px-1.5 py-0.5 rounded transition-all",
-                             data.flexible_allowance < -0.01 ? "bg-red-100 text-red-600" : "bg-emerald-100 text-emerald-600"
-                           )} title="What's left for daily spending (Total Target - Fixed Commitment)">
-                             Allowance: {formatEuro(data.flexible_allowance)}
-                           </span>
+                          <span className="text-[10px] text-muted-foreground uppercase font-bold bg-muted px-1.5 py-0.5 rounded" title="Commitment from your Fixed Expenses">Committed: {formatEuro(data.fixed_baseline)}</span>
+                          <span className={cn(
+                            "text-[10px] uppercase font-bold px-1.5 py-0.5 rounded transition-all",
+                            data.flexible_allowance < -0.01 ? "bg-red-100 text-red-600" : "bg-emerald-100 text-emerald-600"
+                          )} title="What's left for daily spending (Total Target - Fixed Commitment)">
+                            Allowance: {formatEuro(data.flexible_allowance)}
+                          </span>
                         </div>
                       </div>
 
                       <div className="flex items-center gap-3">
                         <div className="space-y-1.5">
-                           <label className="text-[10px] font-bold uppercase text-muted-foreground block text-right">Total Target Budget</label>
-                           <div className="relative">
+                          <label className="text-[10px] font-bold uppercase text-muted-foreground block text-right">Total Target Budget</label>
+                          <div className="relative">
                             <span className="absolute left-3 top-1/2 -translate-y-1/2 text-muted-foreground text-sm font-bold">€</span>
                             <Input
                               key={`${cat}-${month}`}

@@ -1,9 +1,9 @@
 import React, { useState } from 'react';
-import { 
-  Plus, 
-  Trash2, 
-  X, 
-  Check, 
+import {
+  Plus,
+  Trash2,
+  X,
+  Check,
   Edit3,
   LayoutList,
   CreditCard,
@@ -11,8 +11,7 @@ import {
   RotateCcw,
   Activity,
   Calculator,
-  HandMetal,
-  Calendar
+  HandMetal
 } from 'lucide-react';
 import { Button } from '../../components/ui/Button';
 import { Input } from '../../components/ui/Input';
@@ -79,7 +78,7 @@ export const FixedExpensesView: React.FC<FixedExpensesViewProps> = ({
     const now = new Date();
     let start, end;
     setActiveFilter(type);
-    switch(type) {
+    switch (type) {
       case 'month':
         start = new Date(now.getFullYear(), now.getMonth(), 1);
         end = new Date(now.getFullYear(), now.getMonth() + 1, 0);
@@ -104,7 +103,7 @@ export const FixedExpensesView: React.FC<FixedExpensesViewProps> = ({
     const end = new Date(endDate);
     const diffTime = Math.abs(end.getTime() - start.getTime());
     const diffDays = Math.ceil(diffTime / (1000 * 60 * 60 * 24)) + 1;
-    
+
     return {
       days: diffDays,
       months: diffDays / 30.44,
@@ -172,8 +171,8 @@ export const FixedExpensesView: React.FC<FixedExpensesViewProps> = ({
 
   return (
     <div className="space-y-10 pb-12">
-      <PageHeader 
-        title="Fixed Expenses" 
+      <PageHeader
+        title="Fixed Expenses"
         description="Overview of your recurring utilities, subscriptions, and major fixed costs."
       >
         <Button onClick={() => setShowAddForm(!showAddForm)} variant={showAddForm ? 'outline' : 'default'}>
@@ -190,21 +189,21 @@ export const FixedExpensesView: React.FC<FixedExpensesViewProps> = ({
           <span className="text-xs text-muted-foreground ml-auto uppercase font-bold tracking-widest bg-muted px-2 py-0.5 rounded">All-Time Config</span>
         </div>
         <div className="grid gap-4 md:grid-cols-3">
-          <StatCard 
+          <StatCard
             title="Monthly Base Sum"
             value={formatEuro(calculateStaticBase('Monthly'))}
             description="Total cost of all monthly bills"
             icon={CreditCard}
             variant="primary"
           />
-          <StatCard 
+          <StatCard
             title="Quarterly Base Sum"
             value={formatEuro(calculateStaticBase('Quarterly'))}
             description="Total cost of all quarterly bills"
             icon={CreditCard}
             variant="info"
           />
-          <StatCard 
+          <StatCard
             title="Yearly Base Sum"
             value={formatEuro(calculateStaticBase('Yearly'))}
             description="Total cost of all yearly bills"
@@ -221,7 +220,7 @@ export const FixedExpensesView: React.FC<FixedExpensesViewProps> = ({
             <Activity className="w-5 h-5 text-destructive" />
             <h2 className="text-lg font-bold tracking-tight">Period Liability Projection</h2>
           </div>
-          
+
           <div className="flex items-center gap-2">
             <div className="flex bg-muted p-1 rounded-lg">
               {['month', 'quarter', 'year'].map((p) => (
@@ -263,7 +262,7 @@ export const FixedExpensesView: React.FC<FixedExpensesViewProps> = ({
         </div>
 
         <div className="grid gap-4 md:grid-cols-3">
-          <StatCard 
+          <StatCard
             title="Consolidated Projection"
             value={formatEuro(calculateTotalProjected())}
             description={`Combined liability for ${getPeriodLabel()}`}
@@ -281,91 +280,91 @@ export const FixedExpensesView: React.FC<FixedExpensesViewProps> = ({
             <div className="p-6 border-b bg-muted/30 animate-in fade-in slide-in-from-top-2">
               <div className="grid grid-cols-1 md:grid-cols-6 gap-4 items-end">
                 <div className="space-y-1.5">
-                    <label className="text-xs font-bold uppercase text-muted-foreground tracking-wider">Service Name</label>
-                    <Input 
-                      placeholder="e.g. House Rent" 
-                      value={newExpense.service} 
-                      onChange={(e) => setNewExpense({...newExpense, service: e.target.value})} 
-                    />
+                  <label className="text-xs font-bold uppercase text-muted-foreground tracking-wider">Service Name</label>
+                  <Input
+                    placeholder="e.g. House Rent"
+                    value={newExpense.service}
+                    onChange={(e) => setNewExpense({ ...newExpense, service: e.target.value })}
+                  />
                 </div>
                 <div className="space-y-1.5">
-                    <label className="text-xs font-bold uppercase text-muted-foreground tracking-wider">Category</label>
-                    <Select 
-                      value={newExpense.category} 
-                      onChange={(e) => setNewExpense({...newExpense, category: e.target.value})}
-                      options={categories}
-                    />
+                  <label className="text-xs font-bold uppercase text-muted-foreground tracking-wider">Category</label>
+                  <Select
+                    value={newExpense.category}
+                    onChange={(e) => setNewExpense({ ...newExpense, category: e.target.value })}
+                    options={categories}
+                  />
                 </div>
                 <div className="space-y-1.5">
-                    <label className="text-xs font-bold uppercase text-muted-foreground tracking-wider">Payment Account</label>
-                    <Select 
-                      value={newExpense.payment_account} 
-                      onChange={(e) => setNewExpense({...newExpense, payment_account: e.target.value})}
-                      options={accounts}
-                    />
+                  <label className="text-xs font-bold uppercase text-muted-foreground tracking-wider">Payment Account</label>
+                  <Select
+                    value={newExpense.payment_account}
+                    onChange={(e) => setNewExpense({ ...newExpense, payment_account: e.target.value })}
+                    options={accounts}
+                  />
                 </div>
                 <div className="space-y-1.5">
-                    <label className="text-xs font-bold uppercase text-muted-foreground tracking-wider">Period</label>
-                    <Select 
-                      value={newExpense.period} 
-                      onChange={(e) => setNewExpense({...newExpense, period: e.target.value as any})}
-                      options={periods}
-                    />
+                  <label className="text-xs font-bold uppercase text-muted-foreground tracking-wider">Period</label>
+                  <Select
+                    value={newExpense.period}
+                    onChange={(e) => setNewExpense({ ...newExpense, period: e.target.value as any })}
+                    options={periods}
+                  />
                 </div>
                 <div className="space-y-1.5">
-                    <label className="text-xs font-bold uppercase text-muted-foreground tracking-wider">Bucket</label>
-                    <Select 
-                      value={newExpense.bucket} 
-                      onChange={(e) => setNewExpense({...newExpense, bucket: e.target.value})}
-                      options={BUCKET_OPTIONS}
-                    />
+                  <label className="text-xs font-bold uppercase text-muted-foreground tracking-wider">Bucket</label>
+                  <Select
+                    value={newExpense.bucket}
+                    onChange={(e) => setNewExpense({ ...newExpense, bucket: e.target.value })}
+                    options={BUCKET_OPTIONS}
+                  />
                 </div>
                 <div className="space-y-1.5">
-                    <label className="text-xs font-bold uppercase text-muted-foreground tracking-wider">Price</label>
-                    <Input 
-                      type="number"
-                      step="0.01"
-                      placeholder="0.00" 
-                      value={newExpense.price} 
-                      onChange={(e) => setNewExpense({...newExpense, price: parseFloat(e.target.value)})} 
-                    />
+                  <label className="text-xs font-bold uppercase text-muted-foreground tracking-wider">Price</label>
+                  <Input
+                    type="number"
+                    step="0.01"
+                    placeholder="0.00"
+                    value={newExpense.price}
+                    onChange={(e) => setNewExpense({ ...newExpense, price: parseFloat(e.target.value) })}
+                  />
                 </div>
                 <div className="space-y-1.5">
-                    <label className="text-xs font-bold uppercase text-muted-foreground tracking-wider">Due Day</label>
-                    <Input 
-                      type="number"
-                      min="1"
-                      max="31"
-                      placeholder="1" 
-                      value={newExpense.due_day} 
-                      onChange={(e) => setNewExpense({...newExpense, due_day: parseInt(e.target.value)})} 
-                    />
+                  <label className="text-xs font-bold uppercase text-muted-foreground tracking-wider">Due Day</label>
+                  <Input
+                    type="number"
+                    min="1"
+                    max="31"
+                    placeholder="1"
+                    value={newExpense.due_day}
+                    onChange={(e) => setNewExpense({ ...newExpense, due_day: parseInt(e.target.value) })}
+                  />
                 </div>
                 <div className="space-y-1.5">
-                    <label className="text-xs font-bold uppercase text-muted-foreground tracking-wider">Type</label>
-                    <div className="flex gap-2">
-                      <Button 
-                        size="sm" 
-                        variant={newExpense.is_manual ? 'outline' : 'default'}
-                        onClick={() => setNewExpense({...newExpense, is_manual: 0})}
-                        className="flex-1 h-10"
-                      >Auto</Button>
-                      <Button 
-                        size="sm" 
-                        variant={newExpense.is_manual ? 'default' : 'outline'}
-                        onClick={() => setNewExpense({...newExpense, is_manual: 1})}
-                        className="flex-1 h-10"
-                      ><HandMetal className="w-3 h-3 mr-1" /> Man</Button>
-                    </div>
+                  <label className="text-xs font-bold uppercase text-muted-foreground tracking-wider">Type</label>
+                  <div className="flex gap-2">
+                    <Button
+                      size="sm"
+                      variant={newExpense.is_manual ? 'outline' : 'default'}
+                      onClick={() => setNewExpense({ ...newExpense, is_manual: 0 })}
+                      className="flex-1 h-10"
+                    >Auto</Button>
+                    <Button
+                      size="sm"
+                      variant={newExpense.is_manual ? 'default' : 'outline'}
+                      onClick={() => setNewExpense({ ...newExpense, is_manual: 1 })}
+                      className="flex-1 h-10"
+                    ><HandMetal className="w-3 h-3 mr-1" /> Man</Button>
+                  </div>
                 </div>
                 {newExpense.period !== 'Monthly' && (
                   <div className="space-y-1.5 md:col-span-2">
-                      <label className="text-xs font-bold uppercase text-muted-foreground tracking-wider">Months (e.g. 1,4,7,10)</label>
-                      <Input 
-                        placeholder="1,4,7,10" 
-                        value={newExpense.due_months} 
-                        onChange={(e) => setNewExpense({...newExpense, due_months: e.target.value})} 
-                      />
+                    <label className="text-xs font-bold uppercase text-muted-foreground tracking-wider">Months (e.g. 1,4,7,10)</label>
+                    <Input
+                      placeholder="1,4,7,10"
+                      value={newExpense.due_months}
+                      onChange={(e) => setNewExpense({ ...newExpense, due_months: e.target.value })}
+                    />
                   </div>
                 )}
                 <Button onClick={handleAdd} className="md:col-start-6 w-full">Save Expense</Button>
@@ -402,9 +401,9 @@ export const FixedExpensesView: React.FC<FixedExpensesViewProps> = ({
                   )}>
                     <td className="px-6 py-4">
                       {editingId === exp.id ? (
-                        <Input 
-                          value={editRow?.service} 
-                          onChange={(e) => setEditRow({...editRow!, service: e.target.value})}
+                        <Input
+                          value={editRow?.service}
+                          onChange={(e) => setEditRow({ ...editRow!, service: e.target.value })}
                           className="h-8 text-sm"
                         />
                       ) : (
@@ -418,9 +417,9 @@ export const FixedExpensesView: React.FC<FixedExpensesViewProps> = ({
                     </td>
                     <td className="px-6 py-4">
                       {editingId === exp.id ? (
-                        <Select 
-                          value={editRow?.category} 
-                          onChange={(e) => setEditRow({...editRow!, category: e.target.value})}
+                        <Select
+                          value={editRow?.category}
+                          onChange={(e) => setEditRow({ ...editRow!, category: e.target.value })}
                           options={categories}
                           className="h-8 text-xs"
                         />
@@ -432,9 +431,9 @@ export const FixedExpensesView: React.FC<FixedExpensesViewProps> = ({
                     </td>
                     <td className="px-6 py-4">
                       {editingId === exp.id ? (
-                        <Select 
-                          value={editRow?.bucket} 
-                          onChange={(e) => setEditRow({...editRow!, bucket: e.target.value})}
+                        <Select
+                          value={editRow?.bucket}
+                          onChange={(e) => setEditRow({ ...editRow!, bucket: e.target.value })}
                           options={BUCKET_OPTIONS}
                           className="h-8 text-xs"
                         />
@@ -446,9 +445,9 @@ export const FixedExpensesView: React.FC<FixedExpensesViewProps> = ({
                     </td>
                     <td className="px-6 py-4 text-muted-foreground">
                       {editingId === exp.id ? (
-                        <Select 
-                          value={editRow?.payment_account} 
-                          onChange={(e) => setEditRow({...editRow!, payment_account: e.target.value})}
+                        <Select
+                          value={editRow?.payment_account}
+                          onChange={(e) => setEditRow({ ...editRow!, payment_account: e.target.value })}
                           options={accounts}
                           className="h-8 text-xs"
                         />
@@ -462,16 +461,16 @@ export const FixedExpensesView: React.FC<FixedExpensesViewProps> = ({
                     <td className="px-6 py-4">
                       {editingId === exp.id ? (
                         <div className="flex flex-col gap-1">
-                          <Input 
+                          <Input
                             type="number"
-                            value={editRow?.due_day} 
-                            onChange={(e) => setEditRow({...editRow!, due_day: parseInt(e.target.value)})}
+                            value={editRow?.due_day}
+                            onChange={(e) => setEditRow({ ...editRow!, due_day: parseInt(e.target.value) })}
                             className="h-8 text-xs w-16"
                           />
-                          <Button 
-                            size="sm" 
+                          <Button
+                            size="sm"
                             variant={editRow?.is_manual ? 'default' : 'outline'}
-                            onClick={() => setEditRow({...editRow!, is_manual: editRow?.is_manual ? 0 : 1})}
+                            onClick={() => setEditRow({ ...editRow!, is_manual: editRow?.is_manual ? 0 : 1 })}
                             className="h-6 text-[8px] uppercase"
                           >{editRow?.is_manual ? 'Manual' : 'Auto'}</Button>
                         </div>
@@ -489,16 +488,16 @@ export const FixedExpensesView: React.FC<FixedExpensesViewProps> = ({
                     <td className="px-6 py-4">
                       {editingId === exp.id ? (
                         <div className="flex flex-col gap-1">
-                          <Select 
-                            value={editRow?.period} 
-                            onChange={(e) => setEditRow({...editRow!, period: e.target.value as any})}
+                          <Select
+                            value={editRow?.period}
+                            onChange={(e) => setEditRow({ ...editRow!, period: e.target.value as any })}
                             options={periods}
                             className="h-8 text-xs"
                           />
                           {editRow?.period !== 'Monthly' && (
-                            <Input 
-                              value={editRow?.due_months || ''} 
-                              onChange={(e) => setEditRow({...editRow!, due_months: e.target.value})}
+                            <Input
+                              value={editRow?.due_months || ''}
+                              onChange={(e) => setEditRow({ ...editRow!, due_months: e.target.value })}
                               placeholder="1,4,7,10"
                               className="h-6 text-[10px]"
                             />
@@ -519,11 +518,11 @@ export const FixedExpensesView: React.FC<FixedExpensesViewProps> = ({
                     </td>
                     <td className="px-6 py-4 font-mono font-bold text-foreground">
                       {editingId === exp.id ? (
-                        <Input 
+                        <Input
                           type="number"
                           step="0.01"
-                          value={editRow?.price} 
-                          onChange={(e) => setEditRow({...editRow!, price: parseFloat(e.target.value)})}
+                          value={editRow?.price}
+                          onChange={(e) => setEditRow({ ...editRow!, price: parseFloat(e.target.value) })}
                           className="h-8 text-sm w-32"
                         />
                       ) : (
@@ -546,9 +545,9 @@ export const FixedExpensesView: React.FC<FixedExpensesViewProps> = ({
                             <Button onClick={() => handleEditClick(exp)} size="icon" variant="ghost" className="h-8 w-8">
                               <Edit3 className="h-4 w-4" />
                             </Button>
-                            <Button 
-                              variant="ghost" 
-                              size="icon" 
+                            <Button
+                              variant="ghost"
+                              size="icon"
                               className="h-8 w-8 text-destructive"
                               onClick={() => onDelete(exp.id!)}
                             >
