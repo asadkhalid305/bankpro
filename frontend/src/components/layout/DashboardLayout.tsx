@@ -12,7 +12,8 @@ import {
   Tag,
   ChevronLeft,
   ChevronRight,
-  TrendingDown
+  TrendingDown,
+  CheckSquare
 } from 'lucide-react';
 import { cn } from '@/lib/utils';
 
@@ -68,6 +69,7 @@ export const DashboardLayout = ({ children }: DashboardLayoutProps) => {
       case pathname.startsWith('/buckets'): return 'Buckets';
       case pathname.startsWith('/categories'): return 'Categories';
       case pathname.startsWith('/fixed'): return 'Fixed Expenses';
+      case pathname.startsWith('/bills'): return 'Bills & Subscriptions';
       case pathname.startsWith('/settings'): return 'Settings';
       default: return 'BankPro';
     }
@@ -144,6 +146,13 @@ export const DashboardLayout = ({ children }: DashboardLayoutProps) => {
             label="Fixed Expenses"
             active={isActive('/fixed')}
             onClick={() => navigate('/fixed')}
+            collapsed={collapsed}
+          />
+          <NavItem
+            icon={CheckSquare}
+            label="Bills & Subscriptions"
+            active={isActive('/bills')}
+            onClick={() => navigate('/bills')}
             collapsed={collapsed}
           />
           <NavItem

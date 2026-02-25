@@ -99,12 +99,21 @@ def get_category_from_db(raw_merchant):
 
 def identify_transaction_type(merchant, amount, payer=None, payee=None):
     combined_names = f"{merchant} {payer or ''} {payee or ''}".lower()
-    user_tokens = USER_NAME.lower().split()
-    match_count = sum(1 for token in user_tokens if token in combined_names)
-    if match_count >= 2:
+    
+    # Check for user's full name or significant parts
+    user_full_name = USER_NAME.lower()
+    # Only match if full name is found or at least "First Last"
+    tokens = user_full_name.split()
+    if len(tokens) >= 2:
+        first_last = f"{tokens[0]} {tokens[-1]}"
+        if user_full_name in combined_names or first_last in combined_names:
+            return "TRANSFER"
+            
+    # Check for specific transfer indicators
+    transfer_keywords = ["umbebuchung", "internal transfer", "kontoübertrag", "self transfer"]
+    if any(kw in combined_names for kw in transfer_keywords):
         return "TRANSFER"
-    if "transfer" in combined_names or "internal" in combined_names:
-        return "TRANSFER"
+        
     return "INCOME" if amount > 0 else "EXPENSE"
 
 def process_excel(file_path):
@@ -126,6 +135,8 @@ def process_excel(file_path):
         amount = float(row.get('Amount', 0))
         category, bucket = get_category_from_db(raw_merchant)
         t_type = identify_transaction_type(raw_merchant, amount)
+        if t_type == "TRANSFER" and category == "Unknown":
+            category = "Conversion"
         if "kindergeld" in raw_merchant.lower(): bucket = "Kindergeld"
 
         processed_data.append({
@@ -182,6 +193,8 @@ def process_pdf(file_path):
         
         category, bucket = get_category_from_db(raw_merchant)
         t_type = identify_transaction_type(raw_merchant, t['amount'])
+        if t_type == "TRANSFER" and category == "Unknown":
+            category = "Conversion"
         if "kindergeld" in raw_merchant.lower(): bucket = "Kindergeld"
 
         processed_data.append({

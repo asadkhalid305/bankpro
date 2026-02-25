@@ -172,11 +172,6 @@
       "bucket": "Main"
     },
     {
-      "pattern": "Zafar",
-      "category": "Bill",
-      "bucket": "Main"
-    },
-    {
       "pattern": "Deutche Fee",
       "category": "Bill",
       "bucket": "Main"
@@ -397,11 +392,6 @@
       "bucket": "Main"
     },
     {
-      "pattern": "Woolworth",
-      "category": "Car",
-      "bucket": "Main"
-    },
-    {
       "pattern": "Tier",
       "category": "Transport",
       "bucket": "Main"
@@ -434,11 +424,6 @@
     {
       "pattern": "Dining Table Danyal",
       "category": "Transport",
-      "bucket": "Main"
-    },
-    {
-      "pattern": "Xbox",
-      "category": "Extra",
       "bucket": "Main"
     },
     {
@@ -489,11 +474,6 @@
     {
       "pattern": "Ammi 2X",
       "category": "Dependant",
-      "bucket": "Main"
-    },
-    {
-      "pattern": "Yumna Gift",
-      "category": "Extra",
       "bucket": "Main"
     },
     {
@@ -559,11 +539,6 @@
     {
       "pattern": "Free Now",
       "category": "Transport",
-      "bucket": "Main"
-    },
-    {
-      "pattern": "Wool Worth",
-      "category": "Grocery",
       "bucket": "Main"
     },
     {
@@ -783,8 +758,8 @@
     },
     {
       "pattern": "Fatima",
-      "category": "Dependant",
-      "bucket": "Main"
+      "category": "Kindergeld",
+      "bucket": "Kindergeld"
     },
     {
       "pattern": "Bvg",
@@ -957,18 +932,8 @@
       "bucket": "Main"
     },
     {
-      "pattern": "Waqas",
-      "category": "Extra",
-      "bucket": "Main"
-    },
-    {
       "pattern": "Tk Maxx",
       "category": "Shopping",
-      "bucket": "Main"
-    },
-    {
-      "pattern": "Water Bottle",
-      "category": "Extra",
       "bucket": "Main"
     },
     {
@@ -1039,11 +1004,6 @@
     {
       "pattern": "Obi Gardening Tools",
       "category": "Shopping",
-      "bucket": "Main"
-    },
-    {
-      "pattern": "Woolworth Gifts",
-      "category": "Extra",
       "bucket": "Main"
     },
     {
@@ -2272,11 +2232,6 @@
       "bucket": "Main"
     },
     {
-      "pattern": "Waqas Gift",
-      "category": "Vacation",
-      "bucket": "Main"
-    },
-    {
       "pattern": "Irtaza Gift",
       "category": "Vacation",
       "bucket": "Main"
@@ -2549,11 +2504,6 @@
     {
       "pattern": "Eid Suits 2X",
       "category": "Shopping",
-      "bucket": "Main"
-    },
-    {
-      "pattern": "Yousra Gift",
-      "category": "Extra",
       "bucket": "Main"
     },
     {
@@ -3187,11 +3137,6 @@
       "bucket": "Main"
     },
     {
-      "pattern": "Waqas Lent",
-      "category": "Extra",
-      "bucket": "Main"
-    },
-    {
       "pattern": "Uniqlo",
       "category": "Shopping",
       "bucket": "Main"
@@ -3362,11 +3307,6 @@
       "bucket": "Main"
     },
     {
-      "pattern": "Yasir",
-      "category": "Extra",
-      "bucket": "Main"
-    },
-    {
       "pattern": "Osama K",
       "category": "Food & Outing",
       "bucket": "Main"
@@ -3517,11 +3457,6 @@
       "bucket": "Main"
     },
     {
-      "pattern": "Zafar Saeed Khan",
-      "category": "Bill",
-      "bucket": "Main"
-    },
-    {
       "pattern": "Loon Mirch Grocery Store Berlin",
       "category": "Grocery",
       "bucket": "Main"
@@ -3562,11 +3497,6 @@
       "bucket": "Main"
     },
     {
-      "pattern": "Woolworth Gmbh Fil. 1062 Berlin",
-      "category": "Car",
-      "bucket": "Main"
-    },
-    {
       "pattern": "Tk Maxx Berlin Spanda",
       "category": "Shopping",
       "bucket": "Main"
@@ -3604,11 +3534,6 @@
     {
       "pattern": "Shell 0372 Berlin",
       "category": "Food & Outing",
-      "bucket": "Main"
-    },
-    {
-      "pattern": "Yasir Anis",
-      "category": "Extra",
       "bucket": "Main"
     },
     {

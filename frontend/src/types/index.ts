@@ -1,3 +1,9 @@
+export interface Bucket {
+  name: string;
+  description?: string;
+  initial_balance?: number;
+}
+
 export interface Transaction {
   id?: number;
   date: string;
@@ -52,6 +58,9 @@ export interface FixedExpense {
   period: 'Monthly' | 'Quarterly' | 'Yearly';
   price: number;
   bucket: string;
+  due_day?: number;
+  is_manual?: number;
+  due_months?: string;
 }
 
 export interface CategoryBudget {

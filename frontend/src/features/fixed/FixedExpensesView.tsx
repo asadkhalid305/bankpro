@@ -10,7 +10,9 @@ import {
   TrendingUp,
   RotateCcw,
   Activity,
-  Calculator
+  Calculator,
+  HandMetal,
+  Calendar
 } from 'lucide-react';
 import { Button } from '../../components/ui/Button';
 import { Input } from '../../components/ui/Input';
@@ -67,7 +69,10 @@ export const FixedExpensesView: React.FC<FixedExpensesViewProps> = ({
     payment_account: accounts[0] || 'Deutsche Bank',
     period: 'Monthly',
     price: 0,
-    bucket: 'Main'
+    bucket: 'Main',
+    due_day: 1,
+    is_manual: 0,
+    due_months: ''
   });
 
   const setPeriod = (type: string) => {
@@ -132,7 +137,10 @@ export const FixedExpensesView: React.FC<FixedExpensesViewProps> = ({
       payment_account: accounts[0] || 'Deutsche Bank',
       period: 'Monthly',
       price: 0,
-      bucket: 'Main'
+      bucket: 'Main',
+      due_day: 1,
+      is_manual: 0,
+      due_months: ''
     });
     setShowAddForm(false);
   };
@@ -322,6 +330,44 @@ export const FixedExpensesView: React.FC<FixedExpensesViewProps> = ({
                       onChange={(e) => setNewExpense({...newExpense, price: parseFloat(e.target.value)})} 
                     />
                 </div>
+                <div className="space-y-1.5">
+                    <label className="text-xs font-bold uppercase text-muted-foreground tracking-wider">Due Day</label>
+                    <Input 
+                      type="number"
+                      min="1"
+                      max="31"
+                      placeholder="1" 
+                      value={newExpense.due_day} 
+                      onChange={(e) => setNewExpense({...newExpense, due_day: parseInt(e.target.value)})} 
+                    />
+                </div>
+                <div className="space-y-1.5">
+                    <label className="text-xs font-bold uppercase text-muted-foreground tracking-wider">Type</label>
+                    <div className="flex gap-2">
+                      <Button 
+                        size="sm" 
+                        variant={newExpense.is_manual ? 'outline' : 'default'}
+                        onClick={() => setNewExpense({...newExpense, is_manual: 0})}
+                        className="flex-1 h-10"
+                      >Auto</Button>
+                      <Button 
+                        size="sm" 
+                        variant={newExpense.is_manual ? 'default' : 'outline'}
+                        onClick={() => setNewExpense({...newExpense, is_manual: 1})}
+                        className="flex-1 h-10"
+                      ><HandMetal className="w-3 h-3 mr-1" /> Man</Button>
+                    </div>
+                </div>
+                {newExpense.period !== 'Monthly' && (
+                  <div className="space-y-1.5 md:col-span-2">
+                      <label className="text-xs font-bold uppercase text-muted-foreground tracking-wider">Months (e.g. 1,4,7,10)</label>
+                      <Input 
+                        placeholder="1,4,7,10" 
+                        value={newExpense.due_months} 
+                        onChange={(e) => setNewExpense({...newExpense, due_months: e.target.value})} 
+                      />
+                  </div>
+                )}
                 <Button onClick={handleAdd} className="md:col-start-6 w-full">Save Expense</Button>
               </div>
             </div>
@@ -335,6 +381,7 @@ export const FixedExpensesView: React.FC<FixedExpensesViewProps> = ({
                   <th className="px-6 py-4">Category</th>
                   <th className="px-6 py-4">Bucket</th>
                   <th className="px-6 py-4">Payment Source</th>
+                  <th className="px-6 py-4">Due</th>
                   <th className="px-6 py-4">Period</th>
                   <th className="px-6 py-4">Price</th>
                   <th className="px-6 py-4 text-right">Actions</th>
@@ -414,16 +461,60 @@ export const FixedExpensesView: React.FC<FixedExpensesViewProps> = ({
                     </td>
                     <td className="px-6 py-4">
                       {editingId === exp.id ? (
-                        <Select 
-                          value={editRow?.period} 
-                          onChange={(e) => setEditRow({...editRow!, period: e.target.value as any})}
-                          options={periods}
-                          className="h-8 text-xs"
-                        />
+                        <div className="flex flex-col gap-1">
+                          <Input 
+                            type="number"
+                            value={editRow?.due_day} 
+                            onChange={(e) => setEditRow({...editRow!, due_day: parseInt(e.target.value)})}
+                            className="h-8 text-xs w-16"
+                          />
+                          <Button 
+                            size="sm" 
+                            variant={editRow?.is_manual ? 'default' : 'outline'}
+                            onClick={() => setEditRow({...editRow!, is_manual: editRow?.is_manual ? 0 : 1})}
+                            className="h-6 text-[8px] uppercase"
+                          >{editRow?.is_manual ? 'Manual' : 'Auto'}</Button>
+                        </div>
                       ) : (
-                        <Badge variant="outline" className="border-primary/20 text-primary">
-                          {exp.period}
-                        </Badge>
+                        <div className="flex flex-col gap-0.5">
+                          <span className="font-bold">Day {exp.due_day}</span>
+                          {exp.is_manual === 1 && (
+                            <span className="text-[10px] flex items-center gap-1 text-muted-foreground">
+                              <HandMetal className="w-2.5 h-2.5" /> Manual
+                            </span>
+                          )}
+                        </div>
+                      )}
+                    </td>
+                    <td className="px-6 py-4">
+                      {editingId === exp.id ? (
+                        <div className="flex flex-col gap-1">
+                          <Select 
+                            value={editRow?.period} 
+                            onChange={(e) => setEditRow({...editRow!, period: e.target.value as any})}
+                            options={periods}
+                            className="h-8 text-xs"
+                          />
+                          {editRow?.period !== 'Monthly' && (
+                            <Input 
+                              value={editRow?.due_months || ''} 
+                              onChange={(e) => setEditRow({...editRow!, due_months: e.target.value})}
+                              placeholder="1,4,7,10"
+                              className="h-6 text-[10px]"
+                            />
+                          )}
+                        </div>
+                      ) : (
+                        <div className="flex flex-col gap-1">
+                          <Badge variant="outline" className="border-primary/20 text-primary">
+                            {exp.period}
+                          </Badge>
+                          {exp.due_months && (
+                            <span className="text-[10px] text-muted-foreground ml-1">
+                              Months: {exp.due_months}
+                            </span>
+                          )}
+                        </div>
                       )}
                     </td>
                     <td className="px-6 py-4 font-mono font-bold text-foreground">

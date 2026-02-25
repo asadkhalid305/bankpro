@@ -4,6 +4,7 @@ import { api } from '../lib/api';
 export interface Bucket {
   name: string;
   description?: string;
+  initial_balance?: number;
 }
 
 export const useBuckets = () => {

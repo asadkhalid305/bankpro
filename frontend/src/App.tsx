@@ -26,7 +26,9 @@ import { useMappings } from './hooks/useMappings';
 import { useCategories } from './hooks/useCategories';
 import { useBuckets } from './hooks/useBuckets';
 import { useFixedExpenses } from './hooks/useFixedExpenses';
+import { useBills } from './hooks/useBills';
 import { FixedExpensesView } from './features/fixed/FixedExpensesView';
+import { BillsSection } from './features/bills/BillsSection';
 
 function App() {
   const location = useLocation();
@@ -75,6 +77,10 @@ function App() {
               onUpdate={fixed.updateExpense}
               onDelete={fixed.deleteExpense}
             />
+          } />
+
+          <Route path="/bills" element={
+            <BillsSection />
           } />
 
           <Route path="/mappings" element={

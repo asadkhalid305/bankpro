@@ -61,6 +61,7 @@ class AccountUpdate(BaseModel):
 class BucketModel(BaseModel):
     name: str
     description: Optional[str] = None
+    initial_balance: float = 0.0
 
 class TransactionUpdate(BaseModel):
     id: int
@@ -90,10 +91,19 @@ class FixedExpenseModel(BaseModel):
     payment_account: str
     period: str
     price: float
+    due_day: int = 1
+    is_manual: int = 0
+    due_months: Optional[str] = None
     bucket: str = "Main"
 
 class FixedExpenseUpdate(FixedExpenseModel):
     id: int
+
+class BillStatusUpdate(BaseModel):
+    fixed_expense_id: int
+    month: str
+    status: str # pending, paid, skipped
+    transaction_id: Optional[int] = None
 
 class CategoryBudgetModel(BaseModel):
     category_name: str
@@ -193,7 +203,7 @@ async def delete_account(name: str):
 @app.get("/buckets/")
 async def get_buckets():
     conn = get_db()
-    cursor = conn.execute("SELECT name, description FROM buckets")
+    cursor = conn.execute("SELECT name, description, initial_balance FROM buckets")
     rows = cursor.fetchall()
     conn.close()
     return [dict(row) for row in rows]
@@ -204,7 +214,7 @@ async def save_buckets(buckets: List[BucketModel]):
     try:
         conn.execute("DELETE FROM buckets")
         for b in buckets:
-            conn.execute("INSERT INTO buckets (name, description) VALUES (?, ?)", (b.name, b.description))
+            conn.execute("INSERT INTO buckets (name, description, initial_balance) VALUES (?, ?, ?)", (b.name, b.description, b.initial_balance))
         conn.commit()
         config_manager.dump_config_to_seed()
     except Exception as e:
@@ -461,19 +471,19 @@ async def get_summary(start_date: Optional[str] = None, end_date: Optional[str] 
     total_net_worth = sum(acc['balance'] for acc in accounts)
 
     # 2. Bucket Balances (Always Global Snapshot)
-    # Corrected: Initial Balances of linked accounts + All transactions
+    # Corrected: Bucket Initial Balance + Initial Balances of linked accounts + All transactions
+    cursor = conn.execute('SELECT name, initial_balance FROM buckets')
+    bucket_initials = {row['name']: row['initial_balance'] for row in cursor.fetchall()}
+    
     cursor = conn.execute('SELECT bucket as name, SUM(initial_balance) as initial FROM accounts GROUP BY bucket')
-    initial_balances = {row['name']: row['initial'] for row in cursor.fetchall()}
+    account_initials = {row['name']: row['initial'] for row in cursor.fetchall()}
     
     cursor = conn.execute('SELECT bucket as name, TOTAL(amount) as trans_sum FROM transactions GROUP BY bucket')
     trans_sums = {row['name']: row['trans_sum'] for row in cursor.fetchall()}
     
-    cursor = conn.execute('SELECT name FROM buckets')
-    all_buckets = [row['name'] for row in cursor.fetchall()]
-    
     buckets = []
-    for b_name in all_buckets:
-        balance = initial_balances.get(b_name, 0) + trans_sums.get(b_name, 0)
+    for b_name, b_init in bucket_initials.items():
+        balance = b_init + account_initials.get(b_name, 0) + trans_sums.get(b_name, 0)
         buckets.append({"name": b_name, "balance": balance})
 
     # 3. Global Snapshot Pillars (Account-based as requested)
@@ -557,13 +567,12 @@ async def get_summary(start_date: Optional[str] = None, end_date: Optional[str] 
         processed_cats.add(cat)
         fixed_baseline = fixed_baselines.get(cat, 0)
         # Use manual total if set, otherwise fallback to fixed baseline
-        # Note: manual_sums already contains the SUM of targets across the months in the period
-        # If a category has fixed expenses but NO manual budget entries in the period, 
-        # we calculate its total as fixed * months.
         total_budget_for_period = manual_sums.get(cat, fixed_baseline * months_in_period)
         
+        display_name = "Uncategorized" if cat == "Unknown" else cat
+        
         categories.append({
-            "category": cat,
+            "category": display_name,
             "total": row['amount'],
             "budget": total_budget_for_period
         })
@@ -636,9 +645,9 @@ async def add_fixed_expense(exp: FixedExpenseModel):
     conn = get_db()
     try:
         conn.execute('''
-            INSERT INTO fixed_expenses (service, category, payment_account, period, price, bucket) 
-            VALUES (?, ?, ?, ?, ?, ?)
-        ''', (exp.service, exp.category, exp.payment_account, exp.period, exp.price, exp.bucket))
+            INSERT INTO fixed_expenses (service, category, payment_account, period, price, due_day, is_manual, due_months, bucket) 
+            VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?)
+        ''', (exp.service, exp.category, exp.payment_account, exp.period, exp.price, exp.due_day, exp.is_manual, exp.due_months, exp.bucket))
         conn.commit()
     except Exception as e:
         raise HTTPException(status_code=500, detail=str(e))
@@ -652,9 +661,9 @@ async def update_fixed_expense(exp: FixedExpenseUpdate):
     try:
         conn.execute('''
             UPDATE fixed_expenses 
-            SET service = ?, category = ?, payment_account = ?, period = ?, price = ?, bucket = ?
+            SET service = ?, category = ?, payment_account = ?, period = ?, price = ?, due_day = ?, is_manual = ?, due_months = ?, bucket = ?
             WHERE id = ?
-        ''', (exp.service, exp.category, exp.payment_account, exp.period, exp.price, exp.bucket, exp.id))
+        ''', (exp.service, exp.category, exp.payment_account, exp.period, exp.price, exp.due_day, exp.is_manual, exp.due_months, exp.bucket, exp.id))
         conn.commit()
     except Exception as e:
         raise HTTPException(status_code=500, detail=str(e))
@@ -816,6 +825,133 @@ async def copy_budgets(request: dict):
                 VALUES (?, ?, ?)
                 ON CONFLICT(category_name, month) DO UPDATE SET target_amount = EXCLUDED.target_amount
             ''', (row['category_name'], to_month, row['target_amount']))
+        conn.commit()
+    except Exception as e:
+        raise HTTPException(status_code=500, detail=str(e))
+    finally:
+        conn.close()
+    return {"status": "success"}
+
+# --- BILL TRACKING ---
+
+@app.get("/bills/")
+async def get_bills(month: str):
+    """
+    Returns the bill checklist for a specific month (YYYY-MM).
+    Automatically attempts to match pending bills with transactions.
+    """
+    conn = get_db()
+    try:
+        # 1. Get all fixed expenses
+        cursor = conn.execute("SELECT * FROM fixed_expenses")
+        all_fixed = [dict(row) for row in cursor.fetchall()]
+        
+        # 2. Filter for expenses relevant to this month
+        month_parts = month.split('-')
+        if len(month_parts) < 2:
+            raise HTTPException(status_code=400, detail="Invalid month format. Use YYYY-MM")
+        current_month_int = int(month_parts[1])
+        
+        relevant_fixed = []
+        for exp in all_fixed:
+            is_relevant = False
+            if exp['period'] == 'Monthly':
+                is_relevant = True
+            elif exp['period'] in ['Quarterly', 'Yearly'] and exp['due_months']:
+                due_months = [int(m.strip()) for m in exp['due_months'].split(',')]
+                if current_month_int in due_months:
+                    is_relevant = True
+            
+            if is_relevant:
+                relevant_fixed.append(exp)
+
+        # 3. Get existing tracking records for this month
+        cursor = conn.execute("SELECT * FROM bill_tracking WHERE month = ?", (month,))
+        tracking_rows = cursor.fetchall()
+        tracking_map = {row['fixed_expense_id']: dict(row) for row in tracking_rows}
+        
+        # Track which transactions are already "claimed" by a bill this month
+        matched_transaction_ids = {row['transaction_id'] for row in tracking_rows if row['transaction_id']}
+
+        # 4. Get transactions for this month to auto-match (only outgoing)
+        start_date = f"{month}-01"
+        end_date = f"{month}-31" 
+        cursor = conn.execute("SELECT id, merchant, amount, date FROM transactions WHERE amount < 0 AND date BETWEEN ? AND ?", (start_date, end_date))
+        month_transactions = [dict(row) for row in cursor.fetchall()]
+
+        results = []
+        for exp in relevant_fixed:
+            track = tracking_map.get(exp['id'])
+            status = track['status'] if track else 'pending'
+            transaction_id = track['transaction_id'] if track else None
+            paid_at = track['paid_at'] if track else None
+
+            # 5. Auto-matching logic for pending bills
+            if status == 'pending' and not exp['is_manual']:
+                for tx in month_transactions:
+                    # Skip transactions already claimed by another bill
+                    if tx['id'] in matched_transaction_ids: continue
+                    
+                    # Match by merchant name (case-insensitive) and price (approximate)
+                    tx_amount = abs(tx['amount'])
+                    merchant_match = (exp['service'].lower() in tx['merchant'].lower()) or \
+                                     (tx['merchant'].lower() in exp['service'].lower())
+                    
+                    if merchant_match and abs(tx_amount - exp['price']) < 1.0:
+                        status = 'paid'
+                        transaction_id = tx['id']
+                        paid_at = tx['date']
+                        matched_transaction_ids.add(tx['id'])
+                        
+                        # Save the auto-match to DB
+                        conn.execute('''
+                            INSERT INTO bill_tracking (fixed_expense_id, month, status, transaction_id, paid_at)
+                            VALUES (?, ?, ?, ?, ?)
+                            ON CONFLICT(fixed_expense_id, month) DO UPDATE SET 
+                                status = EXCLUDED.status, 
+                                transaction_id = EXCLUDED.transaction_id,
+                                paid_at = EXCLUDED.paid_at
+                        ''', (exp['id'], month, status, transaction_id, paid_at))
+                        break
+
+            results.append({
+                "id": exp['id'],
+                "service": exp['service'],
+                "category": exp['category'],
+                "price": exp['price'],
+                "due_day": exp['due_day'],
+                "is_manual": exp['is_manual'],
+                "payment_account": exp['payment_account'],
+                "status": status,
+                "transaction_id": transaction_id,
+                "paid_at": paid_at
+            })
+
+        conn.commit()
+        # Sort: pending first, then paid/skipped at the bottom (both sorted by due day)
+        results.sort(key=lambda x: (x['status'] != 'pending', x['due_day']))
+        return results
+    except Exception as e:
+        raise HTTPException(status_code=500, detail=str(e))
+    finally:
+        conn.close()
+
+@app.post("/bills/status")
+async def update_bill_status(update: BillStatusUpdate):
+    conn = get_db()
+    try:
+        paid_at = None
+        if update.status == 'paid':
+            paid_at = datetime.now().strftime('%Y-%m-%d %H:%M:%S')
+
+        conn.execute('''
+            INSERT INTO bill_tracking (fixed_expense_id, month, status, transaction_id, paid_at)
+            VALUES (?, ?, ?, ?, ?)
+            ON CONFLICT(fixed_expense_id, month) DO UPDATE SET 
+                status = EXCLUDED.status, 
+                transaction_id = EXCLUDED.transaction_id,
+                paid_at = EXCLUDED.paid_at
+        ''', (update.fixed_expense_id, update.month, update.status, update.transaction_id, paid_at))
         conn.commit()
     except Exception as e:
         raise HTTPException(status_code=500, detail=str(e))

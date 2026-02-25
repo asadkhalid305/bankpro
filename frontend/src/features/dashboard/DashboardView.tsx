@@ -327,18 +327,37 @@ export const DashboardView = () => {
           </CardHeader>
           <CardContent>
             <div className="grid gap-6 md:grid-cols-2 lg:grid-cols-3">
-              {summary?.categories?.sort((a: any, b: any) => (b.budget || 0) - (a.budget || 0)).map((cat: any) => {
+              {summary?.categories?.sort((a: any, b: any) => {
+                // Keep Uncategorized at the top if it has spending
+                if (a.category === 'Uncategorized' && Math.abs(a.total) > 0) return -1;
+                if (b.category === 'Uncategorized' && Math.abs(b.total) > 0) return 1;
+                // Otherwise sort by spending (descending)
+                return Math.abs(b.total) - Math.abs(a.total);
+              }).map((cat: any) => {
                 const spent = Math.abs(cat.total || 0);
                 const budget = cat.budget || 0;
                 const percent = budget > 0 ? Math.min(100, (spent / budget) * 100) : 0;
                 const isOver = budget > 0 && spent > budget;
+                const isUncategorized = cat.category === 'Uncategorized';
                 
                 return (
-                  <div key={cat.category} className="space-y-3 p-4 rounded-xl border bg-card/50 hover:bg-accent/5 transition-all">
+                  <div 
+                    key={cat.category} 
+                    className={cn(
+                      "space-y-3 p-4 rounded-xl border transition-all cursor-pointer group/card",
+                      isUncategorized ? "bg-amber-50/50 border-amber-200 shadow-sm hover:border-amber-400" : "bg-card/50 hover:bg-accent/5"
+                    )}
+                    onClick={() => navigate(`/transactions?category=${cat.category === 'Uncategorized' ? 'Unknown' : cat.category}`)}
+                  >
                     <div className="flex items-center justify-between">
-                      <span className="text-xs font-bold uppercase tracking-wider text-muted-foreground">{cat.category}</span>
-                      <span className={cn("text-[10px] font-bold px-1.5 py-0.5 rounded", isOver ? "bg-red-100 text-red-600" : "bg-emerald-100 text-emerald-600")}>
-                        {isOver ? "Over Budget" : `${Math.round(percent)}% Used`}
+                      <div className="flex items-center gap-2">
+                        <span className="text-xs font-bold uppercase tracking-wider text-muted-foreground">{cat.category}</span>
+                        {isUncategorized && <span className="text-[8px] bg-amber-200 text-amber-700 px-1 rounded font-black uppercase">Action Required</span>}
+                      </div>
+                      <span className={cn("text-[10px] font-bold px-1.5 py-0.5 rounded", 
+                        isUncategorized ? "bg-amber-100 text-amber-700" :
+                        isOver ? "bg-red-100 text-red-600" : "bg-emerald-100 text-emerald-600")}>
+                        {isUncategorized ? "Needs Label" : isOver ? "Over Budget" : `${Math.round(percent)}% Used`}
                       </span>
                     </div>
                     

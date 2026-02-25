@@ -14,11 +14,13 @@ interface BucketsManagerProps {
 export const BucketsManager: React.FC<BucketsManagerProps> = ({ buckets, onSave }) => {
   const [showAddForm, setShowAddForm] = useState(false);
   const [newBucket, setNewBucket] = useState('');
+  const [newInitialBalance, setNewInitialBalance] = useState<string>('0');
 
   const addBucket = () => {
     if (newBucket && !buckets.find(b => b.name === newBucket)) {
-      onSave([...buckets, { name: newBucket }]);
+      onSave([...buckets, { name: newBucket, initial_balance: parseFloat(newInitialBalance) || 0 }]);
       setNewBucket('');
+      setNewInitialBalance('0');
       setShowAddForm(false);
     }
   };
@@ -28,10 +30,19 @@ export const BucketsManager: React.FC<BucketsManagerProps> = ({ buckets, onSave 
     onSave(buckets.filter(b => b.name !== name));
   };
 
+  const updateBucketBalance = (name: string, balance: string) => {
+    const parsed = parseFloat(balance) || 0;
+    onSave(buckets.map(b => b.name === name ? { ...b, initial_balance: parsed } : b));
+  };
+
   const getIcon = (name: string) => {
     if (name === 'Main') return <Wallet className="w-4 h-4 text-emerald-500" />;
     if (name === 'Kindergeld') return <Baby className="w-4 h-4 text-blue-500" />;
     return <ShieldCheck className="w-4 h-4 text-amber-500" />;
+  };
+
+  const formatCurrency = (amount: number = 0) => {
+    return new Intl.NumberFormat('de-DE', { style: 'currency', currency: 'EUR' }).format(amount);
   };
 
   return (
@@ -50,13 +61,23 @@ export const BucketsManager: React.FC<BucketsManagerProps> = ({ buckets, onSave 
         <CardContent className="p-0">
           {showAddForm && (
             <div className="p-6 border-b bg-muted/30 animate-in fade-in slide-in-from-top-2">
-              <div className="flex gap-4 items-end max-w-lg">
+              <div className="grid grid-cols-1 md:grid-cols-3 gap-4 items-end max-w-2xl">
                 <div className="space-y-1.5 flex-1">
                     <label className="text-xs font-bold uppercase text-muted-foreground tracking-wider">Bucket Name</label>
                     <Input 
                       placeholder="e.g. Travel, Emergency" 
                       value={newBucket}
                       onChange={(e) => setNewBucket(e.target.value)}
+                    />
+                </div>
+                <div className="space-y-1.5">
+                    <label className="text-xs font-bold uppercase text-muted-foreground tracking-wider">Initial Logical Balance</label>
+                    <Input 
+                      type="number"
+                      step="0.01"
+                      placeholder="0.00" 
+                      value={newInitialBalance}
+                      onChange={(e) => setNewInitialBalance(e.target.value)}
                     />
                 </div>
                 <Button onClick={addBucket}>Create Bucket</Button>
@@ -69,6 +90,7 @@ export const BucketsManager: React.FC<BucketsManagerProps> = ({ buckets, onSave 
               <thead className="text-xs uppercase bg-muted/50 text-muted-foreground border-b">
                 <tr>
                   <th className="px-6 py-4 font-bold tracking-wider">Bucket Name</th>
+                  <th className="px-6 py-4 font-bold tracking-wider">Initial Logical Balance</th>
                   <th className="px-6 py-4 font-bold tracking-wider">Purpose</th>
                   <th className="px-6 py-4 text-right">Actions</th>
                 </tr>
@@ -76,7 +98,7 @@ export const BucketsManager: React.FC<BucketsManagerProps> = ({ buckets, onSave 
               <tbody className="divide-y">
                 {buckets.length === 0 && (
                   <tr>
-                    <td colSpan={3} className="px-6 py-12 text-center text-muted-foreground italic">
+                    <td colSpan={4} className="px-6 py-12 text-center text-muted-foreground italic">
                       No buckets defined.
                     </td>
                   </tr>
@@ -89,6 +111,20 @@ export const BucketsManager: React.FC<BucketsManagerProps> = ({ buckets, onSave 
                           {getIcon(bucket.name)}
                         </div>
                         <span className="font-semibold text-foreground/90">{bucket.name}</span>
+                      </div>
+                    </td>
+                    <td className="px-6 py-4">
+                      <div className="flex items-center gap-2">
+                        <Input 
+                          type="number"
+                          step="0.01"
+                          className="h-8 w-32 font-mono text-sm"
+                          value={bucket.initial_balance || 0}
+                          onChange={(e) => updateBucketBalance(bucket.name, e.target.value)}
+                        />
+                        <span className="text-xs text-muted-foreground font-mono">
+                          ({formatCurrency(bucket.initial_balance)})
+                        </span>
                       </div>
                     </td>
                     <td className="px-6 py-4 text-muted-foreground">
@@ -112,6 +148,12 @@ export const BucketsManager: React.FC<BucketsManagerProps> = ({ buckets, onSave 
           </div>
         </CardContent>
       </Card>
+      
+      <div className="p-4 bg-muted/50 rounded-lg border border-dashed text-xs text-muted-foreground">
+        <strong>💡 Pro-tip:</strong> To maintain logical balance, if you add an initial balance to one bucket (e.g. +7,025€ for Kindergeld), 
+        consider deducting the same amount from your "Main" bucket (e.g. -7,025€) so that your total logical net worth remains consistent 
+        with your physical bank balances.
+      </div>
     </div>
   );
 };

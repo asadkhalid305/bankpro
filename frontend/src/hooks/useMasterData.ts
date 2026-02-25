@@ -1,13 +1,25 @@
-import { useState, useCallback } from 'react';
+import { useState, useCallback, useEffect } from 'react';
 import type { Transaction, SortConfig } from '../types';
 import { api } from '../lib/api';
+import { useLocation } from 'react-router-dom';
 
 export const useMasterData = () => {
+  const { search: urlSearch } = useLocation();
   const [data, setData] = useState<Transaction[]>([]);
   const [search, setSearch] = useState('');
   const [categoryFilter, setCategoryFilter] = useState('All');
   const [accountFilter, setAccountFilter] = useState('All');
   const [bucketFilter, setBucketFilter] = useState('All');
+  
+  // Sync category filter from URL
+  useEffect(() => {
+    const params = new URLSearchParams(urlSearch);
+    const cat = params.get('category');
+    if (cat) {
+      setCategoryFilter(cat);
+    }
+  }, [urlSearch]);
+
   const [sortConfig, setSortConfig] = useState<SortConfig<Transaction> | null>({ key: 'date', direction: 'desc' });
   const [selectedRows, setSelectedRows] = useState<Set<number>>(new Set());
 
