@@ -2,26 +2,26 @@
   "categories": [
     "Benefit",
     "Bill",
-    "Car",
-    "Charity",
     "Conversion",
     "Dependant",
-    "Entertainment",
     "Extra",
-    "Fees",
     "Food & Outing",
     "Gifts",
     "Grocery",
     "Investment",
-    "Kindergeld",
     "Medical",
     "Office",
-    "Rent",
     "Salary",
     "Shopping",
     "Transport",
-    "Unknown",
     "Vacation",
+    "Car",
+    "Unknown",
+    "Fees",
+    "Entertainment",
+    "Charity",
+    "Kindergeld",
+    "Rent",
     "Test"
   ],
   "buckets": [
@@ -758,7 +758,7 @@
     },
     {
       "pattern": "Fatima",
-      "category": "Kindergeld",
+      "category": "Investment",
       "bucket": "Kindergeld"
     },
     {
@@ -3453,7 +3453,7 @@
     },
     {
       "pattern": "Apple.Com Bill Itunes.Com",
-      "category": "Bill",
+      "category": "Fees",
       "bucket": "Main"
     },
     {
@@ -3533,7 +3533,7 @@
     },
     {
       "pattern": "Shell 0372 Berlin",
-      "category": "Food & Outing",
+      "category": "Car",
       "bucket": "Main"
     },
     {
@@ -3648,12 +3648,12 @@
     },
     {
       "pattern": "E-Plus Service Gmbh",
-      "category": "Bill",
+      "category": "Fees",
       "bucket": "Main"
     },
     {
       "pattern": "Nan",
-      "category": "Food & Outing",
+      "category": "Gifts",
       "bucket": "Main"
     },
     {
@@ -3722,8 +3722,283 @@
       "bucket": "Main"
     },
     {
-      "pattern": "",
-      "category": "Investment",
+      "pattern": "Javeriariaz",
+      "category": "Dependant",
+      "bucket": "Main"
+    },
+    {
+      "pattern": "Kartenzahlung Mevlanamarket Berlin De30-01-2026...",
+      "category": "Grocery",
+      "bucket": "Main"
+    },
+    {
+      "pattern": "Kartenzahlung Rewemarktgmbh-Zw Berlin De31-01-2...",
+      "category": "Grocery",
+      "bucket": "Main"
+    },
+    {
+      "pattern": "Kartenzahlung Lieblingsecke Berlin De01-02-2026...",
+      "category": "Food & Outing",
+      "bucket": "Main"
+    },
+    {
+      "pattern": "Kartenzahlung Mevlanamarket Berlin De06-02-2026...",
+      "category": "Grocery",
+      "bucket": "Main"
+    },
+    {
+      "pattern": "Kartenzahlung Pocoeinrichtungsmarktbe Berlin-Sp...",
+      "category": "Shopping",
+      "bucket": "Main"
+    },
+    {
+      "pattern": "Rundfunkard Zdf Dradio",
+      "category": "Bill",
+      "bucket": "Main"
+    },
+    {
+      "pattern": "Kartenzahlung Mevlanamarket Berlin De20-02-2026...",
+      "category": "Grocery",
+      "bucket": "Main"
+    },
+    {
+      "pattern": "Kaufland Berlin Spandau 2 Berlin Spanda",
+      "category": "Grocery",
+      "bucket": "Main"
+    },
+    {
+      "pattern": "Lime Fahrt 2272 Frankfurt",
+      "category": "Transport",
+      "bucket": "Main"
+    },
+    {
+      "pattern": "Dunkin Donuts Filiale 314 Berlin",
+      "category": "Food & Outing",
+      "bucket": "Main"
+    },
+    {
+      "pattern": "Paypal Toogoodtogo Tgtg",
+      "category": "Food & Outing",
+      "bucket": "Main"
+    },
+    {
+      "pattern": "Kamps Berlin 501003 1 Berlin",
+      "category": "Food & Outing",
+      "bucket": "Main"
+    },
+    {
+      "pattern": "Mehmet Tas Berlin",
+      "category": "Food & Outing",
+      "bucket": "Main"
+    },
+    {
+      "pattern": "Geba Supermaerkte Berlin",
+      "category": "Grocery",
+      "bucket": "Main"
+    },
+    {
+      "pattern": "Dm Drogerie Sagt Danke Berlin",
+      "category": "Grocery",
+      "bucket": "Main"
+    },
+    {
+      "pattern": "Ez Supermarkt Berlin",
+      "category": "Grocery",
+      "bucket": "Main"
+    },
+    {
+      "pattern": "Amzn Mktp De Br1Xe8Hq5 Amzn.Com Bill",
+      "category": "Shopping",
+      "bucket": "Main"
+    },
+    {
+      "pattern": "Spc Spandau Arcaden Grunwald",
+      "category": "Food & Outing",
+      "bucket": "Main"
+    },
+    {
+      "pattern": "Mangal24 Berlin",
+      "category": "Food & Outing",
+      "bucket": "Main"
+    },
+    {
+      "pattern": "Paypal Basraasianf",
+      "category": "Grocery",
+      "bucket": "Main"
+    },
+    {
+      "pattern": "Sumup Food Nations G Berlin",
+      "category": "Food & Outing",
+      "bucket": "Main"
+    },
+    {
+      "pattern": "Amzn Mktp De Yr2Z472Y5 Amzn.Com Bill",
+      "category": "Shopping",
+      "bucket": "Main"
+    },
+    {
+      "pattern": "E Center 3391 Berlin",
+      "category": "Grocery",
+      "bucket": "Main"
+    },
+    {
+      "pattern": "Paypal Urbansports Urban",
+      "category": "Fees",
+      "bucket": "Main"
+    },
+    {
+      "pattern": "Aral Tank Rastanlage Bers Luckau Kaden",
+      "category": "Vacation",
+      "bucket": "Main"
+    },
+    {
+      "pattern": "Stacja Paliw Nr 7633 Ilowa",
+      "category": "Vacation",
+      "bucket": "Main"
+    },
+    {
+      "pattern": "Forest Park Recepcja Swieradow Zdr",
+      "category": "Vacation",
+      "bucket": "Main"
+    },
+    {
+      "pattern": "Forest Park Sala Multi Swieradow Zdr",
+      "category": "Vacation",
+      "bucket": "Main"
+    },
+    {
+      "pattern": "Playtomic.Io F63957E1 Madrid",
+      "category": "Entertainment",
+      "bucket": "Main"
+    },
+    {
+      "pattern": "Forest Park Restauracj Swieradow Zdr",
+      "category": "Vacation",
+      "bucket": "Main"
+    },
+    {
+      "pattern": "Magic Play Sp. Z O.O. Kalisz",
+      "category": "Vacation",
+      "bucket": "Main"
+    },
+    {
+      "pattern": "Ski Sun Coaster Swieradow-Zdr",
+      "category": "Vacation",
+      "bucket": "Main"
+    },
+    {
+      "pattern": "Ski Sun Spolka Z Ogr 01 Swieradow-Zdr",
+      "category": "Vacation",
+      "bucket": "Main"
+    },
+    {
+      "pattern": "Agip Tankstelle Forst",
+      "category": "Vacation",
+      "bucket": "Main"
+    },
+    {
+      "pattern": "Paypal Okaidi Autho_1267",
+      "category": "Shopping",
+      "bucket": "Main"
+    },
+    {
+      "pattern": "Total Service Station Berlin",
+      "category": "Car",
+      "bucket": "Main"
+    },
+    {
+      "pattern": "Schnitzery Gmbh Berlin",
+      "category": "Food & Outing",
+      "bucket": "Main"
+    },
+    {
+      "pattern": "Primark Berlin Zoom Berlin",
+      "category": "Shopping",
+      "bucket": "Main"
+    },
+    {
+      "pattern": "Risa Chicken Zoo Berlin",
+      "category": "Food & Outing",
+      "bucket": "Main"
+    },
+    {
+      "pattern": "Sona Food Berlin",
+      "category": "Grocery",
+      "bucket": "Main"
+    },
+    {
+      "pattern": "Mcdonalds 01194 Berlin",
+      "category": "Food & Outing",
+      "bucket": "Main"
+    },
+    {
+      "pattern": "Spc Its Mo Berlin Berlin",
+      "category": "Food & Outing",
+      "bucket": "Main"
+    },
+    {
+      "pattern": "Paypal Miles",
+      "category": "Shopping",
+      "bucket": "Main"
+    },
+    {
+      "pattern": "Steinecke S Heidebrot Berlin",
+      "category": "Food & Outing",
+      "bucket": "Main"
+    },
+    {
+      "pattern": "Lebensmittelmarkt Kale Berlin Spanda",
+      "category": "Grocery",
+      "bucket": "Main"
+    },
+    {
+      "pattern": "Paypal Voitechnolo",
+      "category": "Transport",
+      "bucket": "Main"
+    },
+    {
+      "pattern": "Jemenitisches Restaura Berlin",
+      "category": "Food & Outing",
+      "bucket": "Main"
+    },
+    {
+      "pattern": "Paypal Basic Fit Basic F",
+      "category": "Fees",
+      "bucket": "Main"
+    },
+    {
+      "pattern": "Rewe Ivonne Schoen Berlin",
+      "category": "Grocery",
+      "bucket": "Main"
+    },
+    {
+      "pattern": "Sonmez Baklava Berlin",
+      "category": "Food & Outing",
+      "bucket": "Main"
+    },
+    {
+      "pattern": "Kartenzahlung Lidlsagtdanke Berlin-Spandau De02...",
+      "category": "Grocery",
+      "bucket": "Main"
+    },
+    {
+      "pattern": "Kartenzahlung Rewesagtdanke. Rauchstr. Berlin S...",
+      "category": "Grocery",
+      "bucket": "Main"
+    },
+    {
+      "pattern": "Paypaleuropes.A.R.L.Etcies.C.A",
+      "category": "Vacation",
+      "bucket": "Main"
+    },
+    {
+      "pattern": "Kartenzahlung Mevlanamarket Berlin De27-03-2026...",
+      "category": "Grocery",
+      "bucket": "Main"
+    },
+    {
+      "pattern": "Balanceofsettlementitems 701 3214673 00 Eur 22 ...",
+      "category": "Bill",
       "bucket": "Main"
     }
   ]
